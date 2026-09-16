@@ -67,9 +67,45 @@
   async function partners(){setHead('Vendors & riders','Partner onboarding, approval and payout queues.');const [v,r,p]=await Promise.all([rows('vendors'),rows('riders'),rows('partner_payouts')]);app.innerHTML='<div class="panel"><h3>Vendors</h3>'+table(v,[{label:'Business',key:'business_name'},{label:'TID',key:'tonninyira_id'},{label:'Location',key:'location'},{label:'Category',key:'category'},{label:'Approval',render:r=>pill(r.approval_status)},{label:'Owner',key:'owner_name'},{label:'Phone',key:'phone'}])+'</div><div class="panel" style="margin-top:10px"><h3>Riders</h3>'+table(r,[{label:'Name',key:'full_name'},{label:'TID',key:'tonninyira_id'},{label:'Vehicle',key:'vehicle_type'},{label:'Plate',key:'plate_number'},{label:'Approval',render:r=>pill(r.approval_status)}])+'</div><div class="panel" style="margin-top:10px"><h3>Payout queue</h3>'+table(p,[{label:'Type',key:'partner_type'},{label:'Amount',render:r=>money(r.amount)},{label:'Method',key:'method'},{label:'Status',render:r=>pill(r.status)},{label:'Reference',key:'reference'}])+'</div>'}
   async function finance(){setHead('Payments & payouts','Payment reconciliation, settlement and partner cash-out.');const [p,s]=await Promise.all([rows('payment_transactions'),rows('platform_settlements')]);app.innerHTML='<div class="panel"><h3>Payment transactions</h3>'+table(p,[{label:'Order',key:'order_id'},{label:'Provider',key:'provider'},{label:'Network',key:'network'},{label:'Amount',render:r=>money(r.amount)},{label:'Status',render:r=>pill(r.status)},{label:'TX ref',key:'tx_ref'},{label:'Verified',key:'verified_at'}])+'</div><div class="panel" style="margin-top:10px"><h3>Platform settlements</h3>'+table(s,[{label:'Vendor',key:'vendor_id'},{label:'Rider',key:'rider_tid'},{label:'Gross',render:r=>money(r.gross_amount)},{label:'Platform fee',render:r=>money(r.platform_fee)},{label:'Vendor net',render:r=>money(r.vendor_amount)},{label:'Rider net',render:r=>money(r.rider_amount)},{label:'Status',render:r=>pill(r.status)}])+'</div>'}
   async function support(){setHead('Support','Customer service conversations and recent messages.');const [c,m]=await Promise.all([rows('support_conversations'),rows('support_messages')]);app.innerHTML='<div class="panel"><h3>Conversations</h3>'+table(c,[{label:'ID',key:'id'},{label:'Customer',key:'customer_id'},{label:'Status',render:r=>pill(r.status)},{label:'Updated',render:r=>r.updated_at||r.created_at||'—'}])+'</div><div class="panel" style="margin-top:10px"><h3>Recent messages</h3>'+table(m.slice(-250).reverse(),[{label:'Conversation',key:'conversation_id'},{label:'Sender',key:'sender_user_id'},{label:'Message',key:'body'},{label:'Time',key:'created_at'}])+'</div>'}
-  async function trust(){setHead('Approvals & trust','Identity, partner approvals and trust signals.');const [v,r,rev]=await Promise.all([rows('vendors'),rows('riders'),rows('reviews')]);app.innerHTML='<div class="grid"><div class="panel"><h3>Vendor approvals</h3>'+table(v,[{label:'Business',key:'business_name'},{label:'TID',key:'tonninyira_id'},{label:'Approval',render:x=>pill(x.approval_status)}])+'</div><div class="panel"><h3>Rider approvals</h3>'+table(r,[{label:'Name',key:'full_name'},{label:'TID',key:'tonninyira_id'},{label:'Approval',render:x=>pill(x.approval_status)}])+'</div></div><div class="panel" style="margin-top:10px"><h3>Reviews</h3>'+table(rev.slice(-250).reverse(),[{label:'Rating',key:'rating'},{label:'Comment',key:'comment'},{label:'Created',key:'created_at'}])+'</div>'}
+  async function trust(){setHead('Approvals & trust','Identity, partner approvals and trust signals.');const [v,r,rev]=await Promise.all([rows('vendors'),rows('riders'),rows('reviews')]);app.innerHTML='<div class="grid"><div class="panel"><h3>Vendor approvals</h3>'+table(v,[{label:'Business',key:'business_name'},{label:'TID',key:'tonninyira_id'},{label:'Approval',render:x=>pill(x.approval_status)},{label:'Decision',render:x=>approvalActions('vendor',x)}])+'</div><div class="panel"><h3>Rider approvals</h3>'+table(r,[{label:'Name',key:'full_name'},{label:'TID',key:'tonninyira_id'},{label:'Approval',render:x=>pill(x.approval_status)},{label:'Decision',render:x=>approvalActions('rider',x)}])+'</div></div><div class="panel" style="margin-top:10px"><h3>Reviews</h3>'+table(rev.slice(-250).reverse(),[{label:'Rating',key:'rating'},{label:'Comment',key:'comment'},{label:'Created',key:'created_at'}])+'</div>'}
   async function growth(){setHead('Growth & analytics','Demand, customer activity and marketplace movement.');const [o,p,e]=await Promise.all([rows('orders'),rows('profiles','id,role,created_at'),rows('market_events')]);const days={};o.forEach(x=>{const d=String(x.created_at||'').slice(0,10)||'Unknown';days[d]=(days[d]||0)+1});const series=Object.entries(days).sort((a,b)=>a[0].localeCompare(b[0])).slice(-14);app.innerHTML='<div class="grid"><div class="panel"><h3>Orders by day</h3>'+table(series.map(x=>({day:x[0],orders:x[1]})),[{label:'Date',key:'day'},{label:'Orders',key:'orders'}])+'</div><div class="panel"><h3>Audience & activity</h3>'+table([{m:'Customers',n:p.filter(x=>x.role==='customer').length},{m:'Total orders',n:o.length},{m:'Completed orders',n:o.filter(x=>String(x.status).toLowerCase()==='completed').length},{m:'Marketplace events',n:e.length}],[{label:'Metric',key:'m'},{label:'Value',key:'n'}])+'</div></div>'}
   async function system(){setHead('System data','Operational records and configuration signals.');const [events,admins,guides]=await Promise.all([rows('market_events'),rows('admin_users'),rows('admin_guides','slug,title,updated_at')]);app.innerHTML='<div class="grid"><div class="panel"><h3>Recent events</h3>'+table(events.slice(-200).reverse(),[{label:'Type',key:'event_type'},{label:'Status',key:'status'},{label:'Reference',key:'reference'},{label:'Created',key:'created_at'}])+'</div><div class="panel"><h3>Admin access registry</h3>'+table(admins,[{label:'User ID',key:'user_id'},{label:'Role',key:'role'},{label:'Active',key:'is_active'}])+'</div></div><div class="panel" style="margin-top:10px"><h3>Protected guides</h3>'+table(guides,[{label:'Slug',key:'slug'},{label:'Title',key:'title'},{label:'Updated',key:'updated_at'}])+'</div>'}
+  /* Approval is the control that publishes a partner: vendors_public and
+     riders_public both serve approval_status='approved' only, so nothing
+     reaches the storefront until someone acts here. These tables were
+     render-only before, which left the queue visible but inert.
+     Note the two tables key differently -- vendors on tonninyira_id (text),
+     riders on id (bigint) -- so the key column travels with the config. */
+  const APPROVALS={vendor:{table:'vendors',key:'tonninyira_id'},rider:{table:'riders',key:'id'}};
+  function approvalActions(kind,row){
+    const cfg=APPROVALS[kind],id=row[cfg.key],state=String(row.approval_status??'').toLowerCase();
+    if(id===null||id===undefined||id==='')return '<span class="muted">—</span>';
+    const btn=(to,bg,fg,text)=>'<button type="button" class="tn-approve" data-kind="'+esc(kind)+'" data-id="'+esc(id)+'" data-to="'+esc(to)+'" style="border:0;border-radius:8px;padding:6px 10px;margin-right:6px;font-size:.72rem;font-weight:800;cursor:pointer;background:'+bg+';color:'+fg+'">'+text+'</button>';
+    return (state==='approved'?'':btn('approved','#4C9A5B','#FFFFFF','Approve'))+(state==='rejected'?'':btn('rejected','#E23F25','#FFFFFF','Reject'));
+  }
+  async function decideApproval(kind,id,to){
+    const cfg=APPROVALS[kind];
+    if(!cfg)throw Error('Unknown approval type.');
+    if(!['approved','rejected'].includes(to))throw Error('Unknown approval state.');
+    const r=await client().from(cfg.table).update({approval_status:to}).eq(cfg.key,id);
+    if(r.error)throw r.error;
+  }
+  /* Delegated, because every view rewrites app.innerHTML wholesale. */
+  app.addEventListener('click',async e=>{
+    const b=e.target.closest('.tn-approve');
+    if(!b)return;
+    const restore=b.innerHTML;
+    b.disabled=true;b.textContent='Saving…';
+    try{
+      await decideApproval(b.dataset.kind,b.dataset.id,b.dataset.to);
+      await load(current);
+    }catch(err){
+      b.disabled=false;b.innerHTML=restore;
+      status.className='status error';
+      status.textContent='Could not update approval: '+String(err?.message||err);
+    }
+  });
+
   const V={overview,operations,customers,partners,finance,support,trust,growth,system};
   async function load(view){status.className='status';status.textContent='Loading '+view+'…';app.innerHTML='<div class="empty">Loading…</div>';try{const s=await window.tnAdminState();if(!s.ok)throw Error(s.error||'Administrator access could not be verified');who.textContent=(s.display_name||s.user.email||'Admin')+' · '+s.role;await V[view]();status.textContent='Live data loaded.'}catch(e){status.className='status error';status.textContent='This workspace remains open. '+String(e?.message||'Unable to load this view.');app.innerHTML='<div class="error-box"><strong>'+esc(view)+'</strong><p>'+esc(e?.message||'Unable to load this view.')+'</p><p>Use Refresh after resolving the underlying data or permission issue.</p></div>'}}
   document.getElementById('refresh').addEventListener('click',()=>load(current));

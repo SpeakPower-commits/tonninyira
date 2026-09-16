@@ -422,6 +422,15 @@ function captureVendorLocation(){
 
 async function submitVendorForm(e){
   e.preventDefault();
+  /* Re-read the session at submit time, not just on load: a long form fill
+     can outlive the token, and a write with a stale session fails the RLS
+     WITH CHECK in a way that reads like a validation bug. */
+  const session = await tnSession();
+  if(!session){
+    showToast('Your session has expired. Sign in again to finish registering.', true);
+    setTimeout(()=>location.replace('index.html'), 1800);
+    return;
+  }
   const f = e.target;
   vendorCounter++;
   const tid = 'TN-VD-' + String(vendorCounter).padStart(5,'0');
@@ -459,6 +468,13 @@ async function submitVendorForm(e){
     kcca_license: f.kcca.value.trim(), ura_tin: f.ura.value.trim(), unbs_cert: f.unbs.value.trim()||null,
     latitude: vendorCoords ? vendorCoords.lat : null, longitude: vendorCoords ? vendorCoords.lng : null,
     logo_url: logoUrl, gallery, items, created_at: new Date().toISOString(),
+    /* Binds the stall to the account that applied, and enters the approval
+       queue rather than the storefront. The vendors_self_apply RLS policy
+       requires exactly this pair -- an applicant may only create their own
+       row, and only as pending. vendors_public serves 'approved' only, so
+       a stall stays invisible until an admin releases it. */
+    auth_user_id: session.user.id,
+    approval_status: 'pending',
   };
 
   let saveError = null;
@@ -503,6 +519,12 @@ async function submitVendorForm(e){
 
 async function submitRiderForm(e){
   e.preventDefault();
+  const session = await tnSession();
+  if(!session){
+    showToast('Your session has expired. Sign in again to finish registering.', true);
+    setTimeout(()=>location.replace('index.html'), 1800);
+    return;
+  }
   const f = e.target;
   riderCounter++;
   const tid = 'TN-RD-' + String(riderCounter).padStart(5,'0');
@@ -519,6 +541,9 @@ async function submitRiderForm(e){
     national_id: nid, photo_url: photoUrl, registration_date: f.regDate.value,
     vehicle_type: f.vehicleType.value.trim(), plate_number: f.plate.value.trim(),
     pin_hash: pinHash, created_at: new Date().toISOString(),
+    /* Same contract as the stall application -- see riders_self_apply. */
+    auth_user_id: session.user.id,
+    approval_status: 'pending',
   };
 
   let saveError = null;
@@ -553,7 +578,42 @@ const SUPABASE_URL = 'https://alxzmjgepftohwpqibmn.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFseHptamdlcGZ0b2h3cHFpYm1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5OTg1NDQsImV4cCI6MjEwMTU3NDU0NH0.YvFQhCqL6spINPsyLs7lf7z5wxtnfi4U893ydWLXEaA';
 let supabaseClient;
 try{ supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
-catch(e){ supabaseClient = { from:()=>({insert:async()=>({})}), storage:{from:()=>({upload:async()=>({error:'no client'}), getPublicUrl:()=>({data:{publicUrl:''}})})} }; }
+catch(e){
+  /* Never fake success. The old fallback returned an insert() that resolved
+     empty, so a registration with no reachable backend still showed the
+     "registered" toast and threw the application away. Every call on a dead
+     client now throws instead, so the failure is visible where it happens. */
+  const dead = ()=>{ throw new Error('Tonninyira cannot reach its secure service.'); };
+  supabaseClient = { auth:{getSession:dead}, from:dead, storage:{from:dead} };
+}
+
+/* Partner registration is account-first. index.html owns the whole sign-up
+   funnel (guest-access-flow.js: authStart -> roleChoice -> register.html?as=),
+   so this page deliberately does NOT render a second sign-in UI. It just
+   refuses to operate without the session that funnel creates, and sends
+   anyone who arrived here directly back to the front door. */
+async function tnSession(){
+  try{ return (await supabaseClient?.auth?.getSession())?.data?.session || null; }
+  catch(_){ return null; }
+}
+
+(function requirePartnerAccount(){
+  const gate = document.createElement('div');
+  gate.id = 'tnRegGate';
+  gate.style.cssText = 'position:fixed;inset:0;z-index:900;background:var(--ink);color:var(--sand);display:grid;place-items:center;text-align:center;padding:24px;font-size:0.9rem;line-height:1.5;';
+  gate.textContent = 'Checking your Tonninyira account…';
+  document.body.appendChild(gate);
+
+  if(typeof supabaseClient?.auth?.getSession !== 'function'){
+    gate.textContent = 'Tonninyira cannot reach its secure service right now. Please check your connection and reload this page.';
+    return;
+  }
+  tnSession().then(session=>{
+    if(session){ gate.remove(); return; }
+    gate.textContent = 'You need a Tonninyira account first — taking you there now…';
+    location.replace('index.html');
+  });
+})();
 </script>
 </body>
 </html>

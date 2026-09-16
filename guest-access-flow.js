@@ -9,7 +9,14 @@
   const session=async()=>{try{return (await client()?.auth?.getSession())?.data?.session||null}catch(_){return null}};
   const esc=v=>String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
   const phoneUg=raw=>{const s=String(raw||'').replace(/[\s()-]/g,'');if(/^0\d{9}$/.test(s))return '+256'+s.slice(1);if(/^256\d{9}$/.test(s))return '+'+s;if(/^\+256\d{9}$/.test(s))return s;return null};
-  const APP_URL='https://cuepointe.github.io/tonninyira/';
+  /* Derived from wherever the app is actually served rather than pinned to
+     one host. This was hardcoded to the GitHub Pages URL; with the app
+     moving to Cloudflare Pages a pinned origin sends the email sign-in link
+     to the wrong site, which surfaces much later as "email sign-in is
+     broken" with no obvious cause. Phone OTP never touched this path.
+     NOTE: whichever domain serves the app must also be added to the
+     Supabase Auth redirect allowlist, or the link is rejected on arrival. */
+  const APP_URL=location.origin+location.pathname.replace(/[^/]*$/,'');
   const AUTH_CALLBACK=APP_URL+'auth-callback.html';
   let pendingTransaction=null;
   function styles(){if(document.getElementById('tn-guest-flow-styles'))return;const s=document.createElement('style');s.id='tn-guest-flow-styles';s.textContent=`

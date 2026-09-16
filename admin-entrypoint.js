@@ -4,7 +4,7 @@
   const client=()=>{try{if(typeof supabaseClient!=='undefined'&&supabaseClient)return supabaseClient}catch(_){}return window.supabaseClient||window.tnSessionClient||null};
   const ADMIN_EMAIL='cuepointe@gmail.com';
   const ADMIN_NAME='Admin';
-  const APP_URL='https://cuepointe.github.io/tonninyira/';
+  const APP_URL=location.origin+location.pathname.replace(/[^/]*$/,''); /* derived, not pinned: see guest-access-flow.js */
   const RESET_URL=APP_URL+'admin-password-reset.html';
   function styles(){if(document.getElementById('tn-admin-entry-style'))return;const s=document.createElement('style');s.id='tn-admin-entry-style';s.textContent=`
     .tn-admin-dot{font-size:8px;line-height:1;color:rgba(243,232,216,.18);background:none;border:0;padding:2px 4px;margin-left:6px;cursor:pointer;letter-spacing:.5px}.tn-admin-dot:hover{color:rgba(243,232,216,.5)}

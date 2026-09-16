@@ -3,7 +3,7 @@
   'use strict';
   const SUPABASE_URL='https://alxzmjgepftohwpqibmn.supabase.co';
   const SUPABASE_KEY='sb_publishable_vLr2S8qLRHN5gVv9IITVPQ_CTXc4aCv';
-  const APP_URL='https://cuepointe.github.io/tonninyira/';
+  const APP_URL=location.origin+location.pathname.replace(/[^/]*$/,''); /* derived, not pinned: see guest-access-flow.js */
   let client=null;
   function getClient(){
     if(client)return client;
