@@ -1259,19 +1259,19 @@ updateCartUI();
 loadLiveVendors();
 loadLiveRiders();
 </script>
+<script src="account-session-ui.js"></script>
+<script src="flutterwave-payments-v2.js"></script>
+<script>if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));</script>
 <script src="enhancements.js"></script>
 <script src="enhancements-fix.js"></script>
 <script src="profile-copy-enhancements.js"></script>
 <script src="guest-access-flow.js"></script>
 <script src="admin-entrypoint.js"></script>
+<script src="session-compat.js"></script>
+<script src="support-session-fix.js"></script>
+<script src="wishlist-account.js"></script>
 <script src="partner-wallet-payouts.js"></script>
 <script src="signout-visible.js"></script>
 <script src="performance-optimizations.js"></script>
-<script src="session-compat.js"></script>
-<script src="account-session-ui.js"></script>
-<script src="support-session-fix.js"></script>
-<script src="wishlist-account.js"></script>
-<script src="flutterwave-payments-v2.js"></script>
-<script>if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));</script>
 </body>
 </html>
