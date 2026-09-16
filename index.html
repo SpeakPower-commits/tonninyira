@@ -1138,7 +1138,16 @@ const SUPABASE_URL = 'https://alxzmjgepftohwpqibmn.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFseHptamdlcGZ0b2h3cHFpYm1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5OTg1NDQsImV4cCI6MjEwMTU3NDU0NH0.YvFQhCqL6spINPsyLs7lf7z5wxtnfi4U893ydWLXEaA';
 let supabaseClient;
 try{ supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
-catch(e){ supabaseClient = { from:()=>({insert:async()=>({}), select:async()=>({data:null,error:'no client'})}) }; }
+catch(e){
+  /* Never fake a successful write. This fallback's insert() resolved empty,
+     so with the Supabase script unreachable an order could pass the
+     `if(ins.error)` check in flutterwave-payments-v2.js having been recorded
+     nowhere, and still move on toward payment. Calls now throw; the readers
+     that matter (loadLiveVendors / loadLiveRiders) already catch and degrade
+     to an empty catalogue, so browsing still fails soft. */
+  const dead = ()=>{ throw new Error('Tonninyira cannot reach its secure service.'); };
+  supabaseClient = { auth:{getSession:dead}, from:dead, storage:{from:dead}, functions:{invoke:dead} };
+}
 
 /* Pulls real registered stalls (with their own logo/gallery/items) from the
    'vendors_public' view -- not the raw 'vendors' table, which now also holds

@@ -298,8 +298,17 @@ async function submitVendorForm(e){
     logo_url: logoUrl, gallery, items, created_at: new Date().toISOString(),
   };
 
-  try{ await supabaseClient.from('vendors').insert(record); }
-  catch(err){ console.log('Vendor row not saved (Supabase not configured yet):', err.message); }
+  /* supabase-js returns {error} rather than throwing, so the old catch saw
+     nothing and the success card below rendered regardless. Both paths are
+     now treated as failure, and failure stops here instead of reporting a
+     registration that never happened. */
+  try{
+    const { error } = await supabaseClient.from('vendors').insert(record);
+    if(error) throw error;
+  }catch(err){
+    showToast(`Couldn't save ${record.business_name} — ${err.message || err}`);
+    return;
+  }
 
   document.getElementById('vendorSessionList').querySelector('.helper')?.remove();
   document.getElementById('vendorSessionList').insertAdjacentHTML('afterbegin', `
@@ -331,8 +340,13 @@ async function submitRiderForm(e){
     created_at: new Date().toISOString(),
   };
 
-  try{ await supabaseClient.from('riders').insert(record); }
-  catch(err){ console.log('Rider row not saved (Supabase not configured yet):', err.message); }
+  try{
+    const { error } = await supabaseClient.from('riders').insert(record);
+    if(error) throw error;
+  }catch(err){
+    showToast(`Couldn't save ${record.full_name} — ${err.message || err}`);
+    return;
+  }
 
   document.getElementById('riderSessionList').querySelector('.helper')?.remove();
   document.getElementById('riderSessionList').insertAdjacentHTML('afterbegin', `
@@ -346,11 +360,17 @@ async function submitRiderForm(e){
   showToast(`Rider registered — ${tid}`);
 }
 
-const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+const SUPABASE_URL = 'https://alxzmjgepftohwpqibmn.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFseHptamdlcGZ0b2h3cHFpYm1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5OTg1NDQsImV4cCI6MjEwMTU3NDU0NH0.YvFQhCqL6spINPsyLs7lf7z5wxtnfi4U893ydWLXEaA';
 let supabaseClient;
 try{ supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
-catch(e){ supabaseClient = { from:()=>({insert:async()=>({})}), storage:{from:()=>({upload:async()=>({error:'no client'}), getPublicUrl:()=>({data:{publicUrl:''}})})} }; }
+catch(e){
+  /* Never fake success. The old fallback handed back an insert() that
+     resolved empty, so this console reported "registered" for every partner
+     while writing nothing at all. Calls on a dead client now throw. */
+  const dead = ()=>{ throw new Error('Tonninyira cannot reach its secure service.'); };
+  supabaseClient = { auth:{getSession:dead}, from:dead, storage:{from:dead} };
+}
 </script>
 </body>
 </html>
