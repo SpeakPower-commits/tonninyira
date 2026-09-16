@@ -20,11 +20,34 @@ const SUPABASE_PUBLIC_KEY='sb_publishable_vLr2S8qLRHN5gVv9IITVPQ_CTXc4aCv';
 const APP_URL=location.origin+location.pathname.replace(/[^/]*$/,''); /* derived, not pinned: see guest-access-flow.js */
 (async()=>{
   const title=document.getElementById('title'),msg=document.getElementById('msg'),spin=document.getElementById('spin');
+  /* Supabase reports a refused redirect in the URL, not through getSession().
+     Implicit flow puts it in the hash; some rejections arrive as a query
+     string. Without reading both, an origin that is missing from the Auth
+     redirect allowlist is indistinguishable here from an expired link --
+     which sends you looking at token lifetimes instead of at the setting
+     that is actually wrong. */
+  function providerError(){
+    for(const raw of [location.hash.replace(/^#/,''), location.search.replace(/^\?/,'')]){
+      if(!raw) continue;
+      const p=new URLSearchParams(raw);
+      const code=p.get('error')||p.get('error_code');
+      if(!code) continue;
+      const detail=p.get('error_description')||'';
+      const hint=/redirect|not allowed|invalid_request/i.test(code+' '+detail)
+        ? ' This usually means this exact address is not in the Supabase Auth redirect allowlist.'
+        : '';
+      return (detail ? decodeURIComponent(detail.replace(/\+/g,' ')) : code) + hint;
+    }
+    return null;
+  }
+
   try{
+    const refused=providerError();
+    if(refused)throw new Error(refused);
     const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLIC_KEY,{auth:{flowType:'implicit',persistSession:true,detectSessionInUrl:true}});
     const {data:{session},error}=await client.auth.getSession();
     if(error)throw error;
-    if(!session)throw new Error('The sign-in link is missing or has expired.');
+    if(!session)throw new Error('The sign-in link is missing or has expired. If this keeps happening, check that '+location.origin+' is in the Supabase Auth redirect allowlist.');
     title.textContent='Account verified';
     msg.textContent='Taking you back to Tonninyira…';
     spin.style.display='none';
