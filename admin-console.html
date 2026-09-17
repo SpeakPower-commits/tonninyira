@@ -37,7 +37,7 @@ main{min-width:0}.view{display:none}.view.active{display:block}.view-head{displa
 </main></div>
 <script>
 const SUPABASE_URL='https://alxzmjgepftohwpqibmn.supabase.co';
-const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFseHptj';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFseHptamdlcGZ0b2h3cHFpYm1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5OTg1NDQsImV4cCI6MjEwMTU3NDU0NH0.YvFQhCqL6spINPsyLs7lf7z5wxtnfi4U893ydWLXEaA';
 // The public site may use a newer anon key; this console deliberately refuses access if Auth is unavailable.
 let sb=null;try{sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY)}catch(e){}
 const sections=[['CONTROL','overview','Command centre'],['OPERATIONS','operations','Orders & fulfilment'],['CUSTOMERS','customers','Customers'],['PARTNERS','partners','Vendors & riders'],['MONEY','finance','Payments & finance'],['SERVICE','support','Support inbox'],['GROWTH','growth','Growth intelligence'],['TRUST','moderation','Approvals & reviews'],['DATA','data','System data']];
