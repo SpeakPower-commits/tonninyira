@@ -1,9 +1,11 @@
-name: Deploy to Cloudflare Pages
+name: Deploy Tonninyira performance build to Cloudflare Pages
 
 on:
   push:
     branches:
       - main
+      - tn-performance-sprint
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -14,9 +16,9 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Deploy to Cloudflare Pages
+      - name: Deploy tested build to production Pages
         uses: cloudflare/wrangler-action@v3
         with:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

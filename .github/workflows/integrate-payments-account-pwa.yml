@@ -1,0 +1,82 @@
+name: Integrate Tonninyira payments account and PWA
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'flutterwave-payments-v2.js'
+      - 'account-session-ui.js'
+      - 'session-compat.js'
+      - 'wishlist-account.js'
+      - 'support-session-fix.js'
+      - 'manifest.webmanifest'
+      - 'sw.js'
+      - 'payment-return.html'
+      - 'payment-return-fixed.html'
+      - '.github/workflows/integrate-payments-account-pwa.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      - name: Patch site entry points without duplicate loaders
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          branch=Path('index.html')
+          h=branch.read_text(encoding='utf-8')
+
+          head_tags=[
+            '<link rel="manifest" href="./manifest.webmanifest">',
+            '<link rel="apple-touch-icon" href="./apple-touch-icon.png">',
+            '<meta name="theme-color" content="#1f1712">',
+          ]
+          for tag in head_tags:
+            h=h.replace(tag+'\n','').replace(tag,'')
+          for tag in head_tags:
+            h=h.replace('</head>',tag+'\n</head>',1)
+
+          payment_scripts=[
+            'flutterwave-payments.js',
+            'flutterwave-payments-v2.js',
+            'session-compat.js',
+            'account-session-ui.js',
+            'support-session-fix.js',
+            'wishlist-account.js',
+          ]
+          for name in payment_scripts:
+            h=re.sub(rf'\s*<script[^>]+src=["\']{re.escape(name)}["\'][^>]*></script>','',h)
+
+          body_tags=[
+            '<script src="session-compat.js"></script>',
+            '<script src="account-session-ui.js"></script>',
+            '<script src="support-session-fix.js"></script>',
+            '<script src="wishlist-account.js"></script>',
+            '<script src="flutterwave-payments-v2.js"></script>',
+            "<script>if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));</script>",
+          ]
+          for tag in body_tags:
+            h=h.replace(tag+'\n','').replace(tag,'')
+          h=h.replace('</body>','\n'.join(body_tags)+'\n</body>',1)
+          branch.write_text(h,encoding='utf-8')
+
+      - name: Commit integration
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Normalize payment and account loaders [skip enhancement injector]'
+          git push origin HEAD:${GITHUB_REF_NAME}

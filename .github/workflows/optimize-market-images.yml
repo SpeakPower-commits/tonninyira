@@ -1,0 +1,76 @@
+name: Optimize Tonninyira market images
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - tn-performance-sprint
+    paths:
+      - 'assets/market/*.jpg'
+      - '.github/workflows/optimize-market-images.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout performance branch
+        uses: actions/checkout@v4
+        with:
+          ref: tn-performance-sprint
+          fetch-depth: 0
+
+      - name: Install Pillow
+        run: python -m pip install --upgrade pillow
+
+      - name: Generate optimized WebP market images and manifest
+        shell: python
+        run: |
+          from pathlib import Path
+          import json
+          from PIL import Image, UnidentifiedImageError
+
+          src_dir = Path('assets/market')
+          out_dir = src_dir / 'optimized'
+          out_dir.mkdir(parents=True, exist_ok=True)
+          entries = []
+
+          for src in sorted(src_dir.glob('*.jpg'), key=lambda p: int(p.stem) if p.stem.isdigit() else 9999):
+              # Ignore empty/placeholder files; real source photos are kept untouched.
+              if src.stat().st_size < 10_000:
+                  continue
+              try:
+                  with Image.open(src) as im:
+                      im = im.convert('RGB')
+                      im.thumbnail((1600, 1200), Image.Resampling.LANCZOS)
+                      out = out_dir / f'{src.stem}.webp'
+                      im.save(out, 'WEBP', quality=78, method=6)
+                      entries.append({
+                          'id': int(src.stem) if src.stem.isdigit() else src.stem,
+                          'src': f'assets/market/{src.name}',
+                          'webp': f'assets/market/optimized/{out.name}',
+                          'width': im.width,
+                          'height': im.height,
+                      })
+              except (UnidentifiedImageError, OSError):
+                  continue
+
+          (src_dir / 'manifest.json').write_text(json.dumps({
+              'version': 1,
+              'images': entries,
+          }, indent=2) + '\n', encoding='utf-8')
+
+      - name: Commit generated optimized assets
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/market/optimized assets/market/manifest.json
+          if git diff --cached --quiet; then
+            echo 'No optimized image changes.'
+            exit 0
+          fi
+          git commit -m 'Optimize market images for fast storefront loading [skip enhancement injector]'
+          git push origin HEAD:tn-performance-sprint

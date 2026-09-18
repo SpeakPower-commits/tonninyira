@@ -1,461 +1,174 @@
-# 🛒 Tonninyira Online App
-## Affordable E-Commerce & Fast Food Delivery for Kampala 🇺🇬
+<div align="center">
 
-![Tonninyira Banner](https://img.shields.io/badge/Tonninyira-v2.0--Production-orange?style=flat-square)
-![Status](https://img.shields.io/badge/Status-Production%20Ready-green?style=flat-square)
-![GitHub](https://img.shields.io/badge/GitHub-Public%20Repo-blue?style=flat-square)
-![Cloudflare](https://img.shields.io/badge/Hosted-Cloudflare%20Pages-orange?style=flat-square)
-![Supabase](https://img.shields.io/badge/Backend-Supabase-green?style=flat-square)
+<img src="logo-full-transparent.png" alt="Tonninyira — a market stall with three traders" width="200">
 
----
+### Discover locally. Order simply. Work transparently.
 
-## 📋 Table of Contents
+A local-first marketplace for Kampala's neighbourhood stalls. Browse without an account,
+pay with MTN or Airtel mobile money, and have it delivered by a verified rider.
 
-- [Features](#features)
-- [Quick Start](#quick-start)
-- [Product Categories](#products)
-- [Architecture](#architecture)
-- [Deployment](#deployment)
-- [Troubleshooting](#troubleshooting)
+<p>
+  <a href="https://github.com/SpeakPower-commits/tonninyira/tree/tonninyira-enhancements"><img src="https://img.shields.io/badge/branch-tonninyira--enhancements-E23F25?style=for-the-badge&logo=git&logoColor=white" alt="Active branch"></a>
+  <img src="https://img.shields.io/badge/frontend-HTML%20%2B%20vanilla%20JS-F5B400?style=for-the-badge&logo=javascript&logoColor=1C1410" alt="Frontend">
+  <img src="https://img.shields.io/badge/backend-Supabase-4C9A5B?style=for-the-badge&logo=supabase&logoColor=white" alt="Backend">
+  <img src="https://img.shields.io/badge/hosting-GitHub%20Pages-24292f?style=for-the-badge&logo=github&logoColor=white" alt="Hosting">
+  <img src="https://img.shields.io/badge/status-pre--launch-8a6100?style=for-the-badge" alt="Status">
+</p>
 
----
+<a href="https://speakpower-commits.github.io/tonninyira/index.html"><strong>Open the live marketplace →</strong></a>
 
-## ✨ Features
+</div>
 
-### 🏪 Three Product Categories
+<br>
 
-#### 1. **Local Markets** (1-3 km hyper-local)
-- Fresh produce, grains, oils
-- Budget-friendly portions
-- Prices: 2,500 - 7,000 UGX
-- Examples:
-  - Fresh Posho: 3,500 UGX
-  - Dry Beans: 6,000 UGX
-  - Cooking Oil: 5,000 UGX
+<img src="assets/market/optimized/2.webp" alt="A busy open-air produce market in Kampala, with traders under umbrellas selling fruit, vegetables and dried goods" width="100%">
 
-#### 2. **🍗 Fast Foods** (Ready-to-eat meals) ⭐ NEW!
-- Affordable street/restaurant food
-- **Starting from 2,000 UGX**
-- Quick meals for busy schedules
-- Complete menu includes:
-
-| Item | Price | Notes |
-|------|-------|-------|
-| 🌯 Rolex (Chapati Roll) | 2,000 UGX | Egg + veg wrapped |
-| 🍩 Mandazi Pack | 2,000 UGX | 6 sweet fried bread |
-| 🍞 Beans on Toast | 2,500 UGX | With toast |
-| 🥟 Samosa Pack | 2,500 UGX | 5 pieces |
-| 🥔 Ugali & Vegetables | 3,000 UGX | With sukuma wiki |
-| 🍲 Posho & Beans | 3,500 UGX | Ready-to-eat |
-| 🫓 Chapati & Curry | 3,500 UGX | 2 chapatis + sauce |
-| 🍚 Rice & Stew | 4,000 UGX | With meat/chicken |
-| 🍲 Chicken Soup | 4,500 UGX | With rice or posho |
-| 🍗 Fried Chicken | 5,000 UGX | 5-6 crispy pieces |
-| 🍢 Beef Skewers | 5,500 UGX | 3-4 grilled sticks |
-| 🍌 Matoke & Fish | 6,000 UGX | Steamed plantain |
-
-#### 3. **Central Hubs** (Cross-city / Owino markets)
-- Second-hand essentials (mitumba)
-- Bulk items
-- Prices: 7,000 - 15,000 UGX
-
-### 💰 Smart Cost Transparency
-- Compares **Physical Trip Cost** vs **Tonninyira Cost**
-- Shows automatic **Net Savings** calculation
-- Dynamic savings based on delivery area
-- Considers real taxi fares
-
-Example:
-```
-🍗 Fried Chicken (5,000 UGX) + Taxi Round-trip (5,000 UGX) = 10,000
-vs
-Tonninyira: Chicken (5,000) + Delivery (1,000) = 6,000
-💰 You Save: 4,000 UGX!
-```
-
-### 📊 Platform Revenue Transparency
-- Shows how Tonninyira earns (3% vendor + 15% delivery)
-- Visual profit margin breakdown
-- Lean model (3-8% margin) keeps prices low
-- Sustainable via high-volume model
-
-### 🚚 Smart Delivery System
-- **Hyper-local delivery**: 1,000 - 1,500 UGX
-- **Cross-city delivery**: 3,000 - 5,000 UGX
-- **Express option**: +2,000 UGX (faster)
-- Real-time fee updates by area
-
-### 👤 User Authentication
-- Phone number signup
-- Email authentication via Supabase
-- Secure OTP-based login
-- Order history tracking
-
-### 💳 Payment Methods
-- ✅ MTN MoMo (Uganda's #1 mobile money)
-- ✅ Airtel Money
-- ✅ Cash on Delivery
-
-### 📦 Order Management
-- Order ID generation
-- Order saved to Supabase database
-- Customer email notifications
-- Order status tracking
+<div align="center"><sub>The businesses Tonninyira brings online — open-air produce traders in Kampala.</sub></div>
 
 ---
 
-## 🚀 Quick Start
+## What is Tonninyira?
 
-### Option 1: Deploy to Cloudflare Pages (Recommended)
+People should be able to find a good local stall without signing up first. The platform should
+only ask for an account when real money or private customer data is involved.
 
-```bash
-# 1. Push to GitHub
-git push origin main
+That gives one straight path: **browse → choose → basket → verify → pay → track**. Discovery is
+public; everything transactional sits behind a verified account.
 
-# 2. Create Cloudflare Pages project
-# Visit: https://pages.cloudflare.com/
-# Connect GitHub repository
-# Add environment variables
+| Area | What you find there |
+| --- | --- |
+| **Eats** | Meals, snacks and ready-to-eat food from local stalls and food businesses. |
+| **Shop** | Groceries, raw foods, second-hand goods and everyday household items. |
 
-# Your app will be live at: https://tonninyira.pages.dev ✨
-```
+---
 
-### Option 2: Local Testing
+## How ordering works
 
-```bash
-# Start a local server
-python -m http.server 8000
-
-# Open browser
-http://localhost:8000
-```
-
-### Option 3: GitHub Pages
-
-```bash
-# Push to GitHub
-git push origin main
-
-# Your app will be at: https://USERNAME.github.io/tonninyira/
+```mermaid
+flowchart LR
+  A["Browse<br/>no account needed"] --> B["Add to basket"]
+  B --> C{"Verify identity"}
+  C -->|"Phone OTP or email"| D["Pay<br/>MTN / Airtel"]
+  D --> E["Track delivery"]
+  style A fill:#F5B400,stroke:#1C1410,color:#1C1410
+  style D fill:#E23F25,stroke:#1C1410,color:#ffffff
+  style E fill:#4C9A5B,stroke:#1C1410,color:#ffffff
 ```
 
 ---
 
-## <a name="products"></a>🛍️ Complete Product Catalog
+## How a stall joins
 
-### Local Markets (🏪)
+Every vendor creates an account, submits an application with their trading credentials, and
+waits for review. Nothing reaches the storefront unapproved.
 
-**Staple Foods:**
-- Fresh Posho (1kg) - 3,500 UGX
-- Dry Beans (2kg) - 6,000 UGX
-- Maize Flour (2kg) - 4,500 UGX
+```mermaid
+flowchart LR
+  A["Create account<br/>phone OTP"] --> B["Submit application<br/>KCCA · URA · UNBS"]
+  B --> C["Status: pending"]
+  C --> D{"Admin review"}
+  D -->|"Approve"| E["Live on the storefront"]
+  D -->|"Reject"| F["Not published"]
+  style C fill:#F5B400,stroke:#1C1410,color:#1C1410
+  style E fill:#4C9A5B,stroke:#1C1410,color:#ffffff
+  style F fill:#9C897A,stroke:#1C1410,color:#ffffff
+```
 
-**Produce & Essentials:**
-- Fresh Tomatoes (heap) - 4,000 UGX
-- Onions Bunch (5-6) - 2,500 UGX
-- Cooking Oil (1L) - 5,000 UGX
-- Sugar (500g) - 3,000 UGX
-- Eggs (15 pieces) - 7,000 UGX
-
-### Fast Foods (🍗) ⭐ NEW CATEGORY!
-
-**Ultra-Affordable (2,000-2,500):**
-- Rolex - 2,000 UGX
-- Mandazi Pack - 2,000 UGX
-- Beans on Toast - 2,500 UGX
-- Samosa Pack - 2,500 UGX
-
-**Budget Meals (3,000-3,500):**
-- Ugali & Vegetables - 3,000 UGX
-- Posho & Beans - 3,500 UGX
-- Chapati & Curry - 3,500 UGX
-
-**Hearty Meals (4,000-6,000):**
-- Rice & Stew - 4,000 UGX
-- Chicken Soup - 4,500 UGX
-- Fried Chicken (5-6 pcs) - 5,000 UGX
-- Beef Skewers (3-4) - 5,500 UGX
-- Matoke & Fish - 6,000 UGX
-
-### Central Hubs (🏬)
-
-**Clothing (Mitumba):**
-- Grade-A Jacket - 8,000 UGX
-- Denim Jeans - 7,500 UGX
-- T-Shirt Bundle (3) - 9,000 UGX
-- Sweater/Pullover - 7,000 UGX
-- Sports Shoes - 10,000 UGX
-- Casual Shoes - 8,500 UGX
-
-**Home Items:**
-- Bed Sheet Set - 12,000 UGX
-- Kitchen Utensils Bundle - 15,000 UGX
+> [!IMPORTANT]
+> **The gate is enforced in the database, not the interface.** A row-level security policy lets
+> an applicant create only their own record, and only in a `pending` state — so a vendor cannot
+> approve themselves even by calling the API directly. `vendors_public` serves approved rows
+> only, so an unreviewed stall is invisible to shoppers.
 
 ---
 
-## <a name="architecture"></a>🏗️ Technical Architecture
+## Architecture
 
-### Stack
-
-```
-Frontend: HTML5 + Vanilla JavaScript + Tailwind CSS
-Backend: Supabase (PostgreSQL + Auth + Realtime)
-Hosting: Cloudflare Pages (free, global CDN)
-Version Control: GitHub
-```
-
-### File Structure
-
-```
-tonninyira/
-├── index.html           # Main UI (no framework bloat!)
-├── app.js               # State management + Supabase
-├── style.css            # Animations & mobile styling
-├── README.md            # This file
-├── SETUP_GUIDE.md       # Deployment instructions
-├── .env.example         # Environment template
-├── .gitignore           # Git ignore rules
-└── .github/
-    └── workflows/
-        └── deploy.yml   # GitHub Actions → Cloudflare
+```mermaid
+flowchart TB
+  B["Browser<br/>HTML · CSS · vanilla JS"] --> P["GitHub Pages<br/>static delivery"]
+  B --> S["Supabase"]
+  S --> AU["Auth<br/>phone OTP / email"]
+  S --> DB[("PostgreSQL<br/>+ row-level security")]
+  S --> EF["Edge Functions"]
+  EF --> FW["Flutterwave<br/>mobile money"]
+  style B fill:#F5B400,stroke:#1C1410,color:#1C1410
+  style S fill:#4C9A5B,stroke:#1C1410,color:#ffffff
+  style FW fill:#E23F25,stroke:#1C1410,color:#ffffff
 ```
 
-### Performance
-
-- **Bundle Size**: ~45KB total (HTML + CSS + JS)
-- **Load Time**: <1 second on 3G
-- **Mobile Optimization**: Touch-first, low bandwidth
-- **Zero Dependencies**: No npm required
-- **Accessibility**: WCAG 2.1 compliant
-
-### Browser Support
-
-✅ Chrome/Edge (Android & Desktop)
-✅ Firefox
-✅ Safari (iOS & Desktop)
-✅ Opera
-✅ UC Browser (budget Android phones)
-✅ All ES6+ supporting browsers
+| Layer | Choice | Why |
+| --- | --- | --- |
+| Frontend | Vanilla JS | No framework weight — it has to stay fast on an ordinary Android phone and a thin connection. |
+| Backend | Supabase | Auth, PostgreSQL, row-level security and serverless functions in one platform. |
+| Hosting | GitHub Pages | Static delivery straight from the repository, no build step. |
+| Payments | Flutterwave | MTN and Airtel mobile money, the way Uganda actually pays. |
 
 ---
 
-## <a name="deployment"></a>🌐 Deployment Options
+## Marketplace economics
 
-### 1. Cloudflare Pages (Recommended) ⭐
+Partners are shown what they earned, what Tonninyira took, and what they are owed — as three
+separate figures, never one net number.
 
-**Pros:**
-- Free tier (unlimited bandwidth)
-- Global CDN (fast everywhere)
-- Auto-deploy from GitHub
-- Custom domain support
-- Auto HTTPS
-
-**Steps:**
-```bash
-git push origin main
-# → Auto-deploys to https://tonninyira.pages.dev
-```
-
-### 2. GitHub Pages
-
-**Pros:**
-- Free with GitHub
-- Easy setup
-- Good for personal projects
-
-**URL:** `https://USERNAME.github.io/tonninyira/`
-
-### 3. Netlify
-
-**Pros:**
-- Free tier
-- Drag & drop deploy
-- Serverless functions support
-
-**Steps:**
-```bash
-# Drag folder to netlify.com
-# → Auto-deployed in 30 seconds
+```mermaid
+flowchart LR
+  A["Order value"] --> B["Partner gross earnings"]
+  B --> C["Tonninyira platform share<br/>5%"]
+  B --> D["Partner net payout"]
+  style C fill:#E23F25,stroke:#1C1410,color:#ffffff
+  style D fill:#4C9A5B,stroke:#1C1410,color:#ffffff
 ```
 
 ---
 
-## <a name="troubleshooting"></a>🔧 Troubleshooting
+## Project status
 
-### ❌ "I only see README.md on GitHub"
+Built and deployed; not yet exercised end to end. Stated plainly so nobody tests against the
+wrong expectation.
 
-**Solution**: Ensure `index.html` is in the **root** directory, not a subfolder.
-
-```bash
-# Check file location
-ls -la | grep index.html
-# Should show: index.html (in root, not in subfolder)
-```
-
-### ❌ "App works locally but not on Cloudflare"
-
-**Solution**: Check environment variables
-
-```bash
-# Verify .env file exists locally
-cat .env
-# Should show SUPABASE_URL and SUPABASE_ANON_KEY
-
-# In Cloudflare: Settings → Environment Variables → Staging
-# Add same variables
-```
-
-### ❌ "Supabase connection fails"
-
-**Solution**: Verify API credentials
-
-```javascript
-// Open browser console (F12)
-// Check for errors like:
-// "Failed to fetch from Supabase"
-// → Check SUPABASE_URL format (must end with .co)
-// → Check SUPABASE_ANON_KEY is correct (>200 chars)
-```
-
-### ❌ "Orders not saving"
-
-**Solution**: Check Supabase tables exist
-
-```bash
-# Go to Supabase Dashboard → SQL Editor
-# Run: SELECT * FROM orders;
-# If table doesn't exist, follow SETUP_GUIDE.md
-```
+| Area | State |
+| --- | --- |
+| Storefront and public browsing | ✅ Live |
+| Accounts, phone OTP and email sign-in | ✅ Live |
+| Vendor / rider sign-up and approval queue | ✅ Live |
+| Admin command centre | ✅ Live |
+| Mobile-money payments | ⏳ Built, not yet tested end to end |
+| Rider dispatch and delivery tracking | ⏳ Built, not yet tested end to end |
 
 ---
 
-## 📚 Documentation
+## Roadmap
 
-| Document | Purpose |
-|----------|---------|
-| **README.md** | This file - features & overview |
-| **SETUP_GUIDE.md** | Step-by-step deployment instructions |
-| **app.js** | Code with comments explaining Supabase integration |
-| **.env.example** | Environment variables template |
+**Near term**
+- End-to-end mobile-money verification against the Flutterwave sandbox
+- Vendor and rider notification centre
+- Customer order tracking through each fulfilment stage
 
----
+**Next**
+- Map-based location selection and road-aware delivery routing
+- Partner performance dashboards
+- Repeat-purchase recommendations
 
-## 🎯 Why Tonninyira?
-
-### Problem:
-Low-income earners in Kampala waste time & money:
-- Round-trip taxi to market: 5,000+ UGX
-- Time away from work/family: 1-2 hours
-- Limited after-hours access
-- No reliable fast food options
-
-### Solution:
-**Tonninyira** delivers at your door:
-- ✅ Saves taxi fare
-- ✅ Saves time
-- ✅ 24/7 fast food access
-- ✅ Transparent pricing
-- ✅ Lean model (no markup)
-
-### Impact:
-- 10,000+ orders/month
-- UGX 50M+ customer savings annually
-- 500+ delivery jobs created
-- 200+ vendors supported
+**Longer term**
+- Demand heatmaps and delivery-zone planning from real order geography
+- Unit-economics modelling per stall, per neighbourhood
 
 ---
 
-## 🔐 Security
+## Documentation
 
-- ✅ Supabase Row-Level Security (RLS)
-- ✅ OTP-based authentication
-- ✅ No passwords stored
-- ✅ HTTPS-only
-- ✅ GDPR-compliant
-
----
-
-## 📞 Support & Contact
-
-- 📧 **Email**: support@tonninyira.ug
-- 💬 **Slack**: [@tonninyira](https://slack.com)
-- 🐛 **Issues**: GitHub Issues
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — data model, authentication and
+  authorization, wishlist design, analytics event model, security notes, repository layout
+  and local development.
+- **[Live site](https://speakpower-commits.github.io/tonninyira/index.html)** — the running marketplace.
 
 ---
 
-## 🤝 Contributing
+<div align="center">
 
-We welcome contributions! Please:
+**Built for local commerce. Designed to scale with evidence.**
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Tonninyira · Kampala, Uganda
 
----
-
-## 📄 License
-
-This project is open-source under the MIT License.
-
----
-
-## 🙏 Acknowledgments
-
-- Built with ❤️ for Kampala's budget-conscious users
-- Inspired by real market-goers struggling with taxi costs
-- Powered by free tools: Supabase, Cloudflare, GitHub
-
----
-
-## 🎉 Quick Links
-
-- 🌐 **Live App**: https://tonninyira.pages.dev
-- 📝 **Setup Guide**: See SETUP_GUIDE.md
-- 💻 **GitHub**: https://github.com/USERNAME/tonninyira
-- 🔐 **Supabase**: https://supabase.com
-- ☁️ **Cloudflare**: https://pages.cloudflare.com
-
----
-
-## ✅ Feature Checklist
-
-- [x] Three product categories (Markets, Fast Food, Central Hubs)
-- [x] Cost transparency & savings calculator
-- [x] Smart delivery fee system
-- [x] User authentication (Supabase)
-- [x] Order management & history
-- [x] Revenue transparency modal
-- [x] Multiple payment methods
-- [x] Mobile-first responsive design
-- [x] GitHub + Cloudflare deployment
-- [x] Fast Foods from 2,000 UGX
-- [ ] Real payment gateway (next phase)
-- [ ] Real-time order tracking (next phase)
-- [ ] Vendor dashboard (next phase)
-
----
-
-## 🚀 Roadmap
-
-### Phase 2 (Q4 2026)
-- ✅ Real payment integration (MTN API)
-- ✅ Order tracking with GPS
-- ✅ Customer reviews & ratings
-
-### Phase 3 (Q1 2027)
-- ✅ Vendor management dashboard
-- ✅ Analytics & business intelligence
-- ✅ Multi-language support (Luganda)
-
-### Phase 4 (Q2 2027)
-- ✅ Desktop admin panel
-- ✅ SMS order notifications
-- ✅ Scheduled delivery orders
-
----
-
-**Tonninyira: Making affordable living accessible. One delivery at a time. 🚴‍♂️**
-
-Made with 💚 🧡 for Uganda 🇺🇬
+</div>

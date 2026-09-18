@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tonninyira Admin Control Tower</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Work+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+:root{--ink:#1c1410;--card:#2a1f19;--card2:#33261c;--red:#e23f25;--gold:#f5b400;--green:#4c9a5b;--sand:#f3e8d8;--muted:#9c897a;--line:rgba(243,232,216,.1)}
+*{box-sizing:border-box}body{margin:0;background:var(--ink);color:var(--sand);font:14px/1.6 'Work Sans',sans-serif}.display{font-family:'Alfa Slab One',serif}.top{position:sticky;top:0;z-index:20;background:rgba(28,20,16,.98);border-bottom:1px solid var(--line)}.top-in{max-width:1450px;margin:auto;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:14px}.brand{display:flex;gap:10px;align-items:center}.brand img{width:42px;height:42px}.eyebrow{font-size:9px;letter-spacing:1.5px;color:var(--gold);font-weight:900}.brand h1{margin:2px 0 0;font-size:18px}.session{display:flex;gap:10px;align-items:center}.who{font-size:11px;color:#9de1a8;font-weight:800}.top-link,.signout,.refresh,.nav{font:800 11px 'Work Sans',sans-serif;cursor:pointer}.top-link,.signout{padding:7px 10px;border-radius:8px;text-decoration:none}.top-link{border:1px solid var(--line);color:var(--gold);background:transparent}.signout{border:1px solid rgba(226,63,37,.45);color:#ffb0a5;background:transparent}.layout{max-width:1450px;margin:auto;display:grid;grid-template-columns:270px minmax(0,1fr);gap:16px;padding:14px}.rail{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:12px;height:calc(100vh - 104px);min-height:620px;position:sticky;top:90px;overflow:auto;box-shadow:0 12px 30px rgba(0,0,0,.12)}.rail-title{padding:8px 10px 9px;color:var(--gold);font-size:9px;letter-spacing:1.3px;font-weight:900}.nav{width:100%;display:flex;align-items:center;gap:11px;text-align:left;border:0;background:transparent;color:var(--muted);padding:12px 12px;border-radius:10px;min-height:44px;transition:background .15s ease,color .15s ease,transform .15s ease}.nav:hover,.nav.active{background:var(--card2);color:var(--sand)}.nav.active{box-shadow:inset 3px 0 0 var(--gold)}.nav:hover{transform:translateX(2px)}.nav-icon{width:22px;height:22px;display:grid;place-items:center;flex:0 0 22px;color:currentColor}.nav-icon svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.nav-label{flex:1}.divider{height:1px;background:var(--line);margin:8px 4px}.main{min-width:0}.head{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-bottom:12px}.head h2{margin:0;font-size:24px}.head p{margin:4px 0 0;color:var(--muted);font-size:12px}.refresh{padding:8px 11px;border:1px solid rgba(245,180,0,.25);background:rgba(245,180,0,.08);color:var(--gold);border-radius:8px}.status{margin-bottom:12px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--muted);font-size:11px}.status.error{border-color:rgba(226,63,37,.3);background:rgba(226,63,37,.08);color:#ffb0a5}.cards{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.metric{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}.metric small{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.7px;font-weight:900}.metric strong{display:block;margin-top:4px;font-size:20px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px;overflow:auto}.panel h3{margin:0 0 8px;font-size:13px}table{width:100%;border-collapse:collapse;min-width:680px}th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left;font-size:11px;vertical-align:top}th{background:var(--card2);color:var(--gold);font-size:9px;text-transform:uppercase}.pill{display:inline-block;padding:3px 7px;border-radius:99px;background:var(--card2);color:var(--muted);font-size:9px;font-weight:900;text-transform:uppercase}.ok{background:rgba(76,154,91,.14);color:#9de1a8}.warn{background:rgba(245,180,0,.12);color:#ffd86d}.bad{background:rgba(226,63,37,.12);color:#ff9d8e}.empty{padding:30px;text-align:center;color:var(--muted)}.error-box{padding:15px;border-radius:12px;border:1px solid rgba(226,63,37,.25);background:rgba(226,63,37,.08);color:#ffb0a5}.mobile-nav{display:none}
+@media(max-width:1050px){.layout{grid-template-columns:1fr}.rail{position:static;height:auto;min-height:0;display:flex;flex-wrap:wrap;gap:4px}.rail-title,.divider{display:none}.nav{width:auto;white-space:nowrap}.nav-icon{width:20px;flex-basis:20px}.cards{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:650px){.top-in{padding:10px}.session .who{display:none}.layout{padding:9px}.mobile-nav{display:block}.cards{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.head{align-items:flex-start}.rail{border-radius:12px;padding:8px}.nav{padding:10px 9px;min-height:42px;gap:8px}.nav-label{font-size:10px}}
+</style>
+<script src="admin-session-fix.js"></script>
+</head>
+<body>
+<header class="top"><div class="top-in"><div class="brand"><img src="assets/tonninyira-mark.svg" alt="Tonninyira"><div><div class="eyebrow">ADMIN CONTROL TOWER</div><h1 class="display">TONNINYIRA COMMAND CENTRE</h1></div></div><div class="session"><span class="who" id="who">Checking access…</span><a class="top-link" href="admin-user-guide.html">User Guide</a><button class="signout" id="signout" type="button">Sign out</button></div></div></header>
+<div class="layout" id="page">
+<aside class="rail" id="nav"></aside>
+<main class="main">
+<div class="head"><div><h2 class="display" id="title">Overview</h2><p id="subtitle">Live marketplace operating picture.</p></div><button class="refresh" id="refresh" type="button">Refresh</button></div>
+<div class="status" id="status">Loading command centre…</div>
+<div id="app"><div class="empty">Preparing marketplace data…</div></div>
+</main>
+</div>
+<script>
+(function(){
+  'use strict';
+  const NAV=[
+    ['Overview','overview','dashboard'],
+    ['Operations','operations','orders'],
+    ['Customers','customers','users'],
+    ['Vendors & riders','partners','partners'],
+    ['Payments & payouts','finance','payments'],
+    ['Support','support','support'],
+    ['Approvals & trust','trust','shield'],
+    ['Growth & analytics','growth','chart'],
+    ['System data','system','database']
+  ];
+  const ICONS={
+    dashboard:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>',
+    orders:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18H6z"></path><path d="M9 7h6M9 11h6M9 15h4"></path><path d="M4 7h2M18 7h2"></path></svg>',
+    users:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"></circle><path d="M3.5 19a5.5 5.5 0 0 1 11 0"></path><circle cx="17" cy="9" r="2.2"></circle><path d="M15 15.5a4.2 4.2 0 0 1 5.5 3.5"></path></svg>',
+    partners:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v11H4z"></path><path d="M7 7V5h10v2M8 12h8M12 10v4"></path></svg>',
+    payments:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="M3 9h18M7 14h4"></path></svg>',
+    support:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"></path><path d="M8 9h8M8 12h5"></path></svg>',
+    shield:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v5c0 5-3.2 8-8 10-4.8-2-8-5-8-10V6z"></path><path d="M9 12l2 2 4-4"></path></svg>',
+    chart:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16"></path><path d="M7 15l4-4 3 2 5-6"></path></svg>',
+    database:'<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="7" ry="3"></ellipse><path d="M5 5v7c0 1.7 3.1 3 7 3s7-1.3 7-3V5M5 12v7c0 1.7 3.1 3 7 3s7-1.3 7-3v-7"></path></svg>'
+  };
+  const client=()=>window.tnAdminClient?.();
+  const esc=v=>String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
+  const money=v=>new Intl.NumberFormat('en-UG').format(Math.round(Number(v||0)))+' UGX';
+  const pill=v=>{const s=String(v??'—'),k=s.toLowerCase();let c='';if(['approved','paid','completed','success','ready'].includes(k))c='ok';else if(['pending','requested','processing','accepted','new','preparing'].includes(k))c='warn';else if(['failed','cancelled','rejected'].includes(k))c='bad';return '<span class="pill '+c+'">'+esc(s)+'</span>'};
+  const app=document.getElementById('app'),title=document.getElementById('title'),subtitle=document.getElementById('subtitle'),status=document.getElementById('status'),who=document.getElementById('who');
+  let current=new URLSearchParams(location.search).get('view')||'overview';
+  const nav=document.getElementById('nav');
+  nav.innerHTML='<div class="rail-title">WORKSPACE</div>'+NAV.map(([label,key,icon])=>'<button type="button" class="nav '+(key===current?'active':'')+'" data-view="'+key+'" aria-label="'+esc(label)+'"><span class="nav-icon" aria-hidden="true">'+ICONS[icon]+'</span><span class="nav-label">'+esc(label)+'</span></button>').join('');
+  nav.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{current=b.dataset.view;history.replaceState(null,'','?view='+encodeURIComponent(current));nav.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x===b));load(current)}));
+  function setHead(t,s){title.textContent=t;subtitle.textContent=s}
+  function table(rows,cols){if(!rows.length)return '<div class="empty">No records found.</div>';return '<table><thead><tr>'+cols.map(c=>'<th>'+c.label+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+cols.map(c=>'<td>'+ (c.render?c.render(r):esc(r[c.key])) +'</td>').join('')+'</tr>').join('')+'</tbody></table>'}
+  async function rows(tableName,columns='*',limit=500){const r=await client().from(tableName).select(columns).limit(limit);if(r.error)throw r.error;return r.data||[]}
+  async function overview(){setHead('Overview','Live marketplace operating picture.');const [o,p,v,r,pay,po,e]=await Promise.all([rows('orders'),rows('profiles','id,role,created_at'),rows('vendors'),rows('riders'),rows('payment_transactions'),rows('partner_payouts'),rows('market_events')]);const gmv=o.reduce((a,x)=>a+Number(x.total||0),0),fees=o.reduce((a,x)=>a+Number(x.platform_fee||0)+Number(x.rider_platform_fee||0),0),done=o.filter(x=>String(x.status).toLowerCase()==='completed').length,openPay=pay.filter(x=>['pending','failed'].includes(String(x.status).toLowerCase())).length,pending=v.filter(x=>x.approval_status==='pending').length+r.filter(x=>x.approval_status==='pending').length,requested=po.filter(x=>x.status==='requested').length;app.innerHTML='<div class="cards">'+[['GMV',money(gmv)],['Platform fees',money(fees)],['Orders',o.length],['Completed',done],['Customers',p.filter(x=>x.role==='customer').length],['Attention',pending+requested+openPay]].map(x=>'<div class="metric"><small>'+x[0]+'</small><strong>'+x[1]+'</strong></div>').join('')+'</div><div class="grid"><div class="panel"><h3>Operational queues</h3>'+table([{m:'Pending partner approvals',n:pending},{m:'Payment exceptions',n:openPay},{m:'Payout requests',n:requested}],[{label:'Queue',key:'m'},{label:'Count',key:'n'}])+'</div><div class="panel"><h3>Recent marketplace events</h3>'+table(e.slice(0,100),[{label:'Type',key:'event_type'},{label:'Status',key:'status'},{label:'Reference',key:'reference'},{label:'Created',key:'created_at'}])+'</div></div>'}
+  async function operations(){setHead('Operations','Orders, fulfilment, payment state and rider assignment.');const o=await rows('orders');app.innerHTML='<div class="panel">'+table(o,[{label:'Order',key:'order_id'},{label:'Customer',key:'customer_name'},{label:'Vendor',key:'vendor_name'},{label:'Area',render:r=>esc(r.customer_area||r.delivery_area)},{label:'Total',render:r=>money(r.total)},{label:'Payment',render:r=>pill(r.payment_status)},{label:'Status',render:r=>pill(r.status)},{label:'Rider',key:'rider_tid'},{label:'Created',key:'created_at'}])+'</div>'}
+  async function customers(){setHead('Customers','Customer activity, orders, saved intent and loyalty.');const [p,o,w,l]=await Promise.all([rows('profiles','id,role,display_name,phone,created_at'),rows('orders','user_id,total,created_at'),rows('wishlists'),rows('loyalty_accounts')]);const count={};o.forEach(x=>{if(x.user_id)count[x.user_id]=(count[x.user_id]||0)+1});const wl={};w.forEach(x=>{if(x.user_id)wl[x.user_id]=(wl[x.user_id]||0)+1});const pts={};l.forEach(x=>{if(x.user_id)pts[x.user_id]=x.points||0});app.innerHTML='<div class="panel">'+table(p.filter(x=>x.role==='customer'),[{label:'Name',key:'display_name'},{label:'Phone',key:'phone'},{label:'Orders',render:r=>count[r.id]||0},{label:'Wishlist',render:r=>wl[r.id]||0},{label:'Points',render:r=>pts[r.id]||0},{label:'Joined',key:'created_at'}])+'</div>'}
+  async function partners(){setHead('Vendors & riders','Partner onboarding, approval and payout queues.');const [v,r,p]=await Promise.all([rows('vendors'),rows('riders'),rows('partner_payouts')]);app.innerHTML='<div class="panel"><h3>Vendors</h3>'+table(v,[{label:'Business',key:'business_name'},{label:'TID',key:'tonninyira_id'},{label:'Location',key:'location'},{label:'Category',key:'category'},{label:'Approval',render:r=>pill(r.approval_status)},{label:'Owner',key:'owner_name'},{label:'Phone',key:'phone'}])+'</div><div class="panel" style="margin-top:10px"><h3>Riders</h3>'+table(r,[{label:'Name',key:'full_name'},{label:'TID',key:'tonninyira_id'},{label:'Vehicle',key:'vehicle_type'},{label:'Plate',key:'plate_number'},{label:'Approval',render:r=>pill(r.approval_status)}])+'</div><div class="panel" style="margin-top:10px"><h3>Payout queue</h3>'+table(p,[{label:'Type',key:'partner_type'},{label:'Amount',render:r=>money(r.amount)},{label:'Method',key:'method'},{label:'Status',render:r=>pill(r.status)},{label:'Reference',key:'reference'}])+'</div>'}
+  async function finance(){setHead('Payments & payouts','Payment reconciliation, settlement and partner cash-out.');const [p,s]=await Promise.all([rows('payment_transactions'),rows('platform_settlements')]);app.innerHTML='<div class="panel"><h3>Payment transactions</h3>'+table(p,[{label:'Order',key:'order_id'},{label:'Provider',key:'provider'},{label:'Network',key:'network'},{label:'Amount',render:r=>money(r.amount)},{label:'Status',render:r=>pill(r.status)},{label:'TX ref',key:'tx_ref'},{label:'Verified',key:'verified_at'}])+'</div><div class="panel" style="margin-top:10px"><h3>Platform settlements</h3>'+table(s,[{label:'Vendor',key:'vendor_id'},{label:'Rider',key:'rider_tid'},{label:'Gross',render:r=>money(r.gross_amount)},{label:'Platform fee',render:r=>money(r.platform_fee)},{label:'Vendor net',render:r=>money(r.vendor_amount)},{label:'Rider net',render:r=>money(r.rider_amount)},{label:'Status',render:r=>pill(r.status)}])+'</div>'}
+  async function support(){setHead('Support','Customer service conversations and recent messages.');const [c,m]=await Promise.all([rows('support_conversations'),rows('support_messages')]);app.innerHTML='<div class="panel"><h3>Conversations</h3>'+table(c,[{label:'ID',key:'id'},{label:'Customer',key:'customer_id'},{label:'Status',render:r=>pill(r.status)},{label:'Updated',render:r=>r.updated_at||r.created_at||'—'}])+'</div><div class="panel" style="margin-top:10px"><h3>Recent messages</h3>'+table(m.slice(-250).reverse(),[{label:'Conversation',key:'conversation_id'},{label:'Sender',key:'sender_user_id'},{label:'Message',key:'body'},{label:'Time',key:'created_at'}])+'</div>'}
+  async function trust(){setHead('Approvals & trust','Identity, partner approvals and trust signals.');const [v,r,rev]=await Promise.all([rows('vendors'),rows('riders'),rows('reviews')]);app.innerHTML='<div class="grid"><div class="panel"><h3>Vendor approvals</h3>'+table(v,[{label:'Business',key:'business_name'},{label:'TID',key:'tonninyira_id'},{label:'Approval',render:x=>pill(x.approval_status)},{label:'Decision',render:x=>approvalActions('vendor',x)}])+'</div><div class="panel"><h3>Rider approvals</h3>'+table(r,[{label:'Name',key:'full_name'},{label:'TID',key:'tonninyira_id'},{label:'Approval',render:x=>pill(x.approval_status)},{label:'Decision',render:x=>approvalActions('rider',x)}])+'</div></div><div class="panel" style="margin-top:10px"><h3>Reviews</h3>'+table(rev.slice(-250).reverse(),[{label:'Rating',key:'rating'},{label:'Comment',key:'comment'},{label:'Created',key:'created_at'}])+'</div>'}
+  async function growth(){setHead('Growth & analytics','Demand, customer activity and marketplace movement.');const [o,p,e]=await Promise.all([rows('orders'),rows('profiles','id,role,created_at'),rows('market_events')]);const days={};o.forEach(x=>{const d=String(x.created_at||'').slice(0,10)||'Unknown';days[d]=(days[d]||0)+1});const series=Object.entries(days).sort((a,b)=>a[0].localeCompare(b[0])).slice(-14);app.innerHTML='<div class="grid"><div class="panel"><h3>Orders by day</h3>'+table(series.map(x=>({day:x[0],orders:x[1]})),[{label:'Date',key:'day'},{label:'Orders',key:'orders'}])+'</div><div class="panel"><h3>Audience & activity</h3>'+table([{m:'Customers',n:p.filter(x=>x.role==='customer').length},{m:'Total orders',n:o.length},{m:'Completed orders',n:o.filter(x=>String(x.status).toLowerCase()==='completed').length},{m:'Marketplace events',n:e.length}],[{label:'Metric',key:'m'},{label:'Value',key:'n'}])+'</div></div>'}
+  async function system(){setHead('System data','Operational records and configuration signals.');const [events,admins,guides]=await Promise.all([rows('market_events'),rows('admin_users'),rows('admin_guides','slug,title,updated_at')]);app.innerHTML='<div class="grid"><div class="panel"><h3>Recent events</h3>'+table(events.slice(-200).reverse(),[{label:'Type',key:'event_type'},{label:'Status',key:'status'},{label:'Reference',key:'reference'},{label:'Created',key:'created_at'}])+'</div><div class="panel"><h3>Admin access registry</h3>'+table(admins,[{label:'User ID',key:'user_id'},{label:'Role',key:'role'},{label:'Active',key:'is_active'}])+'</div></div><div class="panel" style="margin-top:10px"><h3>Protected guides</h3>'+table(guides,[{label:'Slug',key:'slug'},{label:'Title',key:'title'},{label:'Updated',key:'updated_at'}])+'</div>'}
+  /* Approval is the control that publishes a partner: vendors_public and
+     riders_public both serve approval_status='approved' only, so nothing
+     reaches the storefront until someone acts here. These tables were
+     render-only before, which left the queue visible but inert.
+     Note the two tables key differently -- vendors on tonninyira_id (text),
+     riders on id (bigint) -- so the key column travels with the config. */
+  const APPROVALS={vendor:{table:'vendors',key:'tonninyira_id'},rider:{table:'riders',key:'id'}};
+  function approvalActions(kind,row){
+    const cfg=APPROVALS[kind],id=row[cfg.key],state=String(row.approval_status??'').toLowerCase();
+    if(id===null||id===undefined||id==='')return '<span class="muted">—</span>';
+    const btn=(to,bg,fg,text)=>'<button type="button" class="tn-approve" data-kind="'+esc(kind)+'" data-id="'+esc(id)+'" data-to="'+esc(to)+'" style="border:0;border-radius:8px;padding:6px 10px;margin-right:6px;font-size:.72rem;font-weight:800;cursor:pointer;background:'+bg+';color:'+fg+'">'+text+'</button>';
+    return (state==='approved'?'':btn('approved','#4C9A5B','#FFFFFF','Approve'))+(state==='rejected'?'':btn('rejected','#E23F25','#FFFFFF','Reject'));
+  }
+  async function decideApproval(kind,id,to){
+    const cfg=APPROVALS[kind];
+    if(!cfg)throw Error('Unknown approval type.');
+    if(!['approved','rejected'].includes(to))throw Error('Unknown approval state.');
+    const r=await client().from(cfg.table).update({approval_status:to}).eq(cfg.key,id);
+    if(r.error)throw r.error;
+  }
+  /* Delegated, because every view rewrites app.innerHTML wholesale. */
+  app.addEventListener('click',async e=>{
+    const b=e.target.closest('.tn-approve');
+    if(!b)return;
+    const restore=b.innerHTML;
+    b.disabled=true;b.textContent='Saving…';
+    try{
+      await decideApproval(b.dataset.kind,b.dataset.id,b.dataset.to);
+      await load(current);
+    }catch(err){
+      b.disabled=false;b.innerHTML=restore;
+      status.className='status error';
+      status.textContent='Could not update approval: '+String(err?.message||err);
+    }
+  });
+
+  const V={overview,operations,customers,partners,finance,support,trust,growth,system};
+  async function load(view){status.className='status';status.textContent='Loading '+view+'…';app.innerHTML='<div class="empty">Loading…</div>';try{const s=await window.tnAdminState();if(!s.ok)throw Error(s.error||'Administrator access could not be verified');who.textContent=(s.display_name||s.user.email||'Admin')+' · '+s.role;await V[view]();status.textContent='Live data loaded.'}catch(e){status.className='status error';status.textContent='This workspace remains open. '+String(e?.message||'Unable to load this view.');app.innerHTML='<div class="error-box"><strong>'+esc(view)+'</strong><p>'+esc(e?.message||'Unable to load this view.')+'</p><p>Use Refresh after resolving the underlying data or permission issue.</p></div>'}}
+  document.getElementById('refresh').addEventListener('click',()=>load(current));
+  document.getElementById('signout').addEventListener('click',()=>window.tnAdminLogout?.());
+  load(current);
+})();
+</script>
+</body>
+</html>

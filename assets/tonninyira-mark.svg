@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 220" role="img" aria-labelledby="title desc">
+  <title id="title">Tonninyira</title>
+  <desc id="desc">Tonninyira marketplace wordmark with a simple local-market basket mark.</desc>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E23F25"/>
+      <stop offset="1" stop-color="#B92E18"/>
+    </linearGradient>
+  </defs>
+  <rect width="920" height="220" rx="34" fill="#1C1410"/>
+  <g transform="translate(38 38)">
+    <rect x="0" y="0" width="144" height="144" rx="30" fill="#2A1F19" stroke="#F5B400" stroke-width="5"/>
+    <path d="M35 51h74l-7 64H42z" fill="none" stroke="#F3E8D8" stroke-width="9" stroke-linejoin="round"/>
+    <path d="M50 51c0-21 12-34 22-34s22 13 22 34" fill="none" stroke="#F5B400" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="58" cy="125" r="5" fill="#E23F25"/>
+    <circle cx="86" cy="125" r="5" fill="#E23F25"/>
+    <path d="M60 76h24M60 94h31" stroke="#E23F25" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(220 55)">
+    <text x="0" y="70" fill="#F3E8D8" font-family="Arial, Helvetica, sans-serif" font-size="74" font-weight="800" letter-spacing="1">Tonninyira</text>
+    <text x="4" y="122" fill="#F5B400" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" letter-spacing="5">LOCAL MARKETPLACE • UGANDA</text>
+  </g>
+</svg>

@@ -1,0 +1,24 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#1f1712"><title>Payment — Tonninyira</title><style>body{margin:0;background:#1f1712;color:#f3e8d8;font-family:system-ui,-apple-system,Segoe UI,sans-serif;display:grid;min-height:100vh;place-items:center;padding:20px}.card{width:min(460px,100%);background:#2a1f19;border:1px solid rgba(243,232,216,.12);border-radius:22px;padding:24px;box-sizing:border-box;text-align:center}.brand{font-weight:900;letter-spacing:1.5px;color:#f5b400;font-size:.75rem}.status{margin:18px 0;font-size:1.05rem;font-weight:800}.muted{color:#b8aa9b;font-size:.83rem;line-height:1.5}.btn{display:block;width:100%;box-sizing:border-box;border:0;border-radius:12px;padding:13px;margin-top:10px;font-weight:900;text-decoration:none;cursor:pointer}.primary{background:#f5b400;color:#1f1712}.secondary{background:#3a2b23;color:#f3e8d8}.ok{font-size:2.5rem}</style></head><body><main class="card"><div class="brand">TONNINYIRA</div><div id="icon" class="ok">⏳</div><div id="status" class="status">Checking your payment…</div><div id="detail" class="muted">Please keep this page open for a moment.</div><div id="actions"></div></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
+const SUPABASE_URL='https://alxzmjgepftohwpqibmn.supabase.co';
+const SUPABASE_KEY='sb_publishable_vLr2S8qLRHN5gVv9IITVPQ_CTXc4aCv';
+const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const p=new URLSearchParams(location.search),tx=p.get('tx_ref')||'',tid=p.get('transaction_id')||'',flwStatus=(p.get('status')||'').toLowerCase();
+const local=(()=>{try{return JSON.parse(sessionStorage.getItem('tn_pending_payment')||'null')}catch(_){return null}})();
+function finish(ok,msg,detail){document.getElementById('icon').textContent=ok?'✓':'!';document.getElementById('status').textContent=msg;document.getElementById('detail').textContent=detail;document.getElementById('actions').innerHTML='<a class="btn '+(ok?'primary':'secondary')+'" href="./index.html">Return to Tonninyira</a>'}
+async function check(){
+  const ref=tx||local?.tx_ref;const chargeId=tid||local?.charge_id||'';
+  if(!ref){finish(false,'Payment reference missing','Return to Tonninyira and check My Orders.');return}
+  let tries=0;
+  const poll=async()=>{
+    tries++;
+    try{
+      const r=await client.functions.invoke('verify-flutterwave-payment',{body:{tx_ref:ref,transaction_id:chargeId||null}});
+      if(!r.error&&r.data?.status==='paid'){try{sessionStorage.removeItem('tn_pending_payment')}catch(_){}finish(true,'Payment successful','Your Tonninyira order is now marked paid.');return}
+      if(!r.error&&r.data?.status==='failed'){finish(false,'Payment not completed','Your order remains unpaid. You may return and try again.');return}
+    }catch(_){ }
+    if(tries<10){setTimeout(poll,2000)}else{finish(false,'Payment still processing','Do not pay again yet. Check My Orders shortly.')}
+  };
+  poll();
+}
+if(flwStatus==='cancelled'||flwStatus==='cancel')finish(false,'Payment cancelled','No successful payment was recorded.');else check();
+</script></body></html>

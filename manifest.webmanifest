@@ -1,0 +1,14 @@
+{
+  "name": "Tonninyira Market",
+  "short_name": "Tonninyira",
+  "description": "Tonninyira local market — food, groceries, clothes and delivery.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1f1712",
+  "theme_color": "#1f1712",
+  "orientation": "portrait-primary",
+  "icons": [
+    {"src":"./apple-touch-icon.png","sizes":"180x180","type":"image/png","purpose":"any"}
+  ]
+}

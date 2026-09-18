@@ -1,14 +1,43 @@
-/* Tonninyira single admin session layer */
+/* Tonninyira protected admin session layer: authentication + logout only. */
 (function(){
-'use strict';
-const U='https://alxzmjgepftohwpqibmn.supabase.co',K='sb_publishable_vLr2S8qLRHN5gVv9IITVPQ_CTXc4aCv',APP='https://cuepointe.github.io/tonninyira/',GUIDE=APP+'admin-user-guide.html';
-let c=null;
-function client(){if(c)return c;try{if(window.supabaseClient?.auth)return c=window.supabaseClient;if(window.supabase?.createClient)return c=window.supabase.createClient(U,K,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}})}catch(_){}return null}
-async function state(){const x=client();if(!x?.auth)return {ok:false,error:'Authentication is unavailable.'};try{const u=(await x.auth.getUser()).data?.user;if(!u)return {ok:false,error:'No administrator session is active.'};const q=await x.rpc('admin_session_check');if(q.error)throw q.error;return q.data?.ok?{ok:true,user:u,role:q.data.role,display_name:q.data.display_name,phone:q.data.phone}:{ok:false,error:q.data?.error||'Administrator access could not be verified'}}catch(e){return {ok:false,error:e?.message||'Administrator access could not be verified'}}}
-async function logout(){try{await client()?.auth?.signOut({scope:'local'})}catch(_){}try{sessionStorage.clear();Object.keys(localStorage).filter(k=>k.startsWith('sb-')).forEach(k=>localStorage.removeItem(k))}catch(_){}location.replace(APP+'index.html?signed_out=1')}
-function guideLink(){const n=document.getElementById('nav');if(!n)return;n.querySelectorAll('[data-tn-guide-link],#tn-admin-guide-link,#tn-staff-guide').forEach((e,i)=>{if(i>0)e.remove()});if(!document.getElementById('tn-admin-guide-link')){const b=document.createElement('button');b.id='tn-admin-guide-link';b.className='nav';b.dataset.tnGuideLink='1';b.textContent='Staff user guide';b.onclick=()=>location.href=GUIDE;n.appendChild(b)}}
-async function tower(){const w=document.getElementById('who');if(!w)return;const s=await state();if(!s.ok){w.textContent='Administrator access could not be verified';return false}w.textContent=(s.display_name||s.user.email||'Admin')+' · '+s.role;guideLink();const b=document.getElementById('signout');if(b){b.disabled=false;b.style.pointerEvents='auto';b.onclick=logout}return true}
-async function guide(){const a=document.getElementById('access');if(!a)return;const s=await state();if(!s.ok){a.textContent='Administrator access could not be verified';return false}a.textContent='Authorized '+(s.role==='staff'?'staff':'admin');const p=document.getElementById('page');if(p)p.style.display='block';return true}
-function boot(){if(document.getElementById('who'))tower();if(document.getElementById('access'))guide();const b=document.getElementById('signout');if(b){b.disabled=false;b.onclick=logout}}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();setTimeout(boot,500);setTimeout(boot,1500);setTimeout(boot,3000);window.tnAdminLogout=logout;window.tnAdminState=state;window.tnAdminClient=client;
+  'use strict';
+  const SUPABASE_URL='https://alxzmjgepftohwpqibmn.supabase.co';
+  const SUPABASE_KEY='sb_publishable_vLr2S8qLRHN5gVv9IITVPQ_CTXc4aCv';
+  const APP_URL=location.origin+location.pathname.replace(/[^/]*$/,''); /* derived, not pinned: see guest-access-flow.js */
+  let client=null;
+  function getClient(){
+    if(client)return client;
+    try{
+      if(window.supabaseClient?.auth)return client=window.supabaseClient;
+      if(window.supabase?.createClient)return client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+    }catch(e){}
+    return null;
+  }
+  async function adminState(){
+    const c=getClient();
+    if(!c?.auth)return {ok:false,error:'Authentication is unavailable.'};
+    try{
+      let r=await c.auth.getSession();
+      let user=r?.data?.session?.user||null;
+      if(!user){r=await c.auth.getUser();user=r?.data?.user||null;}
+      if(!user)return {ok:false,error:'No administrator session is active.'};
+      const q=await c.rpc('admin_session_check');
+      if(q.error)throw q.error;
+      if(q.data?.ok)return {ok:true,user,role:q.data.role,display_name:q.data.display_name,phone:q.data.phone};
+      return {ok:false,error:q.data?.error||'Administrator access could not be verified'};
+    }catch(e){
+      return {ok:false,error:e?.message||'Administrator access could not be verified'};
+    }
+  }
+  async function logout(){
+    try{await getClient()?.auth?.signOut({scope:'local'});}catch(e){}
+    try{
+      sessionStorage.clear();
+      Object.keys(localStorage).filter(k=>k.startsWith('sb-')).forEach(k=>localStorage.removeItem(k));
+    }catch(e){}
+    location.replace(APP_URL+'index.html?signed_out=1');
+  }
+  window.tnAdminClient=getClient;
+  window.tnAdminState=adminState;
+  window.tnAdminLogout=logout;
 })();

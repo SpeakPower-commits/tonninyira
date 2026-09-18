@@ -12,29 +12,58 @@ jobs:
     if: ${{ !contains(github.event.head_commit.message, '[skip enhancement injector]') }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout enhancement branch
+      - name: Checkout current branch
         uses: actions/checkout@v4
         with:
-          ref: tonninyira-enhancements
+          ref: ${{ github.ref_name }}
           fetch-depth: 0
 
-      - name: Inject public and admin reliability layer
+      - name: Normalize public enhancement layer
         shell: python
         run: |
           from pathlib import Path
-          import re
 
           marker='</body>'
-
           index=Path('index.html')
           html=index.read_text(encoding='utf-8')
-          for tag in [
-              '<script src="account-location-enhancements.js"></script>',
-              '<script src="account-role-location-enhancements.js"></script>',
-              '<script src="account-first-flow-fix.js"></script>',
-              '<script src="auth-gate.js"></script>',
-          ]:
+
+          # Performance-critical head connections/preload. Deduplicate first.
+          head_tags=[
+            '<link rel="preconnect" href="https://alxzmjgepftohwpqibmn.supabase.co">',
+            '<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>',
+            '<link rel="preload" as="image" href="assets/market/optimized/1.webp" fetchpriority="high">',
+            '<link rel="manifest" href="./manifest.webmanifest">',
+            '<link rel="apple-touch-icon" href="./apple-touch-icon.png">',
+            '<meta name="theme-color" content="#1f1712">',
+          ]
+          for tag in head_tags:
               html=html.replace(tag+'\n','').replace(tag,'')
+          for tag in head_tags:
+              html=html.replace('</head>',tag+'\n</head>',1)
+
+          # Remove legacy/duplicate variants before inserting exactly one copy.
+          script_names=[
+              'account-location-enhancements.js',
+              'account-role-location-enhancements.js',
+              'account-first-flow-fix.js',
+              'auth-gate.js',
+              'enhancements.js',
+              'enhancements-fix.js',
+              'profile-copy-enhancements.js',
+              'guest-access-flow.js',
+              'admin-entrypoint.js',
+              'session-compat.js',
+              'support-session-fix.js',
+              'wishlist-account.js',
+              'partner-wallet-payouts.js',
+              'signout-visible.js',
+              'market-gallery-fix.js',
+              'performance-optimizations.js',
+          ]
+          for name in script_names:
+              html=html.replace(f'<script src="{name}"></script>\n','')
+              html=html.replace(f'<script src="{name}"></script>','')
+
           tags=[
               '<script src="enhancements.js"></script>',
               '<script src="enhancements-fix.js"></script>',
@@ -46,56 +75,42 @@ jobs:
               '<script src="wishlist-account.js"></script>',
               '<script src="partner-wallet-payouts.js"></script>',
               '<script src="signout-visible.js"></script>',
-              '<script src="market-gallery-fix.js"></script>',
               '<script src="performance-optimizations.js"></script>',
           ]
-          for tag in tags:
-              if tag not in html:
-                  if marker not in html: raise SystemExit('Could not find </body> in index.html')
-                  html=html.replace(marker,tag+'\n'+marker,1)
+          if marker not in html:
+              raise SystemExit('Could not find </body> in index.html')
+          html=html.replace(marker,'\n'.join(tags)+'\n'+marker,1)
           index.write_text(html,encoding='utf-8')
 
           for page in ('vendor-dashboard.html','rider-dashboard.html'):
               p=Path(page)
               if not p.exists(): continue
               h=p.read_text(encoding='utf-8')
-              for tag in ('<script src="partner-dashboard-auth-earnings.js"></script>','<script src="partner-wallet-payouts.js"></script>','<script src="signout-visible.js"></script>'):
-                  if tag not in h and marker in h: h=h.replace(marker,tag+'\n'+marker,1)
+              for name in ('partner-dashboard-auth-earnings.js','partner-wallet-payouts.js','signout-visible.js'):
+                  h=h.replace(f'<script src="{name}"></script>\n','').replace(f'<script src="{name}"></script>','')
+              if marker not in h:
+                  raise SystemExit(f'Could not find </body> in {page}')
+              for name in ('partner-dashboard-auth-earnings.js','partner-wallet-payouts.js','signout-visible.js'):
+                  h=h.replace(marker,f'<script src="{name}"></script>\n'+marker,1)
               p.write_text(h,encoding='utf-8')
 
-          # Protected admin pages use one shared, server-authorized session helper.
-          admin=Path('admin-control-tower.html')
-          if admin.exists():
-              h=admin.read_text(encoding='utf-8')
+          for page in ('admin-control-tower.html','admin-user-guide.html'):
+              p=Path(page)
+              if not p.exists(): continue
+              h=p.read_text(encoding='utf-8')
               tag='<script src="admin-session-fix.js"></script>'
               h=h.replace(tag+'\n','').replace(tag,'')
+              if '</head>' not in h:
+                  raise SystemExit(f'Could not find </head> in {page}')
               h=h.replace('</head>',tag+'\n</head>',1)
-              pattern=r"async function auth\(\)\{.*?\}\nasync function rows"
-              replacement="async function auth(){const s=await window.tnAdminState();if(!s.ok)throw Error(s.error||'Administrator access could not be verified');document.getElementById('who').textContent=`${s.display_name||s.user.email||'Admin'} · ${s.role}`}\nasync function rows"
-              h,n=re.subn(pattern,replacement,h,count=1,flags=re.S)
-              if n!=1: raise SystemExit('Could not patch Control Tower auth function')
-              h=h.replace('<script src="admin-guide-entry.js"></script>','').replace('<script src="admin-signout-fix.js"></script>','')
-              admin.write_text(h,encoding='utf-8')
+              p.write_text(h,encoding='utf-8')
 
-          guide=Path('admin-user-guide.html')
-          if guide.exists():
-              h=guide.read_text(encoding='utf-8')
-              tag='<script src="admin-session-fix.js"></script>'
-              h=h.replace(tag+'\n','').replace(tag,'')
-              h=h.replace('</head>',tag+'\n</head>',1)
-              guide.write_text(h,encoding='utf-8')
-
-          print('Unified admin session loaded before page code; duplicate guide/logout helpers removed')
-
-      - name: Commit integration
+      - name: Commit normalization
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html vendor-dashboard.html rider-dashboard.html admin-control-tower.html admin-user-guide.html
-          if git diff --cached --quiet; then
-            echo 'No changes to commit.'
-            exit 0
-          fi
-          git commit -m 'Load admin session layer before protected pages [skip enhancement injector]'
-          git push origin HEAD:tonninyira-enhancements
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'Normalize frontend performance loading layer [skip enhancement injector]'
+          git push origin HEAD:${GITHUB_REF_NAME}

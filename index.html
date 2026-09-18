@@ -287,6 +287,12 @@
   .rider-card{display:flex; align-items:center; gap:12px; background:var(--card); border-radius:14px; padding:14px; width:100%; margin-top:14px;}
   .verify-check svg{width:14px;height:14px; color:var(--green); vertical-align:-2px;}
 </style>
+<link rel="preconnect" href="https://alxzmjgepftohwpqibmn.supabase.co">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preload" as="image" href="assets/market/optimized/1.webp" fetchpriority="high">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<meta name="theme-color" content="#1f1712">
 </head>
 <body>
 
@@ -567,8 +573,35 @@ function captureCustomerLocation(){
 const AppState = { category:"eats", subcategory:"breakfast", view:"shop", searchTerm:"", cart:[], customerLocation:null };
 const AVATAR_COLORS = ['#E23F25','#F5B400','#4C9A5B','#C98F00','#B92E18'];
 
+/* Vendor- and shopper-supplied text is written into innerHTML throughout this
+   file. The browser cannot tell markup this app wrote from text somebody
+   typed, so any value not passed through esc() below is obeyed as an
+   instruction on every shopper's device. Identical to the helper the other
+   fifteen modules already use -- kept character-for-character the same so
+   there is one escaping rule in this codebase, not two. */
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* IDs land inside onclick="fn('...')" -- a JavaScript string nested in an
+   HTML attribute. HTML-escaping alone does not hold there: the browser
+   decodes entities before the JavaScript is parsed, so an escaped quote turns
+   back into a real one and closes the string. Tonninyira IDs are alphanumeric
+   by construction and are supplied by the client at registration, so discard
+   anything outside that set rather than escaping for two contexts at once. */
+const safeId = v => String(v ?? '').replace(/[^A-Za-z0-9_-]/g, '');
+
+/* A src of javascript: or data:text/html executes even when the quoting is
+   perfectly correct, so the scheme has to be restricted, not just escaped.
+   Relative paths carry no scheme and stay allowed. */
+const safeUrl = v => {
+  const s = String(v ?? '').trim();
+  if(!s) return '';
+  const scheme = s.match(/^([a-z][a-z0-9+.-]*):/i);
+  if(scheme && !/^https?$/i.test(scheme[1])) return '';
+  return esc(s);
+};
+
 function initials(name){
-  const words = name.replace(/'s\b/i,'').split(' ').filter(w=>w.length>1);
+  const words = String(name ?? '').replace(/'s\b/i,'').split(' ').filter(w=>w.length>1);
   return ((words[0]||'')[0]||'') + ((words[1]||'')[0]||'');
 }
 function avatarColor(name){
@@ -641,9 +674,9 @@ function renderPopular(){
     <div class="popular-label">TOP RATED IN ${CATALOG[AppState.category].label.toUpperCase()}</div>
     <div class="popular-scroll">
       ${top.map(v=>`
-        <div class="pop-chip" onclick="jumpToVendor('${v.subKey}','${v.id}')">
-          <div class="avatar" style="background:${avatarColor(v.name)}; width:40px;height:40px;font-size:0.85rem;">${initials(v.name)}</div>
-          <div class="name">${v.name}</div>
+        <div class="pop-chip" onclick="jumpToVendor('${safeId(v.subKey)}','${safeId(v.id)}')">
+          <div class="avatar" style="background:${avatarColor(v.name)}; width:40px;height:40px;font-size:0.85rem;">${esc(initials(v.name))}</div>
+          <div class="name">${esc(v.name)}</div>
           <div class="rating">★ ${v.rating}</div>
         </div>
       `).join('')}
@@ -716,7 +749,7 @@ function renderSearchResults(){
     });
   });
   if(!matches.length){
-    el.innerHTML = `<div class="empty-state">${ICONS.search}<p style="font-weight:700; color:var(--sand);">Nothing matches "${AppState.searchTerm}"</p><p>Try a different word, like a vendor name or a dish.</p></div>`;
+    el.innerHTML = `<div class="empty-state">${ICONS.search}<p style="font-weight:700; color:var(--sand);">Nothing matches "${esc(AppState.searchTerm)}"</p><p>Try a different word, like a vendor name or a dish.</p></div>`;
     return;
   }
   el.innerHTML = `<div class="stall-list">${matches.map(v=>vendorCardHTML(v)).join('')}</div>`;
@@ -751,7 +784,7 @@ async function renderMyOrders(){
 function renderOrderGroups(rows, myReviews, custId){
   const el = document.getElementById('mainArea');
   if(!rows.length){
-    el.innerHTML = `<div class="placeholder">${ICONS.box}<h3>No orders yet</h3><p>Signed in as ${custId.name}. Your past orders will show up here once you place one.</p></div>`;
+    el.innerHTML = `<div class="placeholder">${ICONS.box}<h3>No orders yet</h3><p>Signed in as ${esc(custId.name)}. Your past orders will show up here once you place one.</p></div>`;
     return;
   }
   const groups = {};
@@ -860,31 +893,39 @@ function renderFavorites(){
 function vendorCardHTML(v){
   const stallNo = stallNumberFor(v.id);
   const showUNBS = v.catKey==='eats' || v.subKey==='groceries' || v.subKey==='rawfoods';
-  const avatarOrLogo = v.logo
-    ? `<img src="${v.logo}" class="avatar" onerror="this.outerHTML='<div class=&quot;avatar&quot; style=&quot;background:${avatarColor(v.name)}&quot;>${initials(v.name)}</div>'">`
-    : `<div class="avatar" style="background:${avatarColor(v.name)};">${initials(v.name)}</div>`;
+  /* The old fallback rebuilt an avatar by writing an entity-escaped markup
+     string inside an onerror attribute, with the vendor's own name
+     interpolated into the innermost of three quoting contexts. Escaping
+     cannot be trusted that deep. Render the fallback up front, hidden, and
+     have onerror do nothing but reveal it -- no vendor data in the handler
+     at all. */
+  const logoSrc = safeUrl(v.logo);
+  const fallbackAvatar = (extra='') => `<div class="avatar" style="background:${avatarColor(v.name)};${extra}">${esc(initials(v.name))}</div>`;
+  const avatarOrLogo = logoSrc
+    ? fallbackAvatar('display:none;') + `<img src="${logoSrc}" class="avatar" onerror="this.previousElementSibling.style.display='';this.remove()">`
+    : fallbackAvatar();
   const galleryHTML = (v.gallery && v.gallery.length) ? `
     <div class="gallery-strip">
       ${v.gallery.map(g=>`
         <div class="gallery-item">
           ${g.type==='video'
-            ? `<video src="${g.url}" muted loop playsinline onmouseover="this.play()" onmouseout="this.pause()"></video>`
-            : `<img src="${g.url}" loading="lazy">`}
-          ${g.caption ? `<div class="gallery-caption">${g.caption}</div>` : ''}
+            ? `<video src="${safeUrl(g.url)}" muted loop playsinline onmouseover="this.play()" onmouseout="this.pause()"></video>`
+            : `<img src="${safeUrl(g.url)}" loading="lazy">`}
+          ${g.caption ? `<div class="gallery-caption">${esc(g.caption)}</div>` : ''}
         </div>`).join('')}
     </div>` : '';
 
   return `
-    <div class="stall-card" id="vendor-${v.id}">
+    <div class="stall-card" id="vendor-${safeId(v.id)}">
       <div class="stall-roof"></div>
-      <button class="fav-btn ${isFavorite(v.id)?'active':''}" id="fav-${v.id}" onclick="toggleFavorite('${v.id}')" aria-label="Save stall">${ICONS.heart}</button>
+      <button class="fav-btn ${isFavorite(v.id)?'active':''}" id="fav-${safeId(v.id)}" onclick="toggleFavorite('${safeId(v.id)}')" aria-label="Save stall">${ICONS.heart}</button>
       <div class="stall-header">
         ${avatarOrLogo}
         <div>
           <div class="stall-eyebrow">STALL NO. ${stallNo}</div>
-          <div class="stall-name">${v.name}</div>
+          <div class="stall-name">${esc(v.name)}</div>
           <div class="stall-meta">
-            ${ICONS.pin} ${v.location} &nbsp;·&nbsp; ${ICONS.star}${v.rating} (${v.reviews}) &nbsp;·&nbsp; ${v.years} yrs on Tonninyira
+            ${ICONS.pin} ${esc(v.location)} &nbsp;·&nbsp; ${ICONS.star}${esc(v.rating)} (${esc(v.reviews)}) &nbsp;·&nbsp; ${esc(v.years)} yrs on Tonninyira
           </div>
           <div class="verify-row">
             ${ICONS.check} KCCA Licensed &nbsp;·&nbsp; ${ICONS.check} URA Registered
@@ -896,12 +937,12 @@ function vendorCardHTML(v){
       ${v.items.map(item=>`
         <div class="item-row">
           <div>
-            <div class="item-name">${item.name}</div>
+            <div class="item-name">${esc(item.name)}</div>
             <div class="item-desc">${item.desc}</div>
           </div>
           <div class="item-action">
             <span class="price-tag">${fmt(item.price)}</span>
-            <button class="add-btn" onclick="addToCart('${v.id}','${item.id}')">+</button>
+            <button class="add-btn" onclick="addToCart('${safeId(v.id)}','${safeId(item.id)}')">+</button>
           </div>
         </div>`).join('')}
     </div>`;
@@ -949,15 +990,15 @@ function updateCartUI(){
     ${AppState.cart.map(c=>`
       <div class="cart-line-card">
         <div class="cart-line-top">
-          <div><div style="font-weight:700;">${c.name}</div><div class="cart-line-vendor">From ${c.vendorName}</div></div>
+          <div><div style="font-weight:700;">${esc(c.name)}</div><div class="cart-line-vendor">From ${esc(c.vendorName)}</div></div>
           <div class="price-tag">${fmt(c.price)}</div>
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
           <span style="font-size:0.82rem; color:var(--muted);">Qty</span>
           <div style="display:flex; gap:10px; align-items:center;">
-            <button class="qty-btn" onclick="updateQty('${c.vendorId}','${c.itemId}',-1)">−</button>
+            <button class="qty-btn" onclick="updateQty('${safeId(c.vendorId)}','${safeId(c.itemId)}',-1)">−</button>
             <span style="font-weight:800; min-width:18px; text-align:center;">${c.qty}</span>
-            <button class="qty-btn" onclick="updateQty('${c.vendorId}','${c.itemId}',1)">+</button>
+            <button class="qty-btn" onclick="updateQty('${safeId(c.vendorId)}','${safeId(c.itemId)}',1)">+</button>
           </div>
         </div>
       </div>`).join('')}
@@ -1084,7 +1125,7 @@ async function finishOrder(method, custId){
   document.getElementById('confirmOrderId').textContent = orderId;
   document.getElementById('confirmSummary').innerHTML = `
     <div class="summary-box" style="text-align:left;">
-      ${AppState.cart.map(c=>`<div class="summary-row"><span>${c.name} ×${c.qty}</span><span>UGX ${fmt(c.price*c.qty)}</span></div>`).join('')}
+      ${AppState.cart.map(c=>`<div class="summary-row"><span>${esc(c.name)} ×${esc(c.qty)}</span><span>UGX ${fmt(c.price*c.qty)}</span></div>`).join('')}
       <div class="summary-row"><span>Delivery</span><span>UGX ${fmt(deliveryFee)}</span></div>
       <div class="summary-row total"><span>Paid via ${method}</span><span>UGX ${fmt(subtotal+deliveryFee)}</span></div>
     </div>`;
@@ -1132,7 +1173,16 @@ const SUPABASE_URL = 'https://alxzmjgepftohwpqibmn.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFseHptamdlcGZ0b2h3cHFpYm1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5OTg1NDQsImV4cCI6MjEwMTU3NDU0NH0.YvFQhCqL6spINPsyLs7lf7z5wxtnfi4U893ydWLXEaA';
 let supabaseClient;
 try{ supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
-catch(e){ supabaseClient = { from:()=>({insert:async()=>({}), select:async()=>({data:null,error:'no client'})}) }; }
+catch(e){
+  /* Never fake a successful write. This fallback's insert() resolved empty,
+     so with the Supabase script unreachable an order could pass the
+     `if(ins.error)` check in flutterwave-payments-v2.js having been recorded
+     nowhere, and still move on toward payment. Calls now throw; the readers
+     that matter (loadLiveVendors / loadLiveRiders) already catch and degrade
+     to an empty catalogue, so browsing still fails soft. */
+  const dead = ()=>{ throw new Error('Tonninyira cannot reach its secure service.'); };
+  supabaseClient = { auth:{getSession:dead}, from:dead, storage:{from:dead}, functions:{invoke:dead} };
+}
 
 /* Pulls real registered stalls (with their own logo/gallery/items) from the
    'vendors_public' view -- not the raw 'vendors' table, which now also holds
@@ -1253,5 +1303,19 @@ updateCartUI();
 loadLiveVendors();
 loadLiveRiders();
 </script>
+<script src="account-session-ui.js"></script>
+<script src="flutterwave-payments-v2.js"></script>
+<script>if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));</script>
+<script src="enhancements.js"></script>
+<script src="enhancements-fix.js"></script>
+<script src="profile-copy-enhancements.js"></script>
+<script src="guest-access-flow.js"></script>
+<script src="admin-entrypoint.js"></script>
+<script src="session-compat.js"></script>
+<script src="support-session-fix.js"></script>
+<script src="wishlist-account.js"></script>
+<script src="partner-wallet-payouts.js"></script>
+<script src="signout-visible.js"></script>
+<script src="performance-optimizations.js"></script>
 </body>
 </html>

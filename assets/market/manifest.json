@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "images": [
+    {
+      "id": 1,
+      "src": "assets/market/1.jpg",
+      "webp": "assets/market/optimized/1.webp",
+      "width": 870,
+      "height": 580
+    },
+    {
+      "id": 2,
+      "src": "assets/market/2.jpg",
+      "webp": "assets/market/optimized/2.webp",
+      "width": 1000,
+      "height": 667
+    },
+    {
+      "id": 3,
+      "src": "assets/market/3.jpg",
+      "webp": "assets/market/optimized/3.webp",
+      "width": 1000,
+      "height": 750
+    },
+    {
+      "id": 4,
+      "src": "assets/market/4.jpg",
+      "webp": "assets/market/optimized/4.webp",
+      "width": 1600,
+      "height": 1065
+    },
+    {
+      "id": 5,
+      "src": "assets/market/5.jpg",
+      "webp": "assets/market/optimized/5.webp",
+      "width": 1600,
+      "height": 900
+    },
+    {
+      "id": 6,
+      "src": "assets/market/6.jpg",
+      "webp": "assets/market/optimized/6.webp",
+      "width": 800,
+      "height": 1200
+    },
+    {
+      "id": 11,
+      "src": "assets/market/11.jpg",
+      "webp": "assets/market/optimized/11.webp",
+      "width": 1600,
+      "height": 971
+    },
+    {
+      "id": 12,
+      "src": "assets/market/12.jpg",
+      "webp": "assets/market/optimized/12.webp",
+      "width": 1600,
+      "height": 1067
+    },
+    {
+      "id": 13,
+      "src": "assets/market/13.jpg",
+      "webp": "assets/market/optimized/13.webp",
+      "width": 1000,
+      "height": 667
+    }
+  ]
+}
