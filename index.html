@@ -308,6 +308,17 @@
 #tnAccountPage .tn-cover img{width:100%;height:100%;object-fit:cover;display:block}
 #tnAccountPage .tn-cover-scrim{position:absolute;inset:0;background:linear-gradient(to top,var(--ink) 4%,rgba(28,20,16,.72) 38%,rgba(28,20,16,.12) 100%)}
 #tnAccountPage .tn-cover h2{position:absolute;left:16px;right:16px;bottom:12px;margin:0;color:#fff;font-size:2.35rem;white-space:nowrap}
+#tnAccountPage .tn-cover .tn-slide{position:absolute;inset:0;opacity:0;transition:opacity .7s ease}
+#tnAccountPage .tn-cover .tn-slide.is-on{opacity:1}
+#tnAccountPage .tn-story-cap{position:absolute;left:16px;right:70px;bottom:52px;margin:0;color:#fff;font-size:.86rem;font-weight:700;line-height:1.35;text-shadow:0 1px 10px rgba(0,0,0,.6);transition:opacity .35s ease}
+#tnAccountPage .tn-dots{position:absolute;right:14px;bottom:14px;display:flex;gap:6px}
+#tnAccountPage .tn-dots button{width:22px;height:22px;padding:0;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
+#tnAccountPage .tn-dots button::after{content:'';width:7px;height:7px;border-radius:99px;background:rgba(255,255,255,.42);transition:background .3s,width .3s}
+#tnAccountPage .tn-dots button[aria-current="true"]::after{background:var(--gold);width:18px}
+@media (prefers-reduced-motion: reduce){
+  #tnAccountPage .tn-cover .tn-slide{transition:none}
+  #tnAccountPage .tn-story-cap{transition:none}
+}
 #tnAccountPage .tn-strip{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -16px;padding:2px 16px 4px;-webkit-overflow-scrolling:touch}
 #tnAccountPage .tn-strip::-webkit-scrollbar{height:0}
 #tnAccountPage .tn-strip figure{margin:0;width:148px;flex-shrink:0;scroll-snap-align:start}
@@ -1165,6 +1176,16 @@ async function renderAccountPage(){
        than inform, so it opens on people. Photographs are cover-cropped webp
        at the size they render -- the whole set is lighter than one of the
        original JPEGs. */
+    /* One still picture says "food". Five in sequence say how an order actually
+       reaches you -- market, rider, transit, door, table -- which is the thing
+       a first-time customer is really asking about. */
+    const story = [
+      ['assets/campus/story1.webp', 'Straight from the market.', 'A rider with a bicycle basket full of fresh greens, bananas and tomatoes'],
+      ['assets/campus/story2.webp', 'Your rider, verified.', 'A delivery rider smiling, holding a parcel ready to hand over'],
+      ['assets/campus/story3.webp', 'Minutes away.', 'A rider walking with paper bags in one hand, checking the app on his phone'],
+      ['assets/campus/story4.webp', 'At your door.', 'A rider handing boxes to a customer at her doorway, both smiling'],
+      ['assets/campus/story5.webp', 'Enjoy \u2014 and collect your points.', 'A woman smiling as she opens a food box beside a paper delivery bag']
+    ];
     const slides = [
       ['assets/campus/s1.webp', 'Between lectures, everyone&rsquo;s ordering.', 'Four students along a library shelf, each looking at their phone'],
       ['assets/campus/s2.webp', 'Found the stall. Told everyone.', 'A young woman laughing at her phone while a friend leans in to look'],
@@ -1173,10 +1194,17 @@ async function renderAccountPage(){
       ['assets/campus/s5.webp', 'Rolex money, sorted.', 'Three friends sitting outside on a step, laughing around a phone']
     ];
     host.innerHTML = `
-      <div class="tn-cover">
-        <img src="assets/campus/cover.webp" alt="Three friends sitting outside on a step, laughing together around a phone" width="900" height="560">
+      <div class="tn-cover" id="tnStory">
+        ${story.map(([src,cap,alt],i)=>`
+          <div class="tn-slide${i===0?' is-on':''}">
+            <img src="${src}" alt="${esc(alt)}" width="800" height="512" ${i?'loading="lazy"':''}>
+          </div>`).join('')}
         <div class="tn-cover-scrim"></div>
+        <p class="tn-story-cap" id="tnStoryCap">${story[0][1]}</p>
         <h2 class="tn-dsp">Make it yours.</h2>
+        <div class="tn-dots" id="tnStoryDots" role="tablist" aria-label="Story">
+          ${story.map((_,i)=>`<button type="button" role="tab" data-i="${i}" aria-current="${i===0}" aria-label="Step ${i+1} of ${story.length}"></button>`).join('')}
+        </div>
       </div>
       <p class="tn-sub" style="font-size:.86rem;margin:10px 0 16px">Browsing is free forever. An account is where your stuff actually lives.</p>
       <div class="tn-strip">
@@ -1197,6 +1225,7 @@ async function renderAccountPage(){
       <button class="tn-btn tn-btn-gold" style="margin-top:20px" onclick="tnAuthEntry()">Create your account</button>
       <button class="tn-btn tn-btn-ghost" style="margin-top:10px" onclick="tnAuthEntry()">I already have one</button>
       <p class="tn-sub" style="text-align:center;margin-top:16px">Selling on Tonninyira, or delivering as a rider, also starts with an account.</p>`;
+    tnStartStory(story.map(x => x[1]));
     return;
   }
 
@@ -1261,6 +1290,49 @@ async function renderAccountPage(){
     ${await tnPartnerSection(session.user.id)}
 
     <button class="tn-btn tn-btn-ghost" style="margin-top:14px;border-color:#4A2A22;color:#FF8A6B" onclick="tnAuthEntry()">Use a different account</button>`;
+}
+
+/* The cover rotates through the delivery story. Kept deliberately slow, it
+   pauses the moment someone touches it, and it does not move at all for anyone
+   who has asked their device to reduce motion -- an auto-playing carousel that
+   ignores that setting is a genuine accessibility failure, not a style choice. */
+let tnStoryTimer = null;
+function tnStopStory(){ if(tnStoryTimer){ clearInterval(tnStoryTimer); tnStoryTimer = null; } }
+
+function tnStartStory(captions){
+  tnStopStory();
+  const wrap = document.getElementById('tnStory');
+  const cap  = document.getElementById('tnStoryCap');
+  const dots = document.getElementById('tnStoryDots');
+  if(!wrap || !cap || !dots) return;
+  const slides = Array.from(wrap.querySelectorAll('.tn-slide'));
+  const buttons = Array.from(dots.querySelectorAll('button'));
+  if(slides.length < 2) return;
+  let i = 0;
+
+  const show = n => {
+    i = (n + slides.length) % slides.length;
+    slides.forEach((el, k) => el.classList.toggle('is-on', k === i));
+    buttons.forEach((b, k) => b.setAttribute('aria-current', String(k === i)));
+    cap.style.opacity = '0';
+    setTimeout(() => { cap.textContent = captions[i]; cap.style.opacity = '1'; }, 180);
+    /* Fetch the next one now so the fade never lands on a blank frame. */
+    const nextImg = slides[(i + 1) % slides.length].querySelector('img');
+    if(nextImg && nextImg.loading === 'lazy') nextImg.loading = 'eager';
+  };
+
+  buttons.forEach(b => b.addEventListener('click', () => { tnStopStory(); show(Number(b.dataset.i)); }));
+
+  let still = true;
+  try{ still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(_){ still = false; }
+  if(still) return;                       /* dots still work; nothing moves on its own */
+
+  ['pointerdown','touchstart'].forEach(e => wrap.addEventListener(e, tnStopStory, { once:true, passive:true }));
+  tnStoryTimer = setInterval(() => {
+    /* Stop for good once the cover has left the page. */
+    if(!document.body.contains(wrap)) return tnStopStory();
+    show(i + 1);
+  }, 4200);
 }
 
 /* Every "sign in" control routes through the one funnel in guest-access-flow.js
