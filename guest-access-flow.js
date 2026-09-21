@@ -36,7 +36,7 @@
     .tn-flow-tabs{display:flex;gap:8px;margin:12px 0}.tn-flow-tab{flex:1;padding:10px;border-radius:10px;border:1px solid rgba(243,232,216,.16);background:var(--card2);color:var(--muted);font-weight:800;cursor:pointer;-webkit-font-smoothing:antialiased}.tn-flow-tab.active{background:var(--gold);color:var(--ink);border-color:var(--gold)}
     .tn-flow-input{width:100%;padding:13px;border-radius:11px;border:1px solid rgba(243,232,216,.16);background:var(--card);color:var(--sand);font:inherit;-webkit-font-smoothing:antialiased}.tn-flow-status{font-size:.76rem;line-height:1.45;color:var(--muted);min-height:20px;margin-top:8px}
     .tn-flow-label{display:block;font-size:.72rem;font-weight:800;margin:11px 0 5px}.tn-flow-label span{font-weight:500;color:var(--muted)}
-    .tn-flow-google{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1f1f1f;border:0;border-radius:11px;padding:12px;font:inherit;font-weight:700;cursor:pointer}
+    .tn-flow-google{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1f1f1f;border:0;border-radius:11px;padding:12px;font:inherit;font-weight:700;cursor:pointer}.tn-flow-oauth{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}.tn-flow-oauth button{display:flex;align-items:center;justify-content:center;gap:7px;background:rgba(255,255,255,.06);color:var(--sand);border:1px solid rgba(255,255,255,.16);border-radius:11px;padding:10px;font:inherit;font-size:.82rem;font-weight:700;cursor:pointer}.tn-flow-oauth button:hover{background:rgba(255,255,255,.11)}.tn-flow-oauth button:disabled{opacity:.55;cursor:default}
     .tn-flow-or{display:flex;align-items:center;gap:10px;margin:14px 0 2px;color:var(--muted);font-size:.66rem;font-weight:700}
     .tn-flow-or::before,.tn-flow-or::after{content:"";height:1px;background:rgba(243,232,216,.14);flex:1}
     .tn-flow-alt{text-align:center;font-size:.74rem;color:var(--muted);margin-top:13px;line-height:1.6}
@@ -47,6 +47,22 @@
   function close(){document.getElementById('tn-public-flow')?.remove()}
   function say(msg,bad){const s=document.getElementById('tnFlowStatus');if(!s)return;s.className='tn-flow-status'+(bad?' tn-flow-err':'');s.textContent=msg}
 
+  /* Supabase retired the `linkedin` provider in favour of `linkedin_oidc`, and
+     projects carry one or the other depending on when they were set up. The
+     handler tries the modern id and falls back once, so neither has to be
+     guessed here. */
+  const MARK={
+    linkedin_oidc:'<svg width="16" height="16" viewBox="0 0 24 24" fill="#0A66C2" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/></svg>',
+    github:'<svg width="16" height="16" viewBox="0 0 24 24" fill="#ffffff" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.12 3.05.74.81 1.18 1.84 1.18 3.1 0 4.43-2.69 5.4-5.25 5.69.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"/></svg>',
+    facebook:'<svg width="16" height="16" viewBox="0 0 24 24" fill="#1877F2" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.09 10.12 24v-8.44H7.08v-3.49h3.04V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.96h-1.51c-1.49 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.09 24 18.1 24 12.07z"/></svg>',
+    twitter:'<svg width="16" height="16" viewBox="0 0 24 24" fill="#ffffff" aria-hidden="true"><path d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.41l-5.8-7.58-6.64 7.58H.46l8.6-9.83L0 1.15h7.59l5.24 6.93 6.07-6.93zm-1.29 19.5h2.04L6.49 3.24H4.3l13.31 17.41z"/></svg>'
+  };
+  const PROVIDERS=[
+    {id:'linkedin_oidc', label:'LinkedIn', alt:'linkedin'},
+    {id:'github',        label:'GitHub'},
+    {id:'facebook',      label:'Facebook'},
+    {id:'twitter',       label:'X'}
+  ];
   const GOOGLE_SVG='<svg width="17" height="17" viewBox="0 0 48 48" aria-hidden="true">'+
     '<path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>'+
     '<path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>'+
@@ -68,12 +84,17 @@
         <button class="tn-flow-tab${signup?' active':''}" data-mode="signup">Create account</button>
       </div>
       <button class="tn-flow-google" id="tnFlowGoogle">${GOOGLE_SVG}<span>Continue with Google</span></button>
+      <div class="tn-flow-oauth">${PROVIDERS.map(p=>`<button type="button" data-provider="${p.id}">${MARK[p.id]}<span>${p.label}</span></button>`).join('')}</div>
       <div class="tn-flow-or">OR</div>
       <div id="tnFlowFields"></div>
       <div id="tnFlowStatus" class="tn-flow-status"></div>
     </div>`;
     m.querySelector('#tnFlowClose').onclick=close;
-    m.querySelector('#tnFlowGoogle').onclick=withGoogle;
+    m.querySelector('#tnFlowGoogle').onclick=()=>withProvider('google','Google');
+    m.querySelectorAll('.tn-flow-oauth button').forEach(b=>{
+      const p=PROVIDERS.find(x=>x.id===b.dataset.provider);
+      b.onclick=()=>withProvider(p.id,p.label,p.alt);
+    });
     m.querySelectorAll('.tn-flow-tab').forEach(t=>t.onclick=()=>authStart(t.dataset.mode));
     fields(signup?'signup':'signin');
   }
@@ -113,14 +134,22 @@
     }
   }
 
-  async function withGoogle(){
+  const notEnabled=e=>/not enabled|unsupported provider|provider is not/i.test(String(e?.message||''));
+
+  async function withProvider(id,label,alt){
     const c=client();
-    if(!c?.auth?.signInWithOAuth){say('Google sign-in is not available right now.',true);return}
-    say('Opening Google…');
-    const r=await c.auth.signInWithOAuth({provider:'google',options:{redirectTo:AUTH_CALLBACK}});
-    /* Only reached when the redirect could not start -- most often because
-       the Google provider has not been enabled on the Supabase project. */
-    if(r.error)say(r.error.message||'Could not start Google sign-in.',true);
+    if(!c?.auth?.signInWithOAuth){say(label+' sign-in is not available right now.',true);return}
+    say('Opening '+label+'…');
+    let r=await c.auth.signInWithOAuth({provider:id,options:{redirectTo:AUTH_CALLBACK}});
+    /* Only the older provider id is configured on this project. */
+    if(r.error&&alt&&notEnabled(r.error)) r=await c.auth.signInWithOAuth({provider:alt,options:{redirectTo:AUTH_CALLBACK}});
+    if(!r.error)return;
+    /* Reached only when the redirect could not start. Naming the provider
+       matters: with five of them, Supabase's own wording does not say which
+       one is missing its credentials. */
+    say(notEnabled(r.error)
+      ? label+' sign-in is not switched on for Tonninyira yet. Use your email and password, or another provider.'
+      : 'Could not start '+label+' sign-in: '+(r.error.message||'unknown error'), true);
   }
 
   /* Attaching the phone to the auth user is what makes

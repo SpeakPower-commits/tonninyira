@@ -48,9 +48,19 @@
     `; document.head.appendChild(st);
   }
 
-  function mountSignOut(){
+  /* This used to run precisely when getPartner() returned null -- which is the
+     case for every signed-out visitor -- and then fell back to document.body
+     because the storefront has no #profileView, pinning a Sign out button to
+     the home page for people who were never signed in. It now requires a live
+     session, and a real host: on the storefront account-session-ui.js owns
+     sign-out, inside the account panel, which only opens once you are in. */
+  async function mountSignOut(){
+    const host = document.querySelector('#profileView') || document.querySelector('[data-view="profile"]');
+    if(!host) return;
+    let signedIn=false;
+    try{ signedIn = !!(await client.auth.getSession())?.data?.session; }catch(_){ return }
+    if(!signedIn){ document.getElementById('tn-signout-btn')?.remove(); return }
     style();
-    const host = document.querySelector('#profileView') || document.querySelector('[data-view="profile"]') || document.body;
     if(document.getElementById('tn-signout-btn')) return;
     const b=document.createElement('button'); b.id='tn-signout-btn'; b.className='tn-signout'; b.textContent='Sign out';
     b.onclick=async()=>{ b.disabled=true; b.textContent='Signing out…'; const {error}=await client.auth.signOut({scope:'global'}); if(error){b.disabled=false;b.textContent='Sign out';alert(error.message);return;} window.location.href='index.html'; };
