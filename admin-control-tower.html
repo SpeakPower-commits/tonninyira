@@ -81,7 +81,8 @@
     const cfg=APPROVALS[kind],id=row[cfg.key],state=String(row.approval_status??'').toLowerCase();
     if(id===null||id===undefined||id==='')return '<span class="muted">—</span>';
     const btn=(to,bg,fg,text)=>'<button type="button" class="tn-approve" data-kind="'+esc(kind)+'" data-id="'+esc(id)+'" data-to="'+esc(to)+'" style="border:0;border-radius:8px;padding:6px 10px;margin-right:6px;font-size:.72rem;font-weight:800;cursor:pointer;background:'+bg+';color:'+fg+'">'+text+'</button>';
-    return (state==='approved'?'':btn('approved','#4C9A5B','#FFFFFF','Approve'))+(state==='rejected'?'':btn('rejected','#E23F25','#FFFFFF','Reject'));
+    const link='<button type="button" class="tn-link-acct" data-kind="'+esc(kind)+'" data-id="'+esc(id)+'" style="border:0;border-radius:8px;padding:6px 10px;margin:2px;font-weight:800;cursor:pointer;background:#8a6100;color:#FFFFFF">'+(row.auth_user_id?'Relink':'Link account')+'</button>';
+    return (state==='approved'?'':btn('approved','#4C9A5B','#FFFFFF','Approve'))+(state==='rejected'?'':btn('rejected','#E23F25','#FFFFFF','Reject'))+link;
   }
   async function decideApproval(kind,id,to){
     const cfg=APPROVALS[kind];
@@ -90,6 +91,56 @@
     const r=await client().from(cfg.table).update({approval_status:to}).eq(cfg.key,id);
     if(r.error)throw r.error;
   }
+  /* The August partner rows carry only a phone number, and no account shares
+     it, so nothing can match them automatically. An admin picks the owner.
+     Setting auth_user_id also stamps the row's email, via a database trigger. */
+  async function linkAccount(kind,id){
+    const cfg=APPROVALS[kind];
+    if(!cfg)throw Error('Unknown partner type.');
+    const r=await client().rpc('admin_list_accounts');
+    if(r.error)throw r.error;
+    const accts=r.data||[];
+    if(!accts.length)throw Error('No accounts available to link.');
+    const pick=await chooseAccount(accts,kind,id);
+    if(!pick)return false;
+    const u=await client().from(cfg.table).update({auth_user_id:pick}).eq(cfg.key,id);
+    if(u.error)throw u.error;
+    return true;
+  }
+  function chooseAccount(accts,kind,id){
+    return new Promise(resolve=>{
+      const m=document.createElement('div');
+      m.style.cssText='position:fixed;inset:0;z-index:10050;background:rgba(0,0,0,.72);display:grid;place-items:center;padding:20px';
+      m.innerHTML='<div style="background:#2a1f19;color:#f3e8d8;border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:20px;width:min(460px,100%)">'
+        +'<h3 style="margin:0 0 4px;font-size:1.05rem">Link '+esc(kind)+' '+esc(id)+'</h3>'
+        +'<p style="margin:0 0 14px;font-size:.8rem;opacity:.75">Choose the Tonninyira account that owns this '+esc(kind)+'. They will sign in with its email and password.</p>'
+        +'<select id="tnAcctPick" style="width:100%;padding:10px;border-radius:9px;background:#1f1712;color:#f3e8d8;border:1px solid rgba(255,255,255,.2)">'
+        +accts.map(a=>'<option value="'+esc(a.user_id)+'">'+esc(a.email||a.user_id)+(a.display_name?' — '+esc(a.display_name):'')+' ('+esc(a.role)+')</option>').join('')
+        +'</select>'
+        +'<div style="display:flex;gap:8px;margin-top:16px"><button id="tnAcctOk" style="flex:1;border:0;border-radius:9px;padding:10px;font-weight:800;cursor:pointer;background:#4C9A5B;color:#fff">Link</button>'
+        +'<button id="tnAcctNo" style="flex:1;border:1px solid rgba(255,255,255,.2);border-radius:9px;padding:10px;font-weight:800;cursor:pointer;background:transparent;color:inherit">Cancel</button></div></div>';
+      document.body.appendChild(m);
+      const done=v=>{m.remove();resolve(v)};
+      m.querySelector('#tnAcctOk').onclick=()=>done(m.querySelector('#tnAcctPick').value);
+      m.querySelector('#tnAcctNo').onclick=()=>done(null);
+      m.onclick=e=>{if(e.target===m)done(null)};
+    });
+  }
+  app.addEventListener('click',async e=>{
+    const b=e.target.closest('.tn-link-acct');
+    if(!b)return;
+    const restore=b.innerHTML;
+    b.disabled=true;b.textContent='Linking…';
+    try{
+      const changed=await linkAccount(b.dataset.kind,b.dataset.id);
+      if(changed){await load(current)}else{b.disabled=false;b.innerHTML=restore}
+    }catch(err){
+      b.disabled=false;b.innerHTML=restore;
+      status.className='status error';
+      status.textContent='Could not link account: '+String(err?.message||err);
+    }
+  });
+
   /* Delegated, because every view rewrites app.innerHTML wholesale. */
   app.addEventListener('click',async e=>{
     const b=e.target.closest('.tn-approve');

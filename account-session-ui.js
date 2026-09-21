@@ -50,14 +50,60 @@
     el.querySelector('#tnAcctOrders').onclick=()=>{close();if(typeof window.goView==='function')window.goView('orders')};
     el.querySelector('#tnAcctProfile').onclick=()=>{close();if(typeof window.goView==='function')window.goView('profile')};
     el.querySelector('#tnAcctAdmin')?.addEventListener('click',()=>{close();location.href='./admin-control-tower.html'});
-    el.querySelector('#tnAcctSignOut').onclick=async()=>{const b=el.querySelector('#tnAcctSignOut');const msg=el.querySelector('#tnAcctMsg');b.disabled=true;b.textContent='Signing out…';const r=await c().auth.signOut({scope:'local'});if(r.error){b.disabled=false;b.textContent='Sign out';msg.textContent=r.error.message;return}try{localStorage.removeItem('tonninyira_customer');sessionStorage.removeItem('tn_pending_payment')}catch(_){}close();location.reload()};
+    el.querySelector('#tnAcctSignOut').onclick=async()=>{const b=el.querySelector('#tnAcctSignOut');const msg=el.querySelector('#tnAcctMsg');b.disabled=true;b.textContent='Signing out…';const r=await c().auth.signOut({scope:'global'});if(r.error){b.disabled=false;b.textContent='Sign out';msg.textContent=r.error.message;return}try{localStorage.removeItem('tonninyira_customer');sessionStorage.removeItem('tn_pending_payment')}catch(_){}close();location.reload()};
   }
+  /* The button used to read "Account" whether or not anyone was signed in,
+     and the storefront looked identical either way -- so a returning
+     customer was greeted exactly like a first-time visitor. The session was
+     always persisted correctly; the interface simply never said so. */
+  function firstName(p,s){
+    const n=p?.display_name||s?.user?.user_metadata?.display_name||s?.user?.user_metadata?.full_name||'';
+    const first=String(n).trim().split(/\s+/)[0];
+    return first||null;
+  }
+
+  async function label(){
+    const b=document.getElementById('tn-account-session-button');
+    if(!b)return;
+    const s=await session();
+    if(!s){b.textContent='Account';b.setAttribute('aria-label','Sign in or create an account');greet(null);return}
+    const p=await profile(s.user.id);
+    const name=firstName(p,s);
+    b.textContent=name||'My account';
+    b.setAttribute('aria-label','Open your Tonninyira account');
+    greet(name);
+  }
+
+  function greet(name){
+    const host=document.querySelector('.brand-row')?.parentElement||document.querySelector('.wrap')||document.body;
+    let g=document.getElementById('tn-welcome-back');
+    if(!name){g?.remove();return}
+    if(!g){
+      g=document.createElement('div');g.id='tn-welcome-back';
+      g.style.cssText='margin:10px 16px 0;padding:11px 13px;border-radius:13px;border:1px solid rgba(245,180,0,.22);background:linear-gradient(180deg,rgba(245,180,0,.12),rgba(245,180,0,0));font-family:\'Work Sans\',sans-serif';
+      const row=document.querySelector('.brand-row');
+      if(row&&row.parentElement)row.parentElement.insertBefore(g,row.nextSibling); else host.prepend(g);
+    }
+    g.innerHTML='<div style="font-size:.88rem;font-weight:800;color:var(--sand)">Welcome back, '+esc(name)+' 👋</div>'+
+      '<div style="font-size:.72rem;color:var(--muted);margin-top:2px;line-height:1.5">Your basket, wishlist and orders are where you left them.</div>';
+  }
+
   function boot(){
     style();
+    /* signout-visible.js loads before this file and appends its own
+       "Account" chip to the same row, so its stand-down guard has not seen
+       us yet when it first runs. This file owns the account control, so it
+       clears the duplicate here -- boot() runs again on a timer, which
+       keeps this correct whichever order the two scripts end up in. */
+    document.getElementById('tn-account-chip')?.remove();
+    document.getElementById('tn-account-menu')?.remove();
     const row=document.querySelector('.brand-row');
     if(!row||document.getElementById('tn-account-session-button'))return;
     const b=document.createElement('button');b.id='tn-account-session-button';b.className='tn-acct-btn';b.textContent='Account';b.onclick=open;
     row.appendChild(b);
+    label();
+    /* Re-label on sign-in and sign-out without needing a page reload. */
+    try{c()?.auth?.onAuthStateChange?.(()=>label())}catch(_){}
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   setTimeout(boot,500);setTimeout(boot,1600);

@@ -32,7 +32,7 @@ repeat purchasing, fulfilment speed, geography and partner productivity.
 ### Customer
 Public marketplace browsing · Eats / Shop category split · vendor and stall discovery · product
 search · area entry and device location · basket and multi-vendor order grouping · account
-creation and sign-in with phone OTP or email · order history and status · reviews and ratings ·
+creation with an email address, sign-in with email or phone plus a password · order history and status · reviews and ratings ·
 private Support · account-backed wishlist that persists across sessions.
 
 ### Vendor
@@ -69,7 +69,7 @@ Supabase Auth is the source of truth for verified identity.
 flowchart TB
   V["Visitor"] --> B["Browse the marketplace freely"]
   B --> T["Start a private or transactional action"]
-  T --> A["Verify account<br/>phone OTP / email"]
+  T --> A["Sign in<br/>email + password"]
   A --> S["Supabase session"]
   S --> C["Customer<br/>orders · wishlist · support"]
   S --> VE["Vendor<br/>application · approval · earnings"]

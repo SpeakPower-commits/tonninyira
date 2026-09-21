@@ -90,6 +90,7 @@
 </header>
 
 <div class="wrap">
+  <div id="tnApplyingAs" class="hidden" style="margin:14px 0 4px;padding:11px 13px;border-radius:12px;border:1px solid rgba(245,180,0,.24);background:rgba(245,180,0,.08);font-size:.78rem;line-height:1.5"></div>
   <div class="tabs" id="tabSwitcher">
     <button class="tab-btn active" id="tabVendorBtn" onclick="showTab('vendor')">Register a Stall</button>
     <button class="tab-btn" id="tabRiderBtn" onclick="showTab('rider')">Register a Rider</button>
@@ -597,6 +598,17 @@ async function tnSession(){
   catch(_){ return null; }
 }
 
+function showApplyingAs(session){
+  const box = document.getElementById('tnApplyingAs');
+  const email = session?.user?.email;
+  if(!box || !email) return;
+  const safe = String(email).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  box.innerHTML = '<strong style="color:var(--gold)">Applying as ' + safe + '</strong>'
+    + '<br><span style="opacity:.75">This is the account that will own your stall or rider profile, '
+    + 'and where we send your approval. Your phone number below is what customers and dispatch call.</span>';
+  box.classList.remove('hidden');
+}
+
 (function requirePartnerAccount(){
   const gate = document.createElement('div');
   gate.id = 'tnRegGate';
@@ -609,7 +621,7 @@ async function tnSession(){
     return;
   }
   tnSession().then(session=>{
-    if(session){ gate.remove(); return; }
+    if(session){ gate.remove(); showApplyingAs(session); return; }
     gate.textContent = 'You need a Tonninyira account first — taking you there now…';
     location.replace('index.html');
   });
