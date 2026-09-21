@@ -752,7 +752,7 @@ async function renderMyOrders(){
   const id = getCustomerIdentity();
   if(!id || !id.name || !id.phone){
     el.innerHTML = `<div class="placeholder">${ICONS.box}<h3>See your orders</h3><p>Sign in with your name and phone number to find past orders and rate your stalls and riders.</p></div>
-      <div style="padding:0 16px;"><button class="btn-primary" style="width:100%;" onclick="document.getElementById('identityOverlay').classList.remove('hidden'); document.getElementById('identitySheet').classList.remove('hidden');">Sign In</button></div>`;
+      <div style="padding:0 16px;"><button class="btn-primary" style="width:100%;" onclick="tnAuthEntry()">Sign in or create an account</button></div>`;
     return;
   }
   el.innerHTML = `<div class="placeholder"><h3>Loading your orders…</h3></div>`;
@@ -1091,8 +1091,9 @@ async function renderAccountPage(){
 function tnAuthEntry(){
   if(typeof window.authStart === 'function'){ window.authStart(); return; }
   if(typeof window.tnOpenAccount === 'function'){ window.tnOpenAccount(); return; }
-  document.getElementById('identityOverlay')?.classList.remove('hidden');
-  document.getElementById('identitySheet')?.classList.remove('hidden');
+  /* Falling back to the old name-and-phone sheet here would quietly reinstate
+     the very flow this replaced, so say what is wrong instead. */
+  alert('Sign-in is unavailable right now. Please reload the page and try again.');
 }
 
 /* Stored on the profile, not on the auth user: auth.users.phone is a login
@@ -1387,7 +1388,27 @@ loadLiveRiders();
 </script>
 <script src="account-session-ui.js"></script>
 <script src="flutterwave-payments-v2.js"></script>
-<script>if('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));</script>
+<script>
+if('serviceWorker' in navigator) window.addEventListener('load',()=>{
+  navigator.serviceWorker.register('./sw.js').then(reg=>{
+    /* A worker that installs while a page is open normally waits until every
+       tab closes, so a browser already running the old cache-first worker
+       could stay on stale scripts indefinitely. Tell it to take over now,
+       and reload once when it does. */
+    const prompt=w=>{ if(w&&w.state==='installed'&&navigator.serviceWorker.controller) w.postMessage('tn-skip-waiting'); };
+    prompt(reg.waiting);
+    reg.addEventListener('updatefound',()=>{
+      const w=reg.installing;
+      if(w) w.addEventListener('statechange',()=>prompt(w));
+    });
+    reg.update().catch(()=>{});
+  }).catch(()=>{});
+  let reloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(reloaded) return; reloaded=true; location.reload();
+  });
+});
+</script>
 <script src="enhancements.js"></script>
 <script src="enhancements-fix.js"></script>
 <script src="profile-copy-enhancements.js"></script>

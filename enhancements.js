@@ -168,44 +168,17 @@
      name or phone the other needs. Hand off to the current flow whenever it
      is loaded, and keep the old sheet only as a fallback for pages that do
      not include it. */
+  /* This once carried a second front door: an email magic-link modal built
+     here when guest-access-flow.js was absent. Two sheets meant two different
+     ways in -- one asking for a password, one mailing a link -- and neither
+     collected what the other needed. The flow in guest-access-flow.js is the
+     only one now; if it is missing, that is a fault to report, not a reason
+     to fall back to a different kind of sign-in. */
   function ensureAuthModal() {
     if (typeof window.authStart === 'function') { window.authStart(); return null; }
-    if (document.getElementById('tnAuthModal')) return document.getElementById('tnAuthModal');
-    const modal = document.createElement('div');
-    modal.id = 'tnAuthModal';
-    modal.style.cssText = 'position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.72);display:grid;place-items:center;padding:16px;';
-    modal.innerHTML = `
-      <div style="width:min(420px,100%);background:var(--card);border:1px solid rgba(243,232,216,.12);border-radius:18px;padding:18px;box-shadow:0 18px 60px rgba(0,0,0,.35);">
-        <button id="tnAuthClose" aria-label="Close" style="float:right;border:0;background:none;color:var(--muted);font-size:24px;cursor:pointer;">×</button>
-        <div style="font-size:.7rem;font-weight:800;letter-spacing:1.5px;color:var(--gold);">SECURE TONNINYIRA ACCOUNT</div>
-        <h2 class="display" style="font-size:1.3rem;margin:7px 0;">Keep your orders safe</h2>
-        <p style="color:var(--muted);font-size:.84rem;line-height:1.45;margin-top:0;">Use your email once. We send a secure sign-in link—no password to remember.</p>
-        <label for="tnAuthEmail" style="display:block;font-size:.78rem;font-weight:800;margin-top:12px;">Email address</label>
-        <input id="tnAuthEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" style="width:100%;margin-top:6px;padding:12px;border-radius:10px;border:1px solid rgba(243,232,216,.12);background:var(--ink);color:var(--sand);font:inherit;">
-        <button id="tnAuthSend" class="btn-primary" style="width:100%;margin-top:12px;">Send secure sign-in link</button>
-        <div id="tnAuthMessage" style="font-size:.76rem;color:var(--muted);margin-top:9px;min-height:20px;"></div>
-      </div>`;
-    document.body.appendChild(modal);
-    modal.querySelector('#tnAuthClose').onclick = () => modal.remove();
-    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-    modal.querySelector('#tnAuthSend').onclick = async () => {
-      const email = modal.querySelector('#tnAuthEmail').value.trim();
-      const msg = modal.querySelector('#tnAuthMessage');
-      const client = db();
-      if (!/^\S+@\S+\.\S+$/.test(email)) { msg.textContent = 'Enter a valid email address.'; return; }
-      if (!client?.auth?.signInWithOtp) { msg.textContent = 'Secure sign-in is unavailable right now.'; return; }
-      const button = modal.querySelector('#tnAuthSend');
-      button.disabled = true;
-      button.textContent = 'Sending…';
-      const result = await client.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: window.location.href.split('#')[0] }
-      });
-      button.disabled = false;
-      button.textContent = 'Send secure sign-in link';
-      msg.textContent = result.error ? `Could not send link: ${result.error.message}` : 'Check your email, then return here. Your orders will be linked to your account.';
-    };
-    return modal;
+    if (typeof window.tnAuthEntry === 'function') { window.tnAuthEntry(); return null; }
+    alert('Sign-in is unavailable right now. Please reload the page and try again.');
+    return null;
   }
 
   async function getSession() {

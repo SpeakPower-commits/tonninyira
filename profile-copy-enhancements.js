@@ -198,9 +198,12 @@
     const {data}=await client.auth.getSession();
     const session=data?.session;
     if(!session){
-      const authButton=document.querySelector('[onclick*="Sign In"]');
-      if(authButton) authButton.click();
-      else alert('Please sign in first.');
+      /* This used to hunt for any element with "Sign In" in its onclick and
+         click it, which reached the legacy name-and-phone sheet. Go to the
+         one funnel instead. */
+      if(typeof window.authStart==='function'){ window.authStart(); return; }
+      if(typeof window.tnAuthEntry==='function'){ window.tnAuthEntry(); return; }
+      alert('Please sign in first.');
       return;
     }
 
