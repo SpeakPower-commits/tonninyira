@@ -31,7 +31,8 @@ const IS_RECOVERY=(function(){
   }
   return false;
 })();
-function isRecovery(){ return IS_RECOVERY; }
+let RECOVERY_EVENT=false;
+function isRecovery(){ return IS_RECOVERY || RECOVERY_EVENT; }
 /* Same rule as the sign-up sheet in guest-access-flow.js, which is not loaded
    on this page -- so it is stated here too rather than assumed. */
 function passwordProblem(pass,confirm){
@@ -94,12 +95,29 @@ function offerNewPassword(client){
   try{
     const refused=providerError();
     if(refused)throw new Error(refused);
-    const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLIC_KEY,{auth:{flowType:'implicit',persistSession:true,detectSessionInUrl:true}});
+    /* No flowType here on purpose. index.html and register.html create their
+       clients with the defaults, which is PKCE, so the sign-in starts by
+       storing a code verifier and Supabase returns ?code=... here. Pinned to
+       implicit, this page looked for tokens in the hash instead, found no
+       session, and reported the link as missing or expired. */
+    const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLIC_KEY,{auth:{persistSession:true,detectSessionInUrl:true}});
     const {data:{session},error}=await client.auth.getSession();
     if(error)throw error;
     if(!session)throw new Error('The sign-in link is missing or has expired. If this keeps happening, check that '+location.origin+' is in the Supabase Auth redirect allowlist.');
     spin.style.display='none';
     if(isRecovery()){ offerNewPassword(client); return; }
+    /* Under PKCE the recovery link carries no type marker, so the URL snapshot
+       cannot see it. Supabase still announces it as PASSWORD_RECOVERY, which is
+       the one signal that holds in either flow. */
+    let handed=false;
+    try{
+      client.auth.onAuthStateChange((event)=>{
+        if(event!=='PASSWORD_RECOVERY'||handed) return;
+        handed=true; RECOVERY_EVENT=true; offerNewPassword(client);
+      });
+    }catch(_){}
+    await new Promise(r=>setTimeout(r,250));
+    if(handed) return;
     title.textContent='Account verified';
     msg.textContent='Taking you back to Tonninyira…';
     setTimeout(()=>location.replace(APP_URL+'index.html?auth=complete'),350);
