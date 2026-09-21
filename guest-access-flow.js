@@ -89,8 +89,18 @@
         <input class="tn-flow-input" id="tnPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="0772 123 456">
         <label class="tn-flow-label" for="tnPass">Password <span>— at least 8 characters</span></label>
         <input class="tn-flow-input" id="tnPass" type="password" autocomplete="new-password">
+        <label class="tn-flow-label" for="tnPass2">Confirm password <span>— type it again</span></label>
+        <input class="tn-flow-input" id="tnPass2" type="password" autocomplete="new-password">
+        <label style="display:flex;align-items:center;gap:7px;margin-top:9px;font-size:.76rem;cursor:pointer">
+          <input type="checkbox" id="tnShowPass" style="width:auto;margin:0"> Show password</label>
         <button class="btn-primary" id="tnFlowGo" style="width:100%;margin-top:14px">Create account</button>`;
       f.querySelector('#tnFlowGo').onclick=doSignUp;
+      /* A confirm field without this makes phone typing worse, not better:
+         two masked fields double the chance of a typo you cannot see. */
+      f.querySelector('#tnShowPass').onchange=e=>{
+        const t=e.target.checked?'text':'password';
+        f.querySelector('#tnPass').type=t;f.querySelector('#tnPass2').type=t;
+      };
     }else{
       f.innerHTML=`<label class="tn-flow-label" for="tnId">Email or phone number</label>
         <input class="tn-flow-input" id="tnId" autocomplete="username" placeholder="you@example.com  or  0772 123 456">
@@ -124,17 +134,29 @@
     try{const r=await client().auth.updateUser({phone});return !r.error}catch(_){return false}
   }
 
+  /* The single rule for a password being chosen. auth-callback.html applies
+     the same one when a recovery link lands, so sign-up and reset cannot
+     drift apart on length or on the wording of the mismatch. */
+  function passwordProblem(pass,confirm){
+    if(!pass||pass.length<8)return 'Use a password of at least 8 characters.';
+    if(pass!==confirm)return 'The two passwords do not match. Check both and try again.';
+    return null;
+  }
+  window.tnPasswordProblem=passwordProblem;
+
   async function doSignUp(){
     const c=client();if(!c?.auth?.signUp){say('Account creation is not available right now.',true);return}
     const name=document.getElementById('tnName').value.trim();
     const email=document.getElementById('tnEmail').value.trim();
     const phoneRaw=document.getElementById('tnPhone').value.trim();
     const pass=document.getElementById('tnPass').value;
+    const pass2=document.getElementById('tnPass2').value;
     if(!name){say('Add your name — vendors and riders see it on your orders.',true);return}
     if(!/^\S+@\S+\.\S+$/.test(email)){say('That email does not look right. It is how you get back in if you forget your password.',true);return}
     const phone=phoneRaw?phoneUg(phoneRaw):null;
     if(phoneRaw&&!phone){say('Use a Uganda number like 0772 123 456.',true);return}
-    if(pass.length<8){say('Use a password of at least 8 characters.',true);return}
+    const bad=passwordProblem(pass,pass2);
+    if(bad){say(bad,true);return}
 
     const btn=document.getElementById('tnFlowGo');btn.disabled=true;btn.textContent='Creating account…';say('');
     const r=await c.auth.signUp({email,password:pass,options:{data:{display_name:name},emailRedirectTo:AUTH_CALLBACK}});

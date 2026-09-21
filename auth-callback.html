@@ -10,14 +10,64 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--ink:#1C1410;--card:#2A1F19;--gold:#F5B400;--sand:#F3E8D8;--muted:#9C897A}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--ink);color:var(--sand);font-family:'Work Sans',Arial,sans-serif;display:grid;place-items:center;padding:24px;text-align:center;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}.card{width:min(420px,100%);background:var(--card);border-radius:18px;padding:28px;border:1px solid rgba(243,232,216,.1)}.mark{font-size:10px;letter-spacing:1.6px;color:var(--gold);font-weight:900}h1{font-size:24px;margin:8px 0;font-weight:800;letter-spacing:-.02em}p{color:var(--muted);font-size:13px;line-height:1.5}.err{color:#ffc2b8}.spin{width:30px;height:30px;border:3px solid rgba(243,232,216,.18);border-top-color:var(--gold);border-radius:50%;margin:18px auto;animation:r .8s linear infinite}@keyframes r{to{transform:rotate(360deg)}}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--ink);color:var(--sand);font-family:'Work Sans',Arial,sans-serif;display:grid;place-items:center;padding:24px;text-align:center;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}.card{width:min(420px,100%);background:var(--card);border-radius:18px;padding:28px;border:1px solid rgba(243,232,216,.1)}.mark{font-size:10px;letter-spacing:1.6px;color:var(--gold);font-weight:900}h1{font-size:24px;margin:8px 0;font-weight:800;letter-spacing:-.02em}p{color:var(--muted);font-size:13px;line-height:1.5}.err{color:#ffc2b8}.tn-in{width:100%;padding:12px;margin-top:6px;border-radius:11px;border:1px solid rgba(243,232,216,.22);background:#1F1712;color:var(--sand);font-family:inherit;font-size:15px}.tn-lb{display:block;text-align:left;font-size:12px;font-weight:800;margin-top:12px}.tn-go{width:100%;margin-top:16px;padding:13px;border:0;border-radius:11px;background:var(--gold);color:var(--ink);font-family:inherit;font-weight:800;font-size:15px;cursor:pointer}.tn-go:disabled{opacity:.6;cursor:default}.spin{width:30px;height:30px;border:3px solid rgba(243,232,216,.18);border-top-color:var(--gold);border-radius:50%;margin:18px auto;animation:r .8s linear infinite}@keyframes r{to{transform:rotate(360deg)}}
 </style>
 </head>
-<body><main class="card"><div class="mark">TONNINYIRA</div><h1 id="title">Signing you in…</h1><div class="spin" id="spin"></div><p id="msg">Please wait while we securely finish your account sign-in.</p></main>
+<body><main class="card"><div class="mark">TONNINYIRA</div><h1 id="title">Signing you in…</h1><div class="spin" id="spin"></div><p id="msg">Please wait while we securely finish your account sign-in.</p><div id="pwForm" style="display:none"></div></main>
 <script>
 const SUPABASE_URL='https://alxzmjgepftohwpqibmn.supabase.co';
 const SUPABASE_PUBLIC_KEY='sb_publishable_vLr2S8qLRHN5gVv9IITVPQ_CTXc4aCv';
 const APP_URL=location.origin+location.pathname.replace(/[^/]*$/,''); /* derived, not pinned: see guest-access-flow.js */
+/* Supabase marks a password-reset link with type=recovery. Without this the
+   page treated it as an ordinary sign-in: you were let in once, the password
+   you never chose stayed in place, and you were locked out again next time. */
+/* Snapshotted at parse time, before createClient runs: detectSessionInUrl
+   consumes the hash and clears it with history.replaceState, so reading the
+   URL after the client is built can come back empty and a recovery link
+   would be mistaken for an ordinary sign-in. */
+const IS_RECOVERY=(function(){
+  for(const raw of [location.hash.replace(/^#/,''), location.search.replace(/^\?/,'')]){
+    if(raw && new URLSearchParams(raw).get('type')==='recovery') return true;
+  }
+  return false;
+})();
+function isRecovery(){ return IS_RECOVERY; }
+/* Same rule as the sign-up sheet in guest-access-flow.js, which is not loaded
+   on this page -- so it is stated here too rather than assumed. */
+function passwordProblem(pass,confirm){
+  if(!pass||pass.length<8)return 'Use a password of at least 8 characters.';
+  if(pass!==confirm)return 'The two passwords do not match. Check both and try again.';
+  return null;
+}
+function offerNewPassword(client){
+  const title=document.getElementById('title'),msg=document.getElementById('msg'),form=document.getElementById('pwForm');
+  title.textContent='Choose a new password';
+  msg.textContent='This replaces the old one. You will use it to sign in from now on.';
+  form.style.display='block';
+  form.innerHTML='<label class="tn-lb" for="np">New password</label>'
+    +'<input class="tn-in" id="np" type="password" autocomplete="new-password">'
+    +'<label class="tn-lb" for="np2">Confirm new password</label>'
+    +'<input class="tn-in" id="np2" type="password" autocomplete="new-password">'
+    +'<label style="display:flex;align-items:center;gap:7px;margin-top:10px;font-size:12px;cursor:pointer">'
+    +'<input type="checkbox" id="npShow" style="width:auto;margin:0"> Show password</label>'
+    +'<button class="tn-go" id="npGo">Save and continue</button>';
+  const np=form.querySelector('#np'),np2=form.querySelector('#np2'),go=form.querySelector('#npGo');
+  form.querySelector('#npShow').onchange=e=>{const t=e.target.checked?'text':'password';np.type=t;np2.type=t};
+  const submit=async()=>{
+    const bad=passwordProblem(np.value,np2.value);
+    if(bad){msg.className='err';msg.textContent=bad;return}
+    msg.className='';msg.textContent='Saving…';go.disabled=true;go.textContent='Saving…';
+    const r=await client.auth.updateUser({password:np.value});
+    if(r.error){go.disabled=false;go.textContent='Save and continue';msg.className='err';msg.textContent=r.error.message;return}
+    form.style.display='none';
+    title.textContent='Password saved';
+    msg.className='';msg.textContent='Taking you back to Tonninyira…';
+    setTimeout(()=>location.replace(APP_URL+'index.html?auth=complete'),450);
+  };
+  go.onclick=submit;
+  [np,np2].forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();submit()}}));
+  np.focus();
+}
 (async()=>{
   const title=document.getElementById('title'),msg=document.getElementById('msg'),spin=document.getElementById('spin');
   /* Supabase reports a refused redirect in the URL, not through getSession().
@@ -48,9 +98,10 @@ const APP_URL=location.origin+location.pathname.replace(/[^/]*$/,''); /* derived
     const {data:{session},error}=await client.auth.getSession();
     if(error)throw error;
     if(!session)throw new Error('The sign-in link is missing or has expired. If this keeps happening, check that '+location.origin+' is in the Supabase Auth redirect allowlist.');
+    spin.style.display='none';
+    if(isRecovery()){ offerNewPassword(client); return; }
     title.textContent='Account verified';
     msg.textContent='Taking you back to Tonninyira…';
-    spin.style.display='none';
     setTimeout(()=>location.replace(APP_URL+'index.html?auth=complete'),350);
   }catch(e){
     title.textContent='Sign-in link could not be completed';
