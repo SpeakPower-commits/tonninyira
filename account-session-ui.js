@@ -50,7 +50,7 @@
     el.querySelector('#tnAcctOrders').onclick=()=>{close();if(typeof window.goView==='function')window.goView('orders')};
     el.querySelector('#tnAcctProfile').onclick=()=>{close();if(typeof window.goView==='function')window.goView('profile')};
     el.querySelector('#tnAcctAdmin')?.addEventListener('click',()=>{close();location.href='./admin-control-tower.html'});
-    el.querySelector('#tnAcctSignOut').onclick=async()=>{const b=el.querySelector('#tnAcctSignOut');const msg=el.querySelector('#tnAcctMsg');b.disabled=true;b.textContent='Signing out…';const r=await c().auth.signOut({scope:'local'});if(r.error){b.disabled=false;b.textContent='Sign out';msg.textContent=r.error.message;return}try{localStorage.removeItem('tonninyira_customer');sessionStorage.removeItem('tn_pending_payment')}catch(_){}close();location.reload()};
+    el.querySelector('#tnAcctSignOut').onclick=async()=>{const b=el.querySelector('#tnAcctSignOut');const msg=el.querySelector('#tnAcctMsg');b.disabled=true;b.textContent='Signing out…';const r=await c().auth.signOut({scope:'global'});if(r.error){b.disabled=false;b.textContent='Sign out';msg.textContent=r.error.message;return}try{localStorage.removeItem('tonninyira_customer');sessionStorage.removeItem('tn_pending_payment')}catch(_){}close();location.reload()};
   }
   /* The button used to read "Account" whether or not anyone was signed in,
      and the storefront looked identical either way -- so a returning

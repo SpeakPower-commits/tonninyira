@@ -96,15 +96,19 @@
 <div class="wrap">
 
   <div id="loginView">
-    <h3>Log In To Your Stall</h3>
+    <h3>Sign In To Your Stall</h3>
     <div class="card">
-      <label>Phone Number <span class="opt">(the one you registered with)</span></label>
-      <input type="tel" id="loginPhone" placeholder="e.g. 0772 123 456">
-      <label>4-Digit PIN</label>
-      <input type="tel" id="loginPin" maxlength="4" inputmode="numeric" placeholder="••••">
-      <button class="btn-primary" onclick="attemptLogin()">Log In</button>
+      <!-- Filled in by partner-dashboard-auth-earnings.js, which signs you in
+           against your Tonninyira account. This markup is what shows for the
+           moment before that script runs, so it must not promise a PIN. -->
+      <p class="helper" style="margin-top:0">Sign in with the same Tonninyira account you registered with.</p>
+      <label>Email or phone number</label>
+      <input type="text" id="loginPhone" autocomplete="username" placeholder="you@example.com or 0772 123 456">
+      <label>Password</label>
+      <input type="password" id="loginPin" autocomplete="current-password">
+      <button class="btn-primary" onclick="attemptLogin()">Sign in</button>
       <div id="loginError" class="error-text hidden"></div>
-      <p class="helper">Not registered yet? <a href="register.html?as=vendor" style="color:var(--gold);">Set up your stall here</a> — you'll choose your PIN during sign-up.</p>
+      <p class="helper">Not registered yet? <a href="register.html?as=vendor" style="color:var(--gold);">Apply to join here</a> &mdash; you create your account first, then submit your details.</p>
     </div>
   </div>
 

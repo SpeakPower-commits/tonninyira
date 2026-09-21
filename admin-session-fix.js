@@ -30,7 +30,7 @@
     }
   }
   async function logout(){
-    try{await getClient()?.auth?.signOut({scope:'local'});}catch(e){}
+    try{await getClient()?.auth?.signOut({scope:'global'});}catch(e){}
     try{
       sessionStorage.clear();
       Object.keys(localStorage).filter(k=>k.startsWith('sb-')).forEach(k=>localStorage.removeItem(k));

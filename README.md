@@ -32,8 +32,13 @@ pay with MTN or Airtel mobile money, and have it delivered by a verified rider.
 People should be able to find a good local stall without signing up first. The platform should
 only ask for an account when real money or private customer data is involved.
 
-That gives one straight path: **browse → choose → basket → verify → pay → track**. Discovery is
+That gives one straight path: **browse → choose → basket → sign in → pay → track**. Discovery is
 public; everything transactional sits behind a verified account.
+
+Every account — customer, vendor, rider — is created with an **email address and a password**. The
+phone number is optional at sign-up and collected where it is actually needed: at checkout for a
+customer, on the application for a vendor or rider, because that is the number a rider calls. Nobody
+waits for an SMS to get in.
 
 | Area | What you find there |
 | --- | --- |
@@ -47,8 +52,8 @@ public; everything transactional sits behind a verified account.
 ```mermaid
 flowchart LR
   A["Browse<br/>no account needed"] --> B["Add to basket"]
-  B --> C{"Verify identity"}
-  C -->|"Phone OTP or email"| D["Pay<br/>MTN / Airtel"]
+  B --> C{"Sign in"}
+  C -->|"Email + password"| D["Pay<br/>MTN / Airtel"]
   D --> E["Track delivery"]
   style A fill:#F5B400,stroke:#1C1410,color:#1C1410
   style D fill:#E23F25,stroke:#1C1410,color:#ffffff
@@ -64,7 +69,7 @@ waits for review. Nothing reaches the storefront unapproved.
 
 ```mermaid
 flowchart LR
-  A["Create account<br/>phone OTP"] --> B["Submit application<br/>KCCA · URA · UNBS"]
+  A["Create account<br/>email + password"] --> B["Submit application<br/>KCCA · URA · UNBS"]
   B --> C["Status: pending"]
   C --> D{"Admin review"}
   D -->|"Approve"| E["Live on the storefront"]
@@ -88,7 +93,7 @@ flowchart LR
 flowchart TB
   B["Browser<br/>HTML · CSS · vanilla JS"] --> P["GitHub Pages<br/>static delivery"]
   B --> S["Supabase"]
-  S --> AU["Auth<br/>phone OTP / email"]
+  S --> AU["Auth<br/>email + password"]
   S --> DB[("PostgreSQL<br/>+ row-level security")]
   S --> EF["Edge Functions"]
   EF --> FW["Flutterwave<br/>mobile money"]
@@ -130,7 +135,7 @@ wrong expectation.
 | Area | State |
 | --- | --- |
 | Storefront and public browsing | ✅ Live |
-| Accounts, phone OTP and email sign-in | ✅ Live |
+| Accounts, email sign-up and password sign-in | ✅ Live |
 | Vendor / rider sign-up and approval queue | ✅ Live |
 | Admin command centre | ✅ Live |
 | Mobile-money payments | ⏳ Built, not yet tested end to end |

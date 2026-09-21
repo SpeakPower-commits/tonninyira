@@ -53,7 +53,7 @@
     const host = document.querySelector('#profileView') || document.querySelector('[data-view="profile"]') || document.body;
     if(document.getElementById('tn-signout-btn')) return;
     const b=document.createElement('button'); b.id='tn-signout-btn'; b.className='tn-signout'; b.textContent='Sign out';
-    b.onclick=async()=>{ b.disabled=true; b.textContent='Signing out…'; const {error}=await client.auth.signOut({scope:'local'}); if(error){b.disabled=false;b.textContent='Sign out';alert(error.message);return;} window.location.href='index.html'; };
+    b.onclick=async()=>{ b.disabled=true; b.textContent='Signing out…'; const {error}=await client.auth.signOut({scope:'global'}); if(error){b.disabled=false;b.textContent='Sign out';alert(error.message);return;} window.location.href='index.html'; };
     host.appendChild(b);
   }
 
