@@ -162,7 +162,14 @@
     });
   }
 
+  /* This email magic-link sheet predates the password flow in
+     guest-access-flow.js. Leaving both live meant two different front doors:
+     one asking for a password, one mailing a link, neither collecting the
+     name or phone the other needs. Hand off to the current flow whenever it
+     is loaded, and keep the old sheet only as a fallback for pages that do
+     not include it. */
   function ensureAuthModal() {
+    if (typeof window.authStart === 'function') { window.authStart(); return null; }
     if (document.getElementById('tnAuthModal')) return document.getElementById('tnAuthModal');
     const modal = document.createElement('div');
     modal.id = 'tnAuthModal';
