@@ -90,6 +90,13 @@
 
   function boot(){
     style();
+    /* signout-visible.js loads before this file and appends its own
+       "Account" chip to the same row, so its stand-down guard has not seen
+       us yet when it first runs. This file owns the account control, so it
+       clears the duplicate here -- boot() runs again on a timer, which
+       keeps this correct whichever order the two scripts end up in. */
+    document.getElementById('tn-account-chip')?.remove();
+    document.getElementById('tn-account-menu')?.remove();
     const row=document.querySelector('.brand-row');
     if(!row||document.getElementById('tn-account-session-button'))return;
     const b=document.createElement('button');b.id='tn-account-session-button';b.className='tn-acct-btn';b.textContent='Account';b.onclick=open;
