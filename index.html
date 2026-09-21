@@ -749,16 +749,30 @@ function renderSearchResults(){
    reviews so the same stall/rider can't be rated twice for one order. */
 async function renderMyOrders(){
   const el = document.getElementById('mainArea');
-  const id = getCustomerIdentity();
-  if(!id || !id.name || !id.phone){
-    el.innerHTML = `<div class="placeholder">${ICONS.box}<h3>See your orders</h3><p>Sign in with your name and phone number to find past orders and rate your stalls and riders.</p></div>
+  /* Gated on the session, not on a name and phone typed into a sheet: the
+     orders themselves are keyed to the account now. */
+  let sess = null;
+  try{ sess = (await supabaseClient.auth.getSession())?.data?.session || null; }catch(_){}
+  if(!sess){
+    el.innerHTML = `<div class="placeholder">${ICONS.box}<h3>See your orders</h3><p>Your orders live in your account, so you can track them, reorder and rate your stall and rider.</p></div>
       <div style="padding:0 16px;"><button class="btn-primary" style="width:100%;" onclick="tnAuthEntry()">Sign in or create an account</button></div>`;
     return;
   }
   el.innerHTML = `<div class="placeholder"><h3>Loading your orders…</h3></div>`;
+  /* Reviews and the rating form still key off a name and phone, so build one
+     from the account, falling back to whatever the old sheet stored. */
+  let prof = null;
+  try{ prof = (await supabaseClient.from('profiles').select('display_name,phone').eq('id', sess.user.id).maybeSingle()).data; }catch(_){}
+  const stored = getCustomerIdentity() || {};
+  const id = {
+    name:  prof?.display_name || sess.user.user_metadata?.display_name || stored.name || '',
+    phone: prof?.phone || sess.user.phone || stored.phone || ''
+  };
   try{
+    /* Matched on customer_phone before, which orders_customer_read never
+       returns anyway -- it filters on user_id = auth.uid(). */
     const { data: orderRows, error } = await supabaseClient.from('orders').select('*')
-      .eq('customer_phone', id.phone).order('created_at', {ascending:false});
+      .order('created_at', {ascending:false});
     if(error) throw error;
     const { data: myReviews } = await supabaseClient.from('reviews')
       .select('target_type,target_id,order_id').eq('reviewer_phone', id.phone);
@@ -1084,8 +1098,21 @@ async function renderAccountPage(){
         <h3 style="margin:10px 0 6px">Your Tonninyira account</h3>
         <p class="helper" style="margin:0 auto;max-width:330px">One account keeps your orders, your saved stalls and the number your rider calls. You only need an email address to start.</p>
       </div>
-      <button class="btn-primary" style="width:100%;margin-top:16px" onclick="tnAuthEntry()">Sign in or create an account</button>
-      <p class="helper" style="margin:14px 0 0;text-align:center;font-size:.78rem">Selling on Tonninyira, or delivering as a rider, starts once you have an account.</p>`;
+      <div style="margin-top:18px;border-top:1px solid rgba(255,255,255,.08);padding-top:16px">
+        <p class="helper" style="margin:0 0 12px">What an account gives you</p>
+        ${[
+          ['Your orders, tracked','See every order, follow it to your door, and reorder in one tap.'],
+          ['Saved stalls','Keep the traders you trust in one place instead of hunting for them again.'],
+          ['Help when something goes wrong','Message us about an order and we can see which one you mean.'],
+          ['Points on every completed order','One point for every UGX 1,000 you spend, added automatically.']
+        ].map(([t,d])=>`<div style="display:flex;gap:10px;padding:9px 0">
+          <span style="color:var(--gold);font-weight:900;line-height:1.35">&#10003;</span>
+          <div><div style="font-weight:800;font-size:.86rem">${t}</div>
+          <div class="helper" style="margin:2px 0 0;font-size:.76rem;line-height:1.45">${d}</div></div></div>`).join('')}
+      </div>
+      <button class="btn-primary" style="width:100%;margin-top:16px" onclick="tnAuthEntry()">Create an account</button>
+      <button class="btn-secondary" style="width:100%;margin-top:9px" onclick="tnAuthEntry()">I already have one &mdash; sign in</button>
+      <p class="helper" style="margin:14px 0 0;text-align:center;font-size:.78rem">Selling on Tonninyira, or delivering as a rider, also starts with an account.</p>`;
     return;
   }
 
@@ -1206,8 +1233,20 @@ async function finishOrder(method, custId){
     if(!byVendor[c.vendorId]) byVendor[c.vendorId] = {vendorName: c.vendorName, items: []};
     byVendor[c.vendorId].items.push(c);
   });
+  /* orders_customer_insert is `user_id = auth.uid()`, so an order without the
+     account attached is refused outright -- and award_order_loyalty() needs
+     the same field to award points. This was missing, which is why every
+     order on record is a guest order worth nothing to its customer. */
+  let tnUserId = null;
+  try{ tnUserId = (await supabaseClient.auth.getSession())?.data?.session?.user?.id || null; }catch(_){}
+  if(!tnUserId){
+    if(typeof window.authStart === 'function'){ window.authStart(); return; }
+    alert('Please sign in to place your order.');
+    return;
+  }
+
   const rows = Object.entries(byVendor).map(([vendorId, group])=>({
-    order_id: orderId, vendor_id: vendorId, vendor_name: group.vendorName,
+    order_id: orderId, user_id: tnUserId, vendor_id: vendorId, vendor_name: group.vendorName,
     items: group.items, item_subtotal: group.items.reduce((s,i)=>s+i.price*i.qty,0),
     delivery_fee: deliveryFee, payment_method: method, customer_area: area, rider_tid: rider.tid,
     customer_name: custId.name, customer_phone: custId.phone,
