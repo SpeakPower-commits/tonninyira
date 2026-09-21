@@ -254,6 +254,9 @@
     const fresh=old.cloneNode(true);
     old.replaceWith(fresh);
     fresh.addEventListener('click',openSupportChat);
+    /* The account page's Help card calls this by name; without it the card
+       would look live and do nothing. */
+    window.tnOpenSupport=openSupportChat;
   }
 
   function enhanceProfile(){
