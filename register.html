@@ -620,10 +620,46 @@ function showApplyingAs(session){
     gate.textContent = 'Tonninyira cannot reach its secure service right now. Please check your connection and reload this page.';
     return;
   }
+  /* This used to redirect to index.html, which threw people out of the form
+     they had just chosen to open and explained nothing. The requirement is the
+     same -- no application without an account -- but it is stated here, with
+     the way to satisfy it, and the sheet opens over this page so nothing
+     typed is lost. */
+  function lock(gate){
+    gate.style.cssText += ';place-items:center;';
+    gate.innerHTML = '';
+    const card = document.createElement('div');
+    card.style.cssText = 'max-width:340px';
+    card.innerHTML = '<div style="font-size:.66rem;letter-spacing:1.6px;color:var(--gold);font-weight:900">TONNINYIRA</div>'
+      + '<h2 style="font-size:1.25rem;margin:10px 0 8px;font-weight:800">You need a Tonninyira account to apply</h2>'
+      + '<p style="margin:0 0 18px;opacity:.8">It takes a moment, and it is where we send your approval.</p>';
+    const go = document.createElement('button');
+    go.textContent = 'Create account or sign in';
+    go.style.cssText = 'width:100%;padding:13px;border:0;border-radius:12px;background:var(--gold);color:var(--ink);font-family:inherit;font-weight:800;font-size:.95rem;cursor:pointer';
+    go.onclick = () => {
+      if(typeof window.authStart === 'function') return window.authStart();
+      alert('Sign-in is unavailable right now. Please reload the page and try again.');
+    };
+    const back = document.createElement('button');
+    back.textContent = 'Back to the marketplace';
+    back.style.cssText = 'width:100%;margin-top:10px;padding:12px;border:1px solid rgba(255,255,255,.18);border-radius:12px;background:transparent;color:inherit;font-family:inherit;font-weight:800;cursor:pointer';
+    back.onclick = () => { location.href = 'index.html'; };
+    card.append(go, back);
+    gate.appendChild(card);
+  }
+
   tnSession().then(session=>{
     if(session){ gate.remove(); showApplyingAs(session); return; }
-    gate.textContent = 'You need a Tonninyira account first — taking you there now…';
-    location.replace('index.html');
+    lock(gate);
+    /* Signing in on the sheet lifts the lock in place -- no reload, no
+       navigation, and the form is revealed already filled in as it was. */
+    try{
+      supabaseClient.auth.onAuthStateChange((_e, s)=>{
+        if(!s) return;
+        document.getElementById('tnRegGate')?.remove();
+        showApplyingAs(s);
+      });
+    }catch(_){}
   });
 })();
 </script>

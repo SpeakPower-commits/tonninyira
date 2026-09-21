@@ -1024,14 +1024,43 @@ function normalizePhone(p){ return (p||'').replace(/[\s-]/g,''); }
    One page that states what a Tonninyira account is for and shows only what
    the signed-in customer can act on. The email is the account; the phone is
    delivery information, which is why it is requested here and not at sign-up. */
-const TN_PARTNER_LINKS = `
-  <div style="margin-top:22px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08)">
+/* These four links used to render whether or not anyone was signed in, so a
+   visitor with no account was offered "Become a vendor" and "Manage my stall"
+   alike -- neither of which could do what it said. The section now appears
+   only for a signed-in person, and says what they actually are: both tables
+   carry a self-read policy on auth_user_id, so this is looked up, not guessed. */
+async function tnPartnerState(userId){
+  const one = async table => {
+    try{
+      const r = await supabaseClient.from(table).select('approval_status').eq('auth_user_id', userId).maybeSingle();
+      return r.data ? String(r.data.approval_status || 'pending').toLowerCase() : null;
+    }catch(_){ return null; }
+  };
+  const [vendor, rider] = await Promise.all([one('vendors'), one('riders')]);
+  return { vendor, rider };
+}
+
+function tnPartnerBlock(kind, status){
+  const vendor = kind === 'vendor';
+  const noun   = vendor ? 'stall' : 'rider profile';
+  const note = t => `<p class="helper" style="margin:0 0 10px;font-size:.78rem">${t}</p>`;
+  if(status === null)
+    return `<a href="register.html?as=${kind}" class="${vendor?'btn-primary':'btn-secondary'}" style="display:block;text-align:center;text-decoration:none">${vendor?'Become a vendor &mdash; register your stall':'Become a rider &mdash; register to deliver'}</a>`;
+  if(status === 'approved')
+    return `<a href="${vendor?'vendor-dashboard.html':'rider-dashboard.html'}" class="btn-secondary" style="display:block;text-align:center;text-decoration:none;border-color:var(--gold);color:var(--gold)">${vendor?'Manage my stall':'View my deliveries'}</a>`;
+  if(status === 'rejected')
+    return note(`Your ${noun} application was not approved. Reply to the email we sent you if you would like it looked at again.`);
+  return note(`Your ${noun} application is with our team for review. We will email you as soon as it is decided.`);
+}
+
+async function tnPartnerSection(userId){
+  const { vendor, rider } = await tnPartnerState(userId);
+  return `<div style="margin-top:22px;padding-top:18px;border-top:1px solid rgba(255,255,255,.08)">
     <p class="helper" style="margin:0 0 10px">Trading on Tonninyira</p>
-    <a href="vendor-dashboard.html" class="btn-secondary" style="display:block;text-align:center;text-decoration:none;border-color:var(--gold);color:var(--gold)">Manage my stall</a>
-    <a href="rider-dashboard.html" class="btn-secondary" style="display:block;text-align:center;text-decoration:none;border-color:var(--gold);color:var(--gold)">View my deliveries</a>
-    <a href="register.html?as=vendor" class="btn-primary" style="display:block;text-align:center;text-decoration:none">Become a vendor &mdash; register your stall</a>
-    <a href="register.html?as=rider" class="btn-secondary" style="display:block;text-align:center;text-decoration:none">Become a rider &mdash; register to deliver</a>
+    ${tnPartnerBlock('vendor', vendor)}
+    ${tnPartnerBlock('rider', rider)}
   </div>`;
+}
 
 function tnAccountRow(label, value, extra){
   return `<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.07)">
@@ -1056,7 +1085,7 @@ async function renderAccountPage(){
         <p class="helper" style="margin:0 auto;max-width:330px">One account keeps your orders, your saved stalls and the number your rider calls. You only need an email address to start.</p>
       </div>
       <button class="btn-primary" style="width:100%;margin-top:16px" onclick="tnAuthEntry()">Sign in or create an account</button>
-      ${TN_PARTNER_LINKS}`;
+      <p class="helper" style="margin:14px 0 0;text-align:center;font-size:.78rem">Selling on Tonninyira, or delivering as a rider, starts once you have an account.</p>`;
     return;
   }
 
@@ -1083,7 +1112,7 @@ async function renderAccountPage(){
       <button class="btn-secondary" style="width:100%" onclick="AppState.view='favorites'; renderMain(); window.scrollTo(0,0);">My favourite stalls</button>
       <button class="btn-secondary" style="width:100%" onclick="tnAuthEntry()">Use a different account</button>
     </div>
-    ${TN_PARTNER_LINKS}`;
+    ${await tnPartnerSection(session.user.id)}`;
 }
 
 /* Every "sign in" control routes through the one funnel in guest-access-flow.js
