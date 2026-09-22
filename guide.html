@@ -16,17 +16,27 @@
   payment-return.html stand alone from the main app shell.
 
   Typography: Work Sans throughout, not the Plus Jakarta Sans / Bricolage
-  Grotesque pairing used on the account-page redesign. That pairing was
-  chosen for stylistic distinctiveness aimed at Gen-Z university students --
-  the opposite persona from this page's audience. Work Sans is already the
-  sitewide body font (nothing new to learn visually), has a large x-height,
-  and reads better at low literacy than a stylised display face. Alfa Slab
-  One stays reserved for the wordmark only.
+  Grotesque pairing used on the account-page redesign -- that pairing was
+  chosen for stylistic distinctiveness aimed at Gen-Z university students,
+  the opposite persona from this page's audience, where legibility matters
+  more than flair. Icon style: Option A from the earlier style demo -- flat,
+  high-contrast pictograms (dark stroke on a plain sand tile), chosen so
+  nothing here is ambiguous at a glance.
 
-  Icon style: Option A from the demo -- flat, high-contrast pictograms
-  (dark stroke on a plain sand tile), chosen over the warmer colour-tile
-  style already used elsewhere in the app, specifically because this page's
-  job is to never be misread, not to look distinctive.
+  Language: content is looked up by step id out of I18N[lang], falling back
+  to the English fields on the step object itself when a key is missing --
+  so an incomplete or future translation degrades to English rather than to
+  a blank screen. Confidence is NOT equal across the five languages offered:
+  Luganda and Kiswahili are translated with real confidence (Kiswahili is
+  one of Uganda's two official languages; Luganda is the dominant language
+  around Kampala, where Tonninyira actually operates). Acholi is a Nilotic
+  language, structurally unrelated to the other four, and Runyankole and
+  Lumasaba (the language of the Bagisu -- Tom's own word for it was
+  "Gishu") are Bantu but less deeply resourced here than Luganda. That
+  difference is surfaced to the reader, not just noted in this comment --
+  see #langNotice below -- because a wrong word in a legal or safety-facing
+  sentence is a real harm to someone who by definition cannot check it
+  against the English.
 -->
 <style>
   :root{--ink:#1C1410;--card:#2A1F19;--card2:#33261C;--gold:#F5B400;--sand:#F3E8D8;--muted:#9C897A;--safe2:#CBB9A6;--green:#4C9A5B}
@@ -37,7 +47,12 @@
   .mark{font-family:'Alfa Slab One',cursive;color:var(--gold);font-size:15px;letter-spacing:.01em}
   .back{font-size:13px;font-weight:600;color:var(--safe2);text-decoration:none}
   .back:hover{color:var(--sand)}
-  .tabs{display:flex;gap:6px;margin-top:20px;background:var(--card);border-radius:14px;padding:5px}
+  .langs{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+  .lang-btn{font-family:inherit;font-size:11px;font-weight:700;color:var(--safe2);background:var(--card);border:1px solid transparent;border-radius:99px;padding:7px 11px;cursor:pointer;min-height:32px}
+  .lang-btn.is-on{color:var(--ink);background:var(--gold);font-weight:800}
+  .lang-notice{margin-top:10px;padding:9px 11px;border-radius:10px;background:rgba(245,180,0,.1);border:1px solid rgba(245,180,0,.35);font-size:11.5px;line-height:1.5;color:var(--safe2);display:none}
+  .lang-notice.show{display:block}
+  .tabs{display:flex;gap:6px;margin-top:16px;background:var(--card);border-radius:14px;padding:5px}
   .tab{flex:1;text-align:center;padding:11px 4px;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;color:var(--muted);background:transparent;border:0;cursor:pointer;min-height:44px}
   .tab.is-on{font-weight:800;color:var(--ink);background:var(--gold)}
   .counter{text-align:center;margin-top:26px;font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--safe2)}
@@ -72,6 +87,9 @@
   </div>
 
   <h1 class="sr-only">How Tonninyira Works</h1>
+
+  <div class="langs" id="langs" role="group" aria-label="Choose a language"></div>
+  <div class="lang-notice" id="langNotice"></div>
 
   <div class="tabs" role="tablist" aria-label="Choose your role">
     <button class="tab" role="tab" id="tabShopper" data-role="shopper">Shopper</button>
@@ -111,10 +129,7 @@
 'use strict';
 
 /* Flat, high-contrast line icons -- copied verbatim from the sitewide
-   ICONS object in index.html (the codebase's own established convention:
-   register.html, admin.html and admin-control-tower.html each already keep
-   a small page-local icon set rather than sharing one module), plus three
-   new icons this guide needed that the storefront never did. */
+   ICONS object in index.html, plus three new icons this guide needed. */
 const GUIDE_ICON = {
   home: '<svg viewBox="0 0 24 24" fill="none" stroke="#1C1410" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5l9-7 9 7V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>',
   pin: '<svg viewBox="0 0 24 24" fill="none" stroke="#1C1410" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
@@ -133,66 +148,263 @@ const GUIDE_ICON = {
   hourglass: '<svg viewBox="0 0 24 24" fill="none" stroke="#1C1410" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12"/><path d="M6 22h12"/><path d="M6 2c0 6 4 8 6 10-2 2-6 4-6 10"/><path d="M18 2c0 6-4 8-6 10 2 2 6 4 6 10"/></svg>'
 };
 
-/* One entry per step: {icon, caption, detail}. i18n and audioSrc are
-   deliberately empty today -- filling either later is a pure content
-   change, never a redesign. speakStep() below already prefers a real
-   recording over synthesis whenever one exists for the active language. */
+/* One entry per step: {id, icon, caption, detail} in English -- the
+   fallback for every language, and the only copy for a language until it
+   gets an entry in I18N below. */
 const GUIDE_DATA = {
   shopper: { label: 'Shopper', steps: [
-    { icon:'home', caption:'Open the app', detail:'Tonninyira opens on the Eats tab, showing stalls near your area — "Kisugu" to start.', i18n:{}, audioSrc:{} },
-    { icon:'pin', caption:'Set your delivery area', detail:'Type your area, or tap the location button to use where you are right now.', i18n:{}, audioSrc:{} },
-    { icon:'search', caption:'Browse or search', detail:'Look through Eats and Shop tabs and their categories, or search for what you want.', i18n:{}, audioSrc:{} },
-    { icon:'star', caption:'Open a stall', detail:'Check its verification badge, ratings, and the items it sells.', i18n:{}, audioSrc:{} },
-    { icon:'heart', caption:'Save it, or add to basket', detail:'Tap the heart to save a stall for later. Tap + on an item to add it to your basket.', i18n:{}, audioSrc:{} },
-    { icon:'cart', caption:'Review your basket', detail:'The delivery fee is shown before you pay — no surprises.', i18n:{}, audioSrc:{} },
-    { icon:'phone', caption:'Choose how to pay', detail:'Cash on Delivery, or Mobile Money (MTN or Airtel). Sign in, or choose "I’m buying," if you haven’t yet.', i18n:{}, audioSrc:{} },
-    { icon:'moto', caption:'Order placed', detail:'You’ll see a confirmation with the rider assigned to bring your order.', i18n:{}, audioSrc:{} },
-    { icon:'receipt', caption:'Track it, then rate it', detail:'Follow it under "Orders." Rate it once delivered. Your Profile shows your points (1 per UGX 1,000 spent), saved stalls, and a "Something wrong?" chat.', i18n:{}, audioSrc:{} }
+    { id:'shopper-1', icon:'home', caption:'Open the app', detail:'Tonninyira opens on the Eats tab, showing stalls near your area — "Kisugu" to start.' },
+    { id:'shopper-2', icon:'pin', caption:'Set your delivery area', detail:'Type your area, or tap the location button to use where you are right now.' },
+    { id:'shopper-3', icon:'search', caption:'Browse or search', detail:'Look through Eats and Shop tabs and their categories, or search for what you want.' },
+    { id:'shopper-4', icon:'star', caption:'Open a stall', detail:'Check its verification badge, ratings, and the items it sells.' },
+    { id:'shopper-5', icon:'heart', caption:'Save it, or add to basket', detail:'Tap the heart to save a stall for later. Tap + on an item to add it to your basket.' },
+    { id:'shopper-6', icon:'cart', caption:'Review your basket', detail:'The delivery fee is shown before you pay — no surprises.' },
+    { id:'shopper-7', icon:'phone', caption:'Choose how to pay', detail:'Cash on Delivery, or Mobile Money (MTN or Airtel). Sign in, or choose "I’m buying," if you haven’t yet.' },
+    { id:'shopper-8', icon:'moto', caption:'Order placed', detail:'You’ll see a confirmation with the rider assigned to bring your order.' },
+    { id:'shopper-9', icon:'receipt', caption:'Track it, then rate it', detail:'Follow it under "Orders." Rate it once delivered. Your Profile shows your points (1 per UGX 1,000 spent), saved stalls, and a "Something wrong?" chat.' }
   ]},
   vendor: { label: 'Stall Owner', steps: [
-    { icon:'user', caption:'Create your account', detail:'Email or phone and a password, or continue with Google.', i18n:{}, audioSrc:{} },
-    { icon:'sack', caption:'Choose "I’m selling"', detail:'Pick this on the role screen to start a stall application.', i18n:{}, audioSrc:{} },
-    { icon:'check', caption:'Confirm you’re applying', detail:'A banner confirms you’re applying to open a stall.', i18n:{}, audioSrc:{} },
-    { icon:'home', caption:'Fill in Stall Details', detail:'Stall name, your name, phone, a 4-digit PIN, location, and category.', i18n:{}, audioSrc:{} },
-    { icon:'doc', caption:'Add Compliance Documents', detail:'KCCA trading license and URA TIN are required. Add a UNBS certificate too, if it applies.', i18n:{}, audioSrc:{} },
-    { icon:'camera', caption:'Add photos and prices', detail:'Upload a logo and gallery photos, then list your commodities and prices.', i18n:{}, audioSrc:{} },
-    { icon:'hourglass', caption:'Submit your application', detail:'You get your Tonninyira ID right away; your status starts as "pending."', i18n:{}, audioSrc:{} },
-    { icon:'check', caption:'Wait for approval', detail:'An admin reviews your documents and approves or rejects your stall.', i18n:{}, audioSrc:{} },
-    { icon:'user', caption:'Sign in to your Stall Dashboard', detail:'Use the same account email/phone and password you signed up with — not the PIN.', i18n:{}, audioSrc:{} },
-    { icon:'sack', caption:'Manage orders and earnings', detail:'Accept/Decline, then Start Preparing, then Mark Ready for Pickup. Track earnings — Tonninyira keeps a 5% service cut — in Wallet & payouts.', i18n:{}, audioSrc:{} }
+    { id:'vendor-1', icon:'user', caption:'Create your account', detail:'Email or phone and a password, or continue with Google.' },
+    { id:'vendor-2', icon:'sack', caption:'Choose "I’m selling"', detail:'Pick this on the role screen to start a stall application.' },
+    { id:'vendor-3', icon:'check', caption:'Confirm you’re applying', detail:'A banner confirms you’re applying to open a stall.' },
+    { id:'vendor-4', icon:'home', caption:'Fill in Stall Details', detail:'Stall name, your name, phone, a 4-digit PIN, location, and category.' },
+    { id:'vendor-5', icon:'doc', caption:'Add Compliance Documents', detail:'KCCA trading license and URA TIN are required. Add a UNBS certificate too, if it applies.' },
+    { id:'vendor-6', icon:'camera', caption:'Add photos and prices', detail:'Upload a logo and gallery photos, then list your commodities and prices.' },
+    { id:'vendor-7', icon:'hourglass', caption:'Submit your application', detail:'You get your Tonninyira ID right away; your status starts as "pending."' },
+    { id:'vendor-8', icon:'check', caption:'Wait for approval', detail:'An admin reviews your documents and approves or rejects your stall.' },
+    { id:'vendor-9', icon:'user', caption:'Sign in to your Stall Dashboard', detail:'Use the same account email/phone and password you signed up with — not the PIN.' },
+    { id:'vendor-10', icon:'sack', caption:'Manage orders and earnings', detail:'Accept/Decline, then Start Preparing, then Mark Ready for Pickup. Track earnings — Tonninyira keeps a 5% service cut — in Wallet & payouts.' }
   ]},
   rider: { label: 'Rider', steps: [
-    { icon:'user', caption:'Create your account', detail:'Email or phone and a password, or continue with Google.', i18n:{}, audioSrc:{} },
-    { icon:'moto', caption:'Choose "I’m delivering"', detail:'Pick this on the role screen to apply as a rider.', i18n:{}, audioSrc:{} },
-    { icon:'doc', caption:'Fill in Your Details', detail:'Name, phone, a 4-digit PIN, your National ID, and a photo. Your National ID stays private — never shown to customers.', i18n:{}, audioSrc:{} },
-    { icon:'moto', caption:'Add your vehicle, then submit', detail:'Vehicle type and plate number.', i18n:{}, audioSrc:{} },
-    { icon:'hourglass', caption:'Status: pending', detail:'Your application is now in the review queue.', i18n:{}, audioSrc:{} },
-    { icon:'check', caption:'Get approved', detail:'An admin reviews your application.', i18n:{}, audioSrc:{} },
-    { icon:'user', caption:'Sign in to your Rider Dashboard', detail:'Same account email/phone and password — not the PIN.', i18n:{}, audioSrc:{} },
-    { icon:'pin', caption:'Go live', detail:'Turn on your location to see nearby delivery offers, with distance shown.', i18n:{}, audioSrc:{} },
-    { icon:'receipt', caption:'Accept a delivery', detail:'Get the pickup/drop-off details and a map link to the customer.', i18n:{}, audioSrc:{} },
-    { icon:'sack', caption:'Deliver, then get paid', detail:'Mark "Picked Up From All Stalls," then "Mark Delivered." Track earnings — 5% cut — in Wallet & payouts.', i18n:{}, audioSrc:{} }
+    { id:'rider-1', icon:'user', caption:'Create your account', detail:'Email or phone and a password, or continue with Google.' },
+    { id:'rider-2', icon:'moto', caption:'Choose "I’m delivering"', detail:'Pick this on the role screen to apply as a rider.' },
+    { id:'rider-3', icon:'doc', caption:'Fill in Your Details', detail:'Name, phone, a 4-digit PIN, your National ID, and a photo. Your National ID stays private — never shown to customers.' },
+    { id:'rider-4', icon:'moto', caption:'Add your vehicle, then submit', detail:'Vehicle type and plate number.' },
+    { id:'rider-5', icon:'hourglass', caption:'Status: pending', detail:'Your application is now in the review queue.' },
+    { id:'rider-6', icon:'check', caption:'Get approved', detail:'An admin reviews your application.' },
+    { id:'rider-7', icon:'user', caption:'Sign in to your Rider Dashboard', detail:'Same account email/phone and password — not the PIN.' },
+    { id:'rider-8', icon:'pin', caption:'Go live', detail:'Turn on your location to see nearby delivery offers, with distance shown.' },
+    { id:'rider-9', icon:'receipt', caption:'Accept a delivery', detail:'Get the pickup/drop-off details and a map link to the customer.' },
+    { id:'rider-10', icon:'sack', caption:'Deliver, then get paid', detail:'Mark "Picked Up From All Stalls," then "Mark Delivered." Track earnings — 5% cut — in Wallet & payouts.' }
   ]}
+};
+
+/* Translations, looked up by step id. Confidence is not equal across these
+   five: Luganda (lg) and Kiswahili (sw) are translated with real
+   confidence. Acholi (ach) is a Nilotic language, structurally unrelated to
+   the other four; Runyankole (nyn) and Lumasaba (myx, the Bagisu language)
+   are Bantu like Luganda but less deeply resourced here. That gap is shown
+   to the reader in #langNotice, not hidden. Proper nouns and institution
+   names (Tonninyira, KCCA, URA, UNBS, PIN, National ID, Mobile Money, MTN,
+   Airtel, boda-boda) are kept as-is in every language, matching how they
+   are actually said in everyday Ugandan speech regardless of language. */
+const I18N = {
+lg: {
+  'shopper-1': { caption:'Ggulawo app', detail:'Tonninyira etandika ku Eats, n’okulaga amaduuka agali okumpi n’ekitundu kyo — kitandikira ku "Kisugu."' },
+  'shopper-2': { caption:'Teekawo ekitundu ky’okuweereza', detail:'Wandiika ekitundu kyo, oba onyige ku location obudde bwonna gy’oli.' },
+  'shopper-3': { caption:'Nonya oba kebera', detail:'Kebera ku Eats ne Shop n’ebika byabyo, oba onoonye ky’oyagala.' },
+  'shopper-4': { caption:'Ggulawo eduuka', detail:'Kebera akabonero k’okukakasibwa, endowooza z’abaguzi, n’ebintu bye batunda.' },
+  'shopper-5': { caption:'Tereka, oba oteeke mu kikapu', detail:'Nyiga ku mutima okutereka eduuka olw’oluvannyuma. Nyiga ku + ku kintu okukiteeka mu kikapu kyo.' },
+  'shopper-6': { caption:'Kebera ekikapu kyo', detail:'Empeera y’okutwala erabika nga tonnasasula — tewali kw’eyongera.' },
+  'shopper-7': { caption:'Londa engeri gy’osasulamu', detail:'Sente z’omukono nga eduuka litusa, oba Mobile Money (MTN oba Airtel). Yingira, oba londa "Ndi muguzi," bw’oba tonnakikola.' },
+  'shopper-8': { caption:'Ekiragiro kituumiddwa', detail:'Ojja kulaba okukakasa awamu n’omutambuze eyagabiddwa okukuleetera ekiragiro kyo.' },
+  'shopper-9': { caption:'Kigoberere, oluvannyuma ogwe endowooza', detail:'Kigoberere wansi wa "Orders." Wa endowooza nga kimaze okutuuka. Profile yo elaga amanoteka go (1 buli UGX 1,000 gy’osasudde), amaduuka ge otadde, ne "Something wrong?" chat.' },
+  'vendor-1': { caption:'Kola akawunti yo', detail:'Email oba essimu, ne password, oba weyongereko ne Google.' },
+  'vendor-2': { caption:'Londa "Nsuubuza"', detail:'Kiro ku screen ekulaga by’oyagala okukola, okutandika okusaba eduuka.' },
+  'vendor-3': { caption:'Kakasa nti osaba', detail:'Akapande kakukakasa nti osaba okuggula eduuka.' },
+  'vendor-4': { caption:'Jjuza Ebikwata ku Duuka', detail:'Erinnya ly’eduuka, erinnya lyo, essimu, PIN ey’ennamba 4, ekifo, n’ekika.' },
+  'vendor-5': { caption:'Teekawo Ebiwandiiko by’Etteeka', detail:'Layisinsi ya KCCA n’ennamba ya URA TIN byetaagisa. Teekawo ne satifikeeti ya UNBS bwe kiba kikwatako.' },
+  'vendor-6': { caption:'Teekawo ebifaananyi n’emiwendo', detail:'Teekawo ekifaananyi ky’eduuka lyo n’ebirala, oluvannyuma owandiike ebintu byo n’emiwendo gyabyo.' },
+  'vendor-7': { caption:'Sindika okusaba kwo', detail:'Ogenda kufuna Tonninyira ID amangu ago; embeera yo etandika nga "pending."' },
+  'vendor-8': { caption:'Linda okukakasibwa', detail:'Omukulembeze akebera ebiwandiiko byo n’akkiriza oba n’agaana eduuka lyo.' },
+  'vendor-9': { caption:'Yingira ku Stall Dashboard yo', detail:'Kozesa email/essimu ne password bye weewandiisisa nabyo — si PIN.' },
+  'vendor-10': { caption:'Ddukanya ebiragiro n’ensimbi z’omulimu', detail:'Kkiriza/Gaana, oluvannyuma Tandika Okutegeka, oluvannyuma Teekamu nga Kirongofu okutwalibwa. Goberera ensimbi — Tonninyira etwala 5% — mu Wallet & payouts.' },
+  'rider-1': { caption:'Kola akawunti yo', detail:'Email oba essimu, ne password, oba weyongereko ne Google.' },
+  'rider-2': { caption:'Londa "Ntambuza"', detail:'Kiro ku screen ekulaga by’oyagala okukola okusaba okuba omutambuze.' },
+  'rider-3': { caption:'Jjuza Ebikukwatako', detail:'Erinnya, essimu, PIN ey’ennamba 4, National ID yo, n’ekifaananyi. National ID yo ekuumibwa ekyama — teraga bakasitoma.' },
+  'rider-4': { caption:'Teekawo emmotoka/pikipiki yo, oluvannyuma osindike', detail:'Ekika ky’ekidduka n’ennamba yaakyo.' },
+  'rider-5': { caption:'Embeera: pending', detail:'Okusaba kwo kali kati mu mutuluko ogw’okukebulwa.' },
+  'rider-6': { caption:'Kakasibwa', detail:'Omukulembeze akebera okusaba kwo.' },
+  'rider-7': { caption:'Yingira ku Rider Dashboard yo', detail:'Email/essimu ne password bye bimu — si PIN.' },
+  'rider-8': { caption:'Tandika okulaga ekifo kyo', detail:'Teekawo location okulaba ebiragiro ebiri okumpi, nga wooleka n’obuwanvu.' },
+  'rider-9': { caption:'Kkiriza okutwala ekiragiro', detail:'Funa obubaka bw’okusitula/okutuusa n’akakubo akalaga gye kasitoma ali.' },
+  'rider-10': { caption:'Twala, oluvannyuma osasulwe', detail:'Teekamu "Nsitudde ku Maduuka Gonna," oluvannyuma "Ntuusizza." Goberera ensimbi — 5% — mu Wallet & payouts.' }
+},
+sw: {
+  'shopper-1': { caption:'Fungua programu', detail:'Tonninyira inafunguka kwenye Eats, ikionyesha maduka yaliyo karibu na eneo lako — inaanza na "Kisugu."' },
+  'shopper-2': { caption:'Weka eneo lako la kuletewa', detail:'Andika eneo lako, au bonyeza kitufe cha mahali ili kutumia ulipo sasa.' },
+  'shopper-3': { caption:'Tafuta au vinjari', detail:'Angalia vichupo vya Eats na Shop na aina zake, au tafuta unachotaka.' },
+  'shopper-4': { caption:'Fungua duka', detail:'Angalia alama yake ya uthibitisho, tathmini, na bidhaa anazouza.' },
+  'shopper-5': { caption:'Hifadhi, au weka kikapuni', detail:'Bonyeza moyo kuhifadhi duka kwa baadaye. Bonyeza + kwenye bidhaa kuiweka kikapuni mwako.' },
+  'shopper-6': { caption:'Angalia kikapu chako', detail:'Ada ya usafirishaji inaonyeshwa kabla hujalipa — hakuna mshangao.' },
+  'shopper-7': { caption:'Chagua namna ya kulipa', detail:'Kulipa Ukipokea Bidhaa, au Mobile Money (MTN au Airtel). Ingia, au chagua "Ninanunua," kama bado hujafanya hivyo.' },
+  'shopper-8': { caption:'Oda imewekwa', detail:'Utaona uthibitisho pamoja na dereva aliyepangiwa kukuletea oda yako.' },
+  'shopper-9': { caption:'Ifuatilie, kisha uipe alama', detail:'Ifuatilie chini ya "Orders." Ipe alama baada ya kufika. Wasifu wako unaonyesha pointi zako (1 kwa kila UGX 1,000 ulizotumia), maduka uliyohifadhi, na mazungumzo ya "Something wrong?"' },
+  'vendor-1': { caption:'Fungua akaunti yako', detail:'Barua pepe au simu na password, au uendelee na Google.' },
+  'vendor-2': { caption:'Chagua "Ninauza"', detail:'Chagua hii kwenye skrini ya majukumu kuanza maombi ya duka.' },
+  'vendor-3': { caption:'Thibitisha unaomba', detail:'Bango linathibitisha unaomba kufungua duka.' },
+  'vendor-4': { caption:'Jaza Maelezo ya Duka', detail:'Jina la duka, jina lako, simu, PIN ya tarakimu 4, eneo, na aina.' },
+  'vendor-5': { caption:'Ongeza Hati za Uzingatiaji', detail:'Leseni ya biashara ya KCCA na URA TIN vinahitajika. Ongeza cheti cha UNBS pia, kama kinahusika.' },
+  'vendor-6': { caption:'Ongeza picha na bei', detail:'Pakia nembo na picha za matunzio, kisha orodhesha bidhaa zako na bei.' },
+  'vendor-7': { caption:'Wasilisha maombi yako', detail:'Utapata Tonninyira ID mara moja; hali yako inaanza kama "inasubiriwa."' },
+  'vendor-8': { caption:'Subiri idhini', detail:'Msimamizi anakagua hati zako na kuidhinisha au kukataa duka lako.' },
+  'vendor-9': { caption:'Ingia kwenye Dashibodi yako ya Duka', detail:'Tumia barua pepe/simu na password uliyojisajili nayo — si PIN.' },
+  'vendor-10': { caption:'Simamia oda na mapato', detail:'Kubali/Kataa, kisha Anza Kuandaa, kisha Weka Tayari Kuchukuliwa. Fuatilia mapato — Tonninyira inachukua 5% — kwenye Wallet & payouts.' },
+  'rider-1': { caption:'Fungua akaunti yako', detail:'Barua pepe au simu na password, au uendelee na Google.' },
+  'rider-2': { caption:'Chagua "Ninasafirisha"', detail:'Chagua hii kwenye skrini ya majukumu kuomba kuwa dereva.' },
+  'rider-3': { caption:'Jaza Maelezo Yako', detail:'Jina, simu, PIN ya tarakimu 4, National ID yako, na picha. National ID yako inabaki siri — haionyeshwi kwa wateja.' },
+  'rider-4': { caption:'Ongeza gari lako, kisha wasilisha', detail:'Aina ya gari na namba ya usajili.' },
+  'rider-5': { caption:'Hali: inasubiriwa', detail:'Maombi yako sasa yapo kwenye foleni ya ukaguzi.' },
+  'rider-6': { caption:'Pata idhini', detail:'Msimamizi anakagua maombi yako.' },
+  'rider-7': { caption:'Ingia kwenye Dashibodi yako ya Dereva', detail:'Barua pepe/simu na password ile ile — si PIN.' },
+  'rider-8': { caption:'Anza kufanya kazi', detail:'Washa mahali ulipo ili kuona oda za karibu, ukionyeshwa umbali.' },
+  'rider-9': { caption:'Kubali oda ya usafirishaji', detail:'Pata maelezo ya kuchukua/kupeleka na kiungo cha ramani kwa mteja.' },
+  'rider-10': { caption:'Peleka, kisha ulipwe', detail:'Weka "Nimechukua Kutoka Maduka Yote," kisha "Nimepeleka." Fuatilia mapato — 5% — kwenye Wallet & payouts.' }
+},
+ach: {
+  'shopper-1': { caption:'Yab app-gi', detail:'Tonninyira nyutte i Eats, kanyutu cato ma bedo cok kwedi — ocakke ki "Kisugu."' },
+  'shopper-2': { caption:'Ket kabedo ma gibikelli iye', detail:'Coo kabedo ni, onyo dii i bino me tir me tic ki kabedo ma ityeko iye tin.' },
+  'shopper-3': { caption:'Yeny onyo nen', detail:'Nen i Eats ki Shop ki kit megi, onyo yeny gin ma imito.' },
+  'shopper-4': { caption:'Yab cato', detail:'Nen giramona pi ada me cato-ni, tam pa lwak, ki jami ma gicato.' },
+  'shopper-5': { caption:'Gwok, onyo ket i basket', detail:'Dii i cwiny me gwoko cato-ni pi anyim. Dii i + i gin acel me keto i basket-ni.' },
+  'shopper-6': { caption:'Nen basket-ni', detail:'Nyuto rwod me poto ma peya icoyo — pe tye lworo mo.' },
+  'shopper-7': { caption:'Yer kit me culo', detail:'Culo i Cwiny me Poto, onyo Mobile Money (MTN onyo Airtel). Donyo, onyo yer "Amito ngolo," ka pud pe itimo.' },
+  'shopper-8': { caption:'Oda oketi', detail:'Ibineno buk pi kite ki ngat mabipoto gin-ni botti.' },
+  'shopper-9': { caption:'Lub kore, ci imi giramona', detail:'Lube i tin "Orders." Mi giramona ka oromo poto. Profile-ni nyuto points-ni (acel pi UGX 1,000 ma icito), cato ma igwoko, ki lok "Something wrong?"' },
+  'vendor-1': { caption:'Yab akaunti-ni', detail:'Email onyo cim ki password, onyo imed ki Google.' },
+  'vendor-2': { caption:'Yer "Amito cato"', detail:'Yer man i skrin ma nyuto tic, me cako penyo me yabo cato.' },
+  'vendor-3': { caption:'Mok ni ipenyo', detail:'Buk-ni miyo ada ni ipenyo me yabo cato.' },
+  'vendor-4': { caption:'Pong Ngec me Cato', detail:'Nying cato, nyingi, cim, PIN me namba angwen, kabedo, ki kit.' },
+  'vendor-5': { caption:'Med Gin acoya me cik', detail:'Layisin me KCCA ki namba me URA TIN mite. Med gin acoya me UNBS bene, ka romo.' },
+  'vendor-6': { caption:'Med cal ki poto me lim', detail:'Ket cal me cato ki cal mukene, ci coo jami ma icato ki poto megi.' },
+  'vendor-7': { caption:'Cwal penyo-ni', detail:'Ibinongo Tonninyira ID i cakke; kit-ni ocakke ki "pending."' },
+  'vendor-8': { caption:'Kur mok', detail:'Ladit nen gin acoya-ni ci mio ada onyo okwero cato-ni.' },
+  'vendor-9': { caption:'Donyo i Stall Dashboard-ni', detail:'Ti ki email/cim ki password ma ityeko iye tin — pe PIN.' },
+  'vendor-10': { caption:'Lo oda ki lim', detail:'Ye/Kwer, ci Cak Yubo, ci Ket ni Oyubbe pi Kwanyo. Lub lim-ni — Tonninyira kwanyo 5% — i Wallet & payouts.' },
+  'rider-1': { caption:'Yab akaunti-ni', detail:'Email onyo cim ki password, onyo imed ki Google.' },
+  'rider-2': { caption:'Yer "Amito poto"', detail:'Yer man i skrin ma nyuto tic me penyo me bedo lapoto.' },
+  'rider-3': { caption:'Pong Ngec Mamegi', detail:'Nyingi, cim, PIN me namba angwen, National ID-ni, ki cal. National ID-ni bedo mung — pe nyutte bot lwak.' },
+  'rider-4': { caption:'Med gari-ni, ci icwal', detail:'Kit gari ki namba mere.' },
+  'rider-5': { caption:'Kit: pending', detail:'Penyo-ni tin tye i lut me kur.' },
+  'rider-6': { caption:'Yang mok', detail:'Ladit nen penyo-ni.' },
+  'rider-7': { caption:'Donyo i Rider Dashboard-ni', detail:'Email/cim ki password acel-lu — pe PIN.' },
+  'rider-8': { caption:'Cak tic', detail:'Moko kabedo-ni me nen poto ma tye cok, ki bor me lac.' },
+  'rider-9': { caption:'Ye poto acel', detail:'Nong ngec me kwanyo/keto ki lin me map bot lwak.' },
+  'rider-10': { caption:'Ter, ci gicullu', detail:'Ket "Akwanyo ki i Cato Ducu," ci "Aterro." Lub lim-ni — 5% — i Wallet & payouts.' }
+},
+myx: {
+  'shopper-1': { caption:'Fungula app', detail:'Tonninyira efungukha khu Eats, nga khulanga tsimaduuka etsili ohwikhupi n’eshibala shyo — khutandikha khu "Kisugu."' },
+  'shopper-2': { caption:'Teekha eshibala shyo shyo khuloosibwamu', detail:'Wandika eshibala shyo, nohomba noonye khu khaani ka location khumbeele hoosi wali.' },
+  'shopper-3': { caption:'Loonda nohomba khulinga', detail:'Linga khu Eats na Shop nende ebibiina byabyo, nohomba loonda khyo wenya.' },
+  'shopper-4': { caption:'Fungula eduuka', detail:'Linga akhabonero ka khusubila, endowooza tsy’abakuusi, nende ebindu ebio bakusinjia.' },
+  'shopper-5': { caption:'Teekha, nohomba oteekhe mu kikapu', detail:'Nyikha khu mutima khuteekha eduuka khu buyeekhelo. Nyikha khu + khu shindu khu oshiteekhe mu kikapu kyo.' },
+  'shopper-6': { caption:'Linga kikapu kyo', detail:'Empeera y’okhutwala eloolekha nga tonasasula — tawali khwiyongera.' },
+  'shopper-7': { caption:'Loonda engeri y’okhusaasula', detail:'Sente z’omukono nga eduuka lisile, nohomba Mobile Money (MTN nohomba Airtel). Yingira, nohomba loonda "Ndi mukuusi," nga otanakhola.' },
+  'shopper-8': { caption:'Ekiragilo kiwelesibwa', detail:'Oja khulola okhusubila halala nende omutambuzi wagabwa okhukhulereera ekiragilo kyo.' },
+  'shopper-9': { caption:'Kilonderere, khandi omuwe endowooza', detail:'Kilonderere hasi wa "Orders." Muwe endowooza nga kimaliile khutuukha. Profile yo eloolekha amanoteka ko (kamu khu buli UGX 1,000 esasulikho), tsimaduuka etsyo oteekho, na "Something wrong?" chat.' },
+  'vendor-1': { caption:'Fungula akhawunti yo', detail:'Email nohomba esimu na password, nohomba wongeleho na Google.' },
+  'vendor-2': { caption:'Loonda "Nsuubuza"', detail:'Loonda khu screen ekhulanga ebio wenya khukhola, khutandikha khusaba khuwulula eduuka.' },
+  'vendor-3': { caption:'Subila ali osaba', detail:'Akhapande khakhukhasa ali osaba khuwulula eduuka.' },
+  'vendor-4': { caption:'Wuura Ebikwatako Eduuka', detail:'Elina ly’eduuka, elina lyo, esimu, PIN ye khamula 4, eshibala, na ekhaali.' },
+  'vendor-5': { caption:'Teekha Ebihandiiko bi Etteka', detail:'Layisensi ya KCCA na khamula ya URA TIN bikwetakhwa. Teekha na satifikeeti ya UNBS, nga khali khikwatako.' },
+  'vendor-6': { caption:'Teekha tsifwaani na emiwendo', detail:'Teekha eshifwaani sh’eduuka na tsindi tsifwaani, khandi owandikhe ebindu byo na emiwendo tsyaabyo.' },
+  'vendor-7': { caption:'Sindikha okhusaba khwo', detail:'Oja khunyoola Tonninyira ID mangu; embeera yo etandikha nga "pending."' },
+  'vendor-8': { caption:'Linda okhusubilibwa', detail:'Omukhulembeze alinga ebihandiiko byo naye asubila nohomba akhaana eduuka lyo.' },
+  'vendor-9': { caption:'Yingira khu Stall Dashboard yo', detail:'Khoosya email/esimu na password ebio weewandikhisisa naabyo — sio PIN.' },
+  'vendor-10': { caption:'Loleera ebiragilo na tsimpeela', detail:'Subila/Khaana, khandi Tandikha Okhutegeka, khandi Teekhamu nga Kirongofu khutwalibwa. Loleera tsimpeela — Tonninyira etwala 5% — mu Wallet & payouts.' },
+  'rider-1': { caption:'Fungula akhawunti yo', detail:'Email nohomba esimu na password, nohomba wongeleho na Google.' },
+  'rider-2': { caption:'Loonda "Ndi mutambuzi"', detail:'Loonda khu screen ekhulanga ebio wenya khukhola khusaba khuba mutambuzi.' },
+  'rider-3': { caption:'Wuura Ebikukwatako', detail:'Elina, esimu, PIN ye khamula 4, National ID yo, na eshifwaani. National ID yo eyikha mu bwifisi — sitalolekha khu bakasitoma.' },
+  'rider-4': { caption:'Teekha emotoka/pikipiki yo, khandi osindikhe', detail:'Ekhaali khi shindu, na khamula yaakyo.' },
+  'rider-5': { caption:'Embeera: pending', detail:'Okhusaba khwo khali mu mutuluko khw’okhulingwa.' },
+  'rider-6': { caption:'Osubilibwa', detail:'Omukhulembeze alinga okhusaba khwo.' },
+  'rider-7': { caption:'Yingira khu Rider Dashboard yo', detail:'Email/esimu na password ebimu — sio PIN.' },
+  'rider-8': { caption:'Tandikha khulanga eshibala shyo', detail:'Teekha location khulola ebiragilo ebili ohwikhupi, nga wooleka na obuleebi.' },
+  'rider-9': { caption:'Khubila okhutwala ekiragilo', detail:'Nyoola obubaka bw’okhusitula/okhutuusa na akhakubo akhalanga eyo kasitoma ali.' },
+  'rider-10': { caption:'Twala, khandi osasulwe', detail:'Teekhamu "Nasitula khu Maduuka Kwosi," khandi "Natuusa." Loleera tsimpeela — 5% — mu Wallet & payouts.' }
+},
+nyn: {
+  'shopper-1': { caption:'Gurura app', detail:'Tonninyira negwongokera aha Eats, negwoyoreka amaduka agali haihi n’omwanya gwawe — nigutandikira aha "Kisugu."' },
+  'shopper-2': { caption:'Teekaho omwanya gwawe ogw’okuhagizibwamu', detail:'Handika omwanya gwawe, nari okande aha location kugira ngu okoresa aha oriho hati.' },
+  'shopper-3': { caption:'Sherura nari orebe', detail:'Reba aha Eats na Shop n’ebiika byabyo, nari osherure eki oyenda.' },
+  'shopper-4': { caption:'Gurura eduka', detail:'Reba akamenyeso k’okuhamya, endaro z’abaguzi, n’ebintu ebi bagurisa.' },
+  'shopper-5': { caption:'Bikye, nari oteeke omu kikapu', detail:'Kanda aha mutima kubika eduka kubw’obwenyima. Kanda aha + aha kintu kukiteeka omu kikapu kyawe.' },
+  'shopper-6': { caption:'Reba kikapu kyawe', detail:'Omusaho gw’okuhagiza nigworekwa otakabashaho kusasura — tihariho ekitangaaza.' },
+  'shopper-7': { caption:'Sherura oku warikusasura', detail:'Sente z’omukono eduka niryahika, nari Mobile Money (MTN nari Airtel). Yingira, nari osherure "Ninguura," yaba otakakikoze.' },
+  'shopper-8': { caption:'Oda ehandiikirwe', detail:'Oryareeba okuhamya hamwe n’omuhagizi ohairwe kukureeta oda yawe.' },
+  'shopper-9': { caption:'Girurira, obundi ogire endaro', detail:'Girurira aha "Orders." Ha endaro obu eyahika. Profile yawe neyoreka amanoteka gawe (rimwe aha buri UGX 1,000 osasuire), amaduka agu obikire, na "Something wrong?" chat.' },
+  'vendor-1': { caption:'Gurura akaunti yawe', detail:'Email nari esimu na password, nari owongyeriremu na Google.' },
+  'vendor-2': { caption:'Sherura "Ninguza"', detail:'Sherura aha screen erikworeka ebi oyenda kukora, kutandika kushaba kugurura eduka.' },
+  'vendor-3': { caption:'Hamya ngu noshaba', detail:'Akapande nikakuhamiza ngu noshaba kugurura eduka.' },
+  'vendor-4': { caption:'Juza Ebirikukwataho Eduka', detail:'Eiziina ry’eduka, eiziina ryawe, esimu, PIN y’omubaro 4, omwanya, n’ekika.' },
+  'vendor-5': { caption:'Teraho Ebyandiko by’Amateeka', detail:'Layisensi ya KCCA n’omubaro gwa URA TIN nibyetengyesa. Teraho na satifiketi ya UNBS, kikaba nikikukwataho.' },
+  'vendor-6': { caption:'Teraho ebishushani n’emisaho', detail:'Teraho ekishushani ky’eduka n’ebindi, wanyima ohandiike ebintu byawe n’emisaho yabyo.' },
+  'vendor-7': { caption:'Ohereze okushaba kwawe', detail:'Noija kuhabwa Tonninyira ID bunyangahi; embeera yawe neetandikira "pending."' },
+  'vendor-8': { caption:'Tegyereza okuhamizibwa', detail:'Omukuru arikureeba ebyandiko byawe kandi naahamya nari kwanga eduka ryawe.' },
+  'vendor-9': { caption:'Yingira aha Stall Dashboard yawe', detail:'Koresa email/esimu na password ebi weyandikisiseho — tikiri PIN.' },
+  'vendor-10': { caption:'Rugyendezya oda n’ebi orikutunga', detail:'Ikiriza/Hakana, wanyima Tandika Kuteekateeka, wanyima Teraho ngu Kirikwetegyerezibwa Kutwarwa. Reeba ebi orikutunga — Tonninyira netwara 5% — omu Wallet & payouts.' },
+  'rider-1': { caption:'Gurura akaunti yawe', detail:'Email nari esimu na password, nari owongyeriremu na Google.' },
+  'rider-2': { caption:'Sherura "Ninkyeyereza"', detail:'Sherura aha screen erikworeka ebi oyenda kukora kushaba kuba omuhagizi.' },
+  'rider-3': { caption:'Juza Ebirikukukwataho', detail:'Eiziina, esimu, PIN y’omubaro 4, National ID yawe, na ekishushani. National ID yawe negumaho omu bwihisho — tikyorekwa abaguzi.' },
+  'rider-4': { caption:'Teraho emotoka/pikipiki yawe, wanyima ohereze', detail:'Ekika ky’ekyanya n’omubaro gwakyo.' },
+  'rider-5': { caption:'Embeera: pending', detail:'Okushaba kwawe hati kuri omu murongo gw’okuhamizibwa.' },
+  'rider-6': { caption:'Hamizibwa', detail:'Omukuru naareeba okushaba kwawe.' },
+  'rider-7': { caption:'Yingira aha Rider Dashboard yawe', detail:'Email/esimu na password bimwe — tikiri PIN.' },
+  'rider-8': { caption:'Tandika kworeka aha oriho', detail:'Teraho location kureeba oda eziri haihi, nizyoreka orwara.' },
+  'rider-9': { caption:'Ikiriza kutwara oda', detail:'Habwa amakuru g’okutwara/kuha n’omuringo gw’aha maapu aha muguzi.' },
+  'rider-10': { caption:'Twara, wanyima osaasurwe', detail:'Teraho "Nyakutwara Kuruga omu Maduka Gonna," wanyima "Nahikirize." Reeba ebi orikutunga — 5% — omu Wallet & payouts.' }
+}
 };
 
 let role = 'shopper';
 let stepIndex = 0;
-const gLang = 'en'; /* no switcher built yet -- nothing to switch between until a translation exists */
+const LANGS = [
+  { code:'en', label:'English' },
+  { code:'lg', label:'Luganda' },
+  { code:'sw', label:'Kiswahili' },
+  { code:'ach', label:'Acholi' },
+  { code:'myx', label:'Lumasaba' },
+  { code:'nyn', label:'Runyankole' }
+];
+const LOWER_CONFIDENCE = ['ach', 'myx', 'nyn'];
+let gLang = 'en';
+try{ const saved = localStorage.getItem('tn_lang'); if (LANGS.some(function(l){ return l.code === saved; })) gLang = saved; }catch(_){}
 
 function stepText(step){
-  const t = step.i18n && step.i18n[gLang];
-  return { caption: (t && t.caption) || step.caption, detail: (t && t.detail) || step.detail };
+  const t = I18N[gLang] && I18N[gLang][step.id];
+  return t || { caption: step.caption, detail: step.detail };
 }
 
 function speakStep(step){
   try{ if (window.speechSynthesis) speechSynthesis.cancel(); }catch(_){}
-  const src = step.audioSrc && step.audioSrc[gLang];
-  if (src){ new Audio(src).play(); return; }
   if (!('speechSynthesis' in window)){ return; }
   const t = stepText(step);
   const u = new SpeechSynthesisUtterance(t.detail ? (t.caption + '. ' + t.detail) : t.caption);
   u.rate = 0.95;
   speechSynthesis.speak(u);
+}
+
+function renderLangs(){
+  const wrap = document.getElementById('langs');
+  wrap.innerHTML = LANGS.map(function(l){
+    return '<button class="lang-btn' + (l.code === gLang ? ' is-on' : '') + '" data-lang="' + l.code + '">' + l.label + '</button>';
+  }).join('');
+  wrap.querySelectorAll('button').forEach(function(b){
+    b.addEventListener('click', function(){
+      gLang = b.dataset.lang;
+      try{ localStorage.setItem('tn_lang', gLang); }catch(_){}
+      renderStep();
+    });
+  });
+  const notice = document.getElementById('langNotice');
+  if (gLang === 'en'){
+    notice.classList.remove('show');
+  } else {
+    notice.classList.add('show');
+    notice.textContent = LOWER_CONFIDENCE.indexOf(gLang) !== -1
+      ? 'Machine-translated. English is the official text. This language has had less checking than Luganda or Kiswahili — if anything reads oddly, ask someone to help confirm it.'
+      : 'Machine-translated. English is the official text.';
+  }
 }
 
 function renderTabs(){
@@ -236,6 +448,7 @@ function renderStep(){
   document.getElementById('listenLabel').textContent = ('speechSynthesis' in window) ? 'Listen' : 'Listen (not supported here)';
   document.getElementById('listenBtn').disabled = !('speechSynthesis' in window);
 
+  renderLangs();
   renderDots();
   renderTabs();
 }

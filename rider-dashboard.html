@@ -290,7 +290,7 @@ function renderDeliveries(rows){
     else if(stage==='out') action = `<button class="action-btn action-deliver" onclick="advanceGroup('${orderId}','completed')">Mark Delivered</button>`;
     else if(stage==='preparing') action = `<p class="helper">Waiting on stalls to finish preparing before pickup.</p>`;
     const mapsLink = (first.customer_lat!=null && first.customer_lng!=null)
-      ? `<a href="https://www.google.com/maps/search/?api=1&query=${first.customer_lat},${first.customer_lng}" target="_blank" rel="noopener" class="action-btn" style="display:block; text-align:center; text-decoration:none; background:var(--card); color:var(--gold); border:1px solid var(--gold); margin-bottom:8px;">📍 Open Customer Location in Maps</a>`
+      ? `<a href="https://www.google.com/maps/search/?api=1&query=${first.customer_lat},${first.customer_lng}" target="_blank" rel="noopener" class="action-btn" style="display:block; text-align:center; text-decoration:none; background:var(--card); color:var(--gold); border:1px solid var(--gold); margin-bottom:8px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Open Customer Location in Maps</a>`
       : '';
     return `
     <div class="order-card stage-${stage}">

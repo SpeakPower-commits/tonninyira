@@ -26,8 +26,16 @@
   Flutterwave, Uganda's Data Protection and Privacy Act 2019, and the real
   approval_status mechanic). Anywhere a real policy doesn't exist yet in
   code -- an exact cancellation window, a data-controller contact -- the
-  text says so inline rather than inventing a number. It is not legal
-  advice and is not final: see the draft notice below.
+  text says so inline, in every language, rather than inventing a number.
+  It is not legal advice and is not final: see the draft notice below.
+
+  Language: the picker and its choice (localStorage key tn_lang) are
+  shared with guide.html, so picking a language on one page carries over
+  to the other. Confidence is NOT equal across the five offered languages
+  -- see the shared explanation in guide.html's header comment. It matters
+  more here than there: a wrong word in "you agree to a 5% commission" or
+  "your National ID stays private" is a real harm to someone who by
+  definition cannot check it against the English.
 -->
 <style>
   :root{--ink:#1C1410;--card:#2A1F19;--card2:#33261C;--gold:#F5B400;--sand:#F3E8D8;--muted:#9C897A;--safe2:#CBB9A6;--red:#E23F25}
@@ -38,7 +46,12 @@
   .title{font-weight:800;font-size:16px}
   .back{font-size:13px;font-weight:600;color:var(--safe2);text-decoration:none}
   .back:hover{color:var(--sand)}
-  .draft{margin-top:16px;padding:12px 14px;border-radius:12px;background:rgba(226,63,37,.14);border:1px solid var(--red);font-size:13px;font-weight:700;line-height:1.5}
+  .langs{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+  .lang-btn{font-family:inherit;font-size:11px;font-weight:700;color:var(--safe2);background:var(--card);border:1px solid transparent;border-radius:99px;padding:7px 11px;cursor:pointer;min-height:32px}
+  .lang-btn.is-on{color:var(--ink);background:var(--gold);font-weight:800}
+  .lang-notice{margin-top:10px;padding:9px 11px;border-radius:10px;background:rgba(245,180,0,.1);border:1px solid rgba(245,180,0,.35);font-size:11.5px;line-height:1.5;color:var(--safe2);display:none}
+  .lang-notice.show{display:block}
+  .draft{margin-top:14px;padding:12px 14px;border-radius:12px;background:rgba(226,63,37,.14);border:1px solid var(--red);font-size:13px;font-weight:700;line-height:1.5}
   .jump{display:flex;flex-wrap:wrap;gap:6px;margin-top:18px}
   .jump a{font-size:12px;font-weight:700;color:var(--safe2);background:var(--card);border-radius:99px;padding:7px 12px;text-decoration:none;min-height:32px;display:inline-flex;align-items:center}
   .jump a:hover{color:var(--sand)}
@@ -63,6 +76,9 @@
     <span class="title">Terms &amp; Conditions</span>
     <a class="back" href="index.html">&larr; Back</a>
   </div>
+
+  <div class="langs" id="langs" role="group" aria-label="Choose a language"></div>
+  <div class="lang-notice" id="langNotice"></div>
 
   <div class="draft" id="draftNotice">&#9888; Draft for review &mdash; this is a working draft of Tonninyira&rsquo;s Terms &amp; Conditions. It is not yet final or legally binding. It should be reviewed and approved by Tonninyira and its legal advisor before being treated as the platform&rsquo;s official Terms.</div>
 
@@ -92,7 +108,9 @@ const TERMS_ICON = {
 /* Eight sections, grounded only in confirmed app mechanics. Anywhere a real
    policy doesn't exist yet in code, the full text names the gap ([Tom: ...])
    instead of inventing a number -- flagged spans are wrapped in class="flag"
-   so they stand out for review. */
+   so they stand out for review, and are deliberately left in English in
+   every language: they are editorial notes to Tom, not user-facing policy,
+   and there is no real policy yet to translate. */
 const TERMS_SECTIONS = [
   { id:'general', eyebrow:'GENERAL', icon:'home',
     summary:'Tonninyira connects shoppers, stall owners and riders — Tonninyira itself doesn’t sell or deliver anything directly.',
@@ -120,7 +138,121 @@ const TERMS_SECTIONS = [
     full:'These Terms are governed by the laws of the Republic of Uganda. Disputes should first be raised through the "Something wrong?" chat or Tonninyira support. Unresolved disputes are subject to the jurisdiction of the courts of Uganda.' }
 ];
 
-const gLang = 'en'; /* no switcher built yet -- nothing to switch between until a translation exists */
+/* Translations, looked up by section id. Same confidence calibration as
+   guide.html: Luganda (lg) and Kiswahili (sw) with real confidence; Acholi
+   (ach), Lumasaba (myx) and Runyankole (nyn) genuine best-effort, flagged
+   to the reader via #langNotice. The bracketed [Tom: ...] notes are kept
+   in English in every language on purpose -- see the comment above
+   TERMS_SECTIONS. */
+const I18N = {
+lg: {
+  general: { summary:'Tonninyira ekwataganya abaguzi, bannannyini maduuka, n’abatambuze — Tonninyira yennyini tetunda wadde okutwala kintu kyonna butereevu.',
+    full:'Tonninyira ekola ku pulatifomu ekwataganya Abaguzi n’Abasuubuzi abeetongole n’Abatambuze abeetongole. Tonninyira si mukwano mu ndagaano ey’okutunda wakati w’Omusuubuzi n’Omuguzi. Abasuubuzi be bavunaanyizibwa ku mutindo, obukuumi, obutuufu bw’amateeka, n’obutuufu bw’ebyo bye bawandiika. Abatambuze be bavunaanyizibwa ku mpisa ennungi era ez’okutuusa mangu.' },
+  shopper: { summary:'Olonda ky’oyagala okugula, osasula sente z’omukono oba za mmobayilo, era osobola okugoberera okutuusa lw’okituusibwa.',
+    full:'Okuteekawo ekiragiro kitondawo endagaano wakati wo n’Omusuubuzi. Empeera y’okutwala erabika nga tonnasasula. Osasula nga okozesa Sente z’Omukono nga Eduuka Litusa, oba Mobile Money (MTN oba Airtel). <span class="flag">[Tom: confirm and state an exact cancellation policy here]</span> — nga etteeka ejjuvu, tukiise support mu "Something wrong?" chat ng’okyasooka; Omusuubuzi bw’aba amaze okutandika okutegeka ekiragiro kyo, okukisazaamu kiyinza obutasoboka.' },
+  vendor: { summary:'Kuuma layisinsi zo nga za mateeka, ebiwandiise byo nga bituufu, era Tonninyira etwala 5% ku buli kyetunzeewo ng’empeera yaayo.',
+    full:'Okakasa nti olina Layisinsi ya KCCA entuufu n’ennamba ya URA TIN (ne satifikeeti ya UNBS, bwe kiba kikwatako) ebeera nga za mateeka nga eduuka lyo likyakola. Gwe wekka ovunaanyizibwa ku butuufu bw’emiwendo, ebikwata ku bintu, n’obusobozi bw’okufuna, era ku bukuumi n’omutindo gw’ebyo by’otunda. Tonninyira egyako 5% ku nsimbi z’ensasulo ku biragiro ebimaliddwa, nga birabika mu Wallet &amp; payouts yo. Okkiriza okutuukiriza ebiragiro ebikkirizibwa mangu era n’okukuuma amawulire g’eduuka lyo nga ga bulijjo.' },
+  rider: { summary:'Twala emirimu n’obukuumi, kola n’obwesigwa, era Tonninyira etwala 5% ku nsimbi zo ez’okutambuza ng’empeera yaayo.',
+    full:'Okakasa nti ebikwata ku kidduka kyo ne National ID yo bituufu. National ID yo ekozesebwa ku kukakasa munda mwokka era ku kuvunaanyizibwa — teraga bakasitoma. Okkiriza okukkiriza bibiragiro by’osobola okutuukiriza n’obukuumi era mangu, era okulaga bibiragiro nga bituufu. Tonninyira egyako 5% y’emu, ng’erabika mu Wallet &amp; payouts yo.' },
+  payments: { summary:'Sasula sente z’omukono ekiragiro nga kituuse, oba MTN/Airtel Mobile Money nga kiyita mu Flutterwave.',
+    full:'Engeri bbiri z’okusasula ziriwo ku kupaya: Sente z’Omukono nga Eduuka Litusa, oba Mobile Money (MTN MoMo oba Airtel Money) nga kiyita mu Flutterwave, kkampuni ekola ku bya sente ekkirizibwa. Tonninyira tekuuma PIN yo eya mobile money oba bumanyirwa bwa kaadi yo obujjuvu.' },
+  privacy: { summary:'Tukuŋŋaanya bwokka ebye twetaaga okutuusa ebiragiro mu bukuumi, era tubikuuma nga tuwuliriza etteeka ly’Uganda ery’okukuuma amawulire.',
+    full:'Tonninyira ekuŋŋaanya ennamba z’essimu (okuyingira akawunti, okutegeeragana ku kutuusa), amawulire g’ekifo (ekitundu ky’okutuusiibwamu ekya Muguzi n’ekifo ky’Omutambuze mu kiseera ky’okutambuza, ebikozesebwa okulambika ebiragiro n’okubala empeera okusinziira ku bbanga), ennamba za National ID okuva ku Batambuze (okukakasa munda mwokka, teziraga Baguzi oba Basuubuzi), n’ebiwandiiko by’Abasuubuzi eby’etteeka (layisinsi ya KCCA, URA TIN, satifikeeti ya UNBS). Bino bikolebwa nga bagoberera Etteeka ly’Uganda ery’Okukuuma Amawulire n’Eby’obwannannyini, 2019. Tonninyira tetunda mawulire ga bantu eri ebibiina ebirala. <span class="flag">[Tom: add a data-controller contact here once available]</span>' },
+  suspension: { summary:'Akawunti eziyisa etteeka lino zisobola okuziyizibwa oba okuggyibwawo Tonninyira mu kiseera kyonna.',
+    full:'Okusaba kw’Abasuubuzi n’Abatambuze kuyita mu kifo eky’okukakasibwa — pending, approved, oba rejected. Tonninyira eyinza okugaana okusaba, oba okuziyiza oba okuggyawo akawunti eyakakasibwa, awali amawulire agalimba, ebiwandiiko ebitali bya mateeka oba ebiweddemu ekiseera, oba etteeka lino nga liyisiddwa. Obuyinza bw’Omuguzi buyinza okukomibwako olw’okukozesa pulatifomu obubi.' },
+  disputes: { summary:'Etteeka lino likolebwa mu mateeka g’Uganda, era tugezaako okumalawo enjawukana wakati waffe mu kusooka.',
+    full:'Etteeka lino likolebwa mu mateeka ga Uganda. Enjawukana zisaanidde okusookera mu "Something wrong?" chat oba support ya Tonninyira. Enjawukana ezitamalibwawo ziba wansi w’obuyinza bw’ekooti za Uganda.' }
+},
+sw: {
+  general: { summary:'Tonninyira inaunganisha wanunuzi, wenye maduka na madereva — Tonninyira yenyewe haiuzi wala kusafirisha chochote moja kwa moja.',
+    full:'Tonninyira inaendesha jukwaa linalounganisha Wateja na Wachuuzi huru na Madereva huru. Tonninyira si upande katika mkataba wa mauzo kati ya Muuzaji na Mteja. Wachuuzi wanawajibika kwa ubora, usalama, uhalali na usahihi wa bidhaa wanazoorodhesha. Madereva wanawajibika kwa mwenendo salama na wa wakati wa usafirishaji.' },
+  shopper: { summary:'Unachagua unachoagiza, unalipa kwa fedha taslimu au pesa za simu, na unaweza kufuatilia hadi ifike.',
+    full:'Kuweka oda kunaunda mkataba moja kwa moja kati yako na Muuzaji. Ada ya usafirishaji inaonyeshwa kabla hujalipa. Malipo ni kwa Kulipa Ukipokea Bidhaa, au Mobile Money (MTN au Airtel). <span class="flag">[Tom: confirm and state an exact cancellation policy here]</span> — kama kanuni ya jumla, wasiliana na huduma kupitia mazungumzo ya "Something wrong?" mapema iwezekanavyo; Muuzaji akishaanza kuandaa oda yako, kughairi kunaweza kutowezekana.' },
+  vendor: { summary:'Weka leseni zako halali, orodha zako sahihi, na Tonninyira inachukua 5% ya kila mauzo kama ada yake ya huduma.',
+    full:'Unathibitisha kuwa una leseni halali ya biashara ya KCCA na URA TIN (na cheti cha UNBS, pale kinapohusika) vinavyoendelea kuwa halali wakati duka lako liko hai. Wewe pekee unawajibika kwa usahihi wa bei, maelezo na upatikanaji, na kwa usalama na ubora wa unachouza. Tonninyira inakata kamisheni ya huduma ya 5% kutoka kwenye mapato yako kwa oda zilizokamilika, inayoonyeshwa kwenye Wallet &amp; payouts yako. Unakubali kutimiza oda zilizokubaliwa haraka na kuweka taarifa za duka lako sasa.' },
+  rider: { summary:'Endesha kwa usalama, safirisha kwa uaminifu, na Tonninyira inachukua 5% ya mapato yako ya usafirishaji kama ada yake ya huduma.',
+    full:'Unathibitisha kuwa maelezo ya gari lako na National ID ni sahihi. National ID yako inatumika tu kwa uthibitisho wa ndani na uwajibikaji — haionyeshwi kamwe kwa wateja. Unakubali kukubali tu usafirishaji unaoweza kukamilisha kwa usalama na haraka, na kuweka alama za usafirishaji kwa usahihi. Tonninyira inakata kamisheni ile ile ya huduma ya 5%, inayofuatiliwa kwenye Wallet &amp; payouts yako.' },
+  payments: { summary:'Lipa kwa fedha taslimu oda ikifika, au kwa MTN/Airtel Mobile Money kupitia Flutterwave.',
+    full:'Njia mbili za malipo zinatolewa wakati wa kulipia: Kulipa Ukipokea Bidhaa, au Mobile Money (MTN MoMo au Airtel Money) inayoshughulikiwa kupitia Flutterwave, lango la malipo lenye leseni. Tonninyira haihifadhi PIN yako ya pesa za simu wala maelezo kamili ya kadi.' },
+  privacy: { summary:'Tunakusanya tu kile tunachohitaji kuendesha usafirishaji kwa usalama, na kukilinda chini ya sheria ya Uganda ya ulinzi wa data.',
+    full:'Tonninyira inakusanya namba za simu (kufikia akaunti, uratibu wa usafirishaji), data ya mahali (eneo la kuletewa la Mteja na mahali alipo Dereva moja kwa moja wakati wa kusafirisha, inayotumika kupanga oda na kuhesabu ada kulingana na umbali), namba za National ID kutoka kwa Madereva (uthibitisho wa ndani tu, hazionyeshwi kamwe kwa Wateja au Wachuuzi), na hati za uzingatiaji za Wachuuzi (leseni ya KCCA, URA TIN, cheti cha UNBS). Hii inashughulikiwa kulingana na Sheria ya Uganda ya Ulinzi wa Data na Faragha, 2019. Tonninyira haiuzi data binafsi kwa wahusika wengine. <span class="flag">[Tom: add a data-controller contact here once available]</span>' },
+  suspension: { summary:'Akaunti zinazovunja masharti haya zinaweza kusimamishwa au kuondolewa na Tonninyira wakati wowote.',
+    full:'Maombi ya Wachuuzi na Madereva yanapitia hatua ya idhini — inasubiriwa, imeidhinishwa, au imekataliwa. Tonninyira inaweza kukataa ombi, au kusimamisha au kusitisha akaunti iliyoidhinishwa, pale taarifa zilizotolewa ni za uongo, hati si halali au zimeisha muda, au masharti haya yamevunjwa. Ufikiaji wa Mteja unaweza kuzuiliwa kwa matumizi mabaya ya jukwaa.' },
+  disputes: { summary:'Masharti haya yanaongozwa na sheria za Uganda, na tutajaribu kutatua mabishano moja kwa moja kwanza.',
+    full:'Masharti haya yanaongozwa na sheria za Jamhuri ya Uganda. Mabishano yanapaswa kuletwa kwanza kupitia mazungumzo ya "Something wrong?" au huduma ya Tonninyira. Mabishano yasiyotatuliwa yako chini ya mamlaka ya mahakama za Uganda.' }
+},
+ach: {
+  general: { summary:'Tonninyira riwo lwak me wilo, lwak me cato, ki lupoto — Tonninyira kikome pe kato gin mo tir.',
+    full:'Tonninyira tic ki cukul ma riwo Lwak me Wilo ki Lucato ma gibedo kengi ki Lupoto ma gibedo kengi. Tonninyira pe lubo i winyo me cato ma tye i kin Lacato ki Lawilo. Lucato gin ki lagam pi ber, gum, cik, ki ada me gin ma gicoyo. Lupoto gin ki lagam pi poto gum ki kare mapore.' },
+  shopper: { summary:'Iyer gin ma imito, iculo ki gwok onyo Mobile Money, kadi bene inyalo lubo nio karacel oromo.',
+    full:'Keto oda miyo winyo i kin in ki Lacato-ni. Rwod me poto nyutte con ma peya iculo. Culo ki Cwiny me Poto, onyo Mobile Money (MTN onyo Airtel). <span class="flag">[Tom: confirm and state an exact cancellation policy here]</span> — kit acel, lwong kony ki "Something wrong?" chat i cakke; ka Lacato ocakke yubo oda-ni, juko-ni pe romo bedo tye.' },
+  vendor: { summary:'Gwok layisin-ni ka tir, gin ma ipwonyo ka ada, ki Tonninyira kwanyo 5% i wil-lu ducu kaka lim mere me tic.',
+    full:'Imoko ni itye ki layisin me KCCA ki namba me URA TIN (ki satifikeeti me UNBS, ka romo) ma cwako tir kekken kun cato-ni tye ki tic. In keni imoko pi ada me poto, lok, ki nongo, ki pi ber ki kwo me gin ma icato. Tonninyira kwanyo lim me tic 5% ki i lim-ni pi oda ma otum, ma nyutte i Wallet &amp; payouts-ni. Iye ni ibicobo oda ma gigamo oyot ki gwoko ngec me cato-ni ka mwaka.' },
+  rider: { summary:'Poto ki ber, ter jami ki ada, ki Tonninyira kwanyo 5% i lim me poto mere kaka lim mere me tic.',
+    full:'Imoko ni ngec me gari-ni ki National ID tye tir. National ID-ni tic mung pi moko i te kin ki tic pa lagam — pe nyutte bot lwak. Iye ni ibiye lu poto ma inyalo cobbe ki ber ki oyot, ki bino nyuto poto ka ada. Tonninyira kwanyo lim me tic 5% acel-lu, ma gwoko i Wallet &amp; payouts-ni.' },
+  payments: { summary:'Culo ki gwok ka oda oromo, onyo ki MTN/Airtel Mobile Money ka kadho i Flutterwave.',
+    full:'Yo aryo me culo tye kacel me culo: Cwiny me Poto, onyo Mobile Money (MTN MoMo onyo Airtel Money) ma kadho i Flutterwave, gang me culo ma tye ki layisin. Tonninyira pe gwoko PIN mere Mobile Money onyo ngec me kadi ducu.' },
+  privacy: { summary:'Wakwanyo mung gin ma wamito me poto ki ber, ki wagwoko ki cik pa Uganda me gwoko ngec.',
+    full:'Tonninyira kwanyo namba me cim (donyo i akaunti, tic ki poto), ngec me kabedo (kabedo me poto pa Lawilo ki kabedo pa Lapoto i kare me poto, ma tic pi lubo oda ki kwano lim ki bor), namba me National ID ki bot Lupoto (moko mung i te kin, pe nyutte bot Lucato onyo Lucato), ki gin acoya pa Lucato me cik (layisin me KCCA, URA TIN, satifikeeti me UNBS). Man tic i lubo Cik pa Uganda me Gwoko Ngec ki Kwo Amung, 2019. Tonninyira pe cato ngec pa dano bot jo mukene. <span class="flag">[Tom: add a data-controller contact here once available]</span>' },
+  suspension: { summary:'Akaunti ma poko cik-gi Tonninyira twero juko onyo kwanyo woko kare mo keken.',
+    full:'Penyo pa Lucato ki Lupoto kadho i kifo me moko — pending, approved, onyo rejected. Tonninyira twero kwero penyo, onyo juko onyo ngolo akaunti ma gimoko, ka ngec ma gimiyo obedo mie, gin acoya pe tye tir onyo oromo kare, onyo cik-gi opoke. Winyo pa Lacato twero jukke pi tic marac ki cukul-ni.' },
+  disputes: { summary:'Cik magi lubo cik pa Uganda, ki wabitemo yubo lok ma opoke i kinwa i cakke.',
+    full:'Cik magi lubo cik pa Republic me Uganda. Lok ma opoke myero okel mukwongo ki i "Something wrong?" chat onyo kony pa Tonninyira. Lok ma pe oyubbe tye i te loc pa cukul me Uganda.' }
+},
+myx: {
+  general: { summary:'Tonninyira ekwataniisa abakuusi, bannannyini beduuka, na abatambuzi — Tonninyira yiyene sitakusinjia nohomba khutwala shindu shosi shosi butereevu.',
+    full:'Tonninyira ekhola khu pulatifomu ekwataniisa Abakuusi na Abasuubuzi abeetongole na Abatambuzi abeetongole. Tonninyira sio mukwano mu endagaano y’okhusinjia hakati w’Omusuubuzi n’Omukuusi. Abasuubuzi nibo bavunaanyisibwa khu mutindo, obukuumi, obutuufu bw’amateeka, na obutuufu bw’ebindu byabo bawandiise. Abatambuzi nibo bavunaanyisibwa khu mpisa ndayi na okhutuusa mangu.' },
+  shopper: { summary:'Oloonda khyo wenya khugula, osasula sente z’omukono nohomba Mobile Money, khandi onyala okhulondelela okhula nga khitukha.',
+    full:'Okhuteekha ekhiragilo khikhola endagaano hakati wo n’Omusuubuzi. Empeera y’okhutwala eloolekha nga tonasasula. Osasula okhukhoosya Sente z’Omukono nga Eduuka Lisile, nohomba Mobile Money (MTN nohomba Airtel). <span class="flag">[Tom: confirm and state an exact cancellation policy here]</span> — nga eteeka ejjuvu, khubila support khu "Something wrong?" chat nga okyasooka; Omusuubuzi nga amala okhutandikha khutegeka ekhiragilo khyo, okhukhisaamu khinyala khutabaho.' },
+  vendor: { summary:'Gwoosa layisensi tsyo nga tsili tsy’amateeka, ebiwandiise byo nga bituufu, na Tonninyira etwala 5% khu buli khyetunzeewo nga empeera yaayo.',
+    full:'Osubila ali olina Layisensi ya KCCA entuufu na khamula ya URA TIN (na satifikeeti ya UNBS, nga khali khikwatako) etsili tsy’amateeka nga eduuka lyo likhali khikhola. Ewe yiyene ovunaanyisibwa khu butuufu bw’emiwendo, ebikwatako ebindu, na obwangu bw’okhufuna, na khu bukuumi n’omutindo khw’ebindu byo osinjia. Tonninyira egikha 5% khu tsimpeela tsy’okhusasulwa khu biragilo ebimaliile, nga byoolekha mu Wallet &amp; payouts yo. Osubila okhutuukiliisa ebiragilo ebikhiriisibwa mangu na okhugwoosa amawulile g’eduuka lyo nga ga bulaala.' },
+  rider: { summary:'Twala emilimu na obukuumi, khola na obwesigwa, na Tonninyira etwala 5% khu tsimpeela tsyo etsy’okhutwala nga empeera yaayo.',
+    full:'Osubila ali ebikwatako ekhidduka khyo na National ID yo bili bitufu. National ID yo ekhoosibwa khu khukhasa mu buifisi biene na khuvunaanyisibwa — sitalolekha khu bakasitoma. Osubila okhukhiriisa ebiragilo ebio onyala okhutuukiliisa na obukuumi na mangu, na okhulanga ebiragilo nga bili bitufu. Tonninyira egikha 5% eyimwi, nga eloolekha mu Wallet &amp; payouts yo.' },
+  payments: { summary:'Sasula sente z’omukono ekhiragilo nga khitukhile, nohomba MTN/Airtel Mobile Money nga khiitsa mu Flutterwave.',
+    full:'Engeli tsibili tsy’okhusasula tsili wo khu khusasula: Sente z’Omukono nga Eduuka Lisile, nohomba Mobile Money (MTN MoMo nohomba Airtel Money) nga khiitsa mu Flutterwave, khampuni ekhola khu tsimpeela ekhiliisibwa. Tonninyira sitagwoosa PIN yo eya mobile money nohomba obumanyilwa bw’ekhadi yo obwijuvu.' },
+  privacy: { summary:'Khukhungaanya khyene ekhio khwenya khukhola khutuusa ebiragilo mu bukuumi, na khubigwoosa nga khuulondekhana etteeka lya Uganda ely’okhugwoosa amawulile.',
+    full:'Tonninyira ekhungaanya khamula tsy’esimu (okhuyingira akhawunti, okhutegeeragana khu khutuusa), amawulile g’eshibala (eshibala shy’okhutuusibwamu eshya Mukuusi n’eshibala shy’Omutambuzi mu ebise by’okhutwala, ebikhoosibwa okhulambika ebiragilo na okhubala empeera okhusinziila khu bulaali), khamula tsya National ID okhula khu Batambuzi (okhukhasa mu buifisi biene, sitalolekha khu Bakuusi nohomba Basuubuzi), na ebihandiiko bi Basuubuzi ebi etteka (layisensi ya KCCA, URA TIN, satifikeeti ya UNBS). Bino bikholebwa nga bilondekhana Etteeka lya Uganda ely’Okhugwoosa Amawulile n’Eby’obwannannyini, 2019. Tonninyira sitatunda mawulile ga bandu khu bibiina ebindi. <span class="flag">[Tom: add a data-controller contact here once available]</span>' },
+  suspension: { summary:'Akhawunti etsiyisa etteeka lino tsinyala khusiibwa nohomba khuwelesibwawo Tonninyira mu ebise bibisi.',
+    full:'Okhusaba khw’Abasuubuzi na Abatambuzi khuitsa mu ekhifo ekhy’okhukhasibwa — pending, approved, nohomba rejected. Tonninyira enyala khukhaana okhusaba, nohomba khusiiba nohomba khuwelesawo akhawunti eyakhasibwa, wali amawulile agalimba, ebihandiiko ebitali bya mateeka nohomba ebiweddemu ebise, nohomba etteeka lino nga liyisiibwe. Obwangu bw’Omukuusi bunyala khukhomibwakho khu khukhoosya pulatifomu ebubi.' },
+  disputes: { summary:'Etteeka lino likholebwa mu mateeka ga Uganda, na khugelesa okhumalawo endaganu hakati wefwe mu khusooka.',
+    full:'Etteeka lino likholebwa mu mateeka ga Uganda. Endaganu tsili nokho okhusookela mu "Something wrong?" chat nohomba support ya Tonninyira. Endaganu ebitamaliibwawo tsili wansi w’obwangu bw’ekhooti tsya Uganda.' }
+},
+nyn: {
+  general: { summary:'Tonninyira negatanisa abaguzi, abanyeeduka, n’abahagizi — Tonninyira yenka tikaguza nari kutwara ekintu kyona okuruga aha.',
+    full:'Tonninyira negakora aha ipuraatifoomu erikutanisa Abaguzi n’Abaguzi b’ebicweka abeserukira n’Abahagizi abeserukira. Tonninyira tikiri munonga omu endagaano y’okuguza omu kati k’Omuguzi n’Omuguzi. Abaguzi bahikire kuba n’obujunanizibwa aha muringo, obwiremwa, amateeka, na buzimazima bw’ebi barikwandiika. Abahagizi bahikire kuba n’obujunanizibwa aha mahagiza agari amazima kandi agarikuhika omu bwire.' },
+  shopper: { summary:'Osherura ekyo oyenda kugura, orikusasura na sente z’omukono nari Mobile Money, kandi noobaasa kugirurira kuhitsya obu eryahika.',
+    full:'Kuteraho oda nikuhanga endagaano ahagati yawe n’Omuguzi. Omusaho gw’okuhagiza nigworekwa otakabashaho kusasura. Osasura na Sente z’Omukono Eduka Nirihika, nari Mobile Money (MTN nari Airtel). <span class="flag">[Tom: confirm and state an exact cancellation policy here]</span> — nk’ebiteekateeko, tukaana kony omu "Something wrong?" chat obu kikaba kikyaba, Omuguzi yaba amaze kutandika kuteekateeka oda yawe, kuhagarika nikibaasa kutabaho.' },
+  vendor: { summary:'Gumaho layisensi zawe nizibaho amateeka, ebi orikwandiika nibiba bimazima, kandi Tonninyira negatwara 5% aha buri ekiguzirwe nk’omusaho gwayo.',
+    full:'Nohamiza ngu oine layisensi ya KCCA ehikire n’omubaro gwa URA TIN (na satifikeiti ya UNBS, kikaba nikikukwataho) ebi birikugumaho okuba amateeka obu eduka ryawe rikaba nirikora. Iwe wenka noba n’obujunanizibwa aha buzimazima bw’emisaho, ebirikukwataho, n’okuboneka, na aha bwiremwa n’omuringo gw’ebi orikuguza. Tonninyira negakiraho komisheni y’omurimo 5% okuruga omu ebi orikutunga aha oda ezaahikire, nizyoreka omu Wallet &amp; payouts yawe. Noikiriza kutuukiriza oda ezaikirizibwe bwango kandi kugumaho amakuru g’eduka ryawe.' },
+  rider: { summary:'Hagiza n’obwiremwa, kora n’amazima, kandi Tonninyira negatwara 5% ah’ebi orikutunga omu buhagizi nk’omusaho gwayo.',
+    full:'Nohamiza ngu ebirikukwataho ekyanya kyawe na National ID biri bimazima. National ID yawe negukoresibwa gwonka aha kuhamya omu bwihisho n’obujunanizibwa — tikyorekwa abaguzi. Noikiriza kwikiriza gusa oda ez’obaasa kutuukiriza n’obwiremwa kandi bwango, na kworeka oda kimwe. Tonninyira negakiraho komisheni y’omurimo 5% emwe, erikureebwa omu Wallet &amp; payouts yawe.' },
+  payments: { summary:'Sasura na sente z’omukono oda erihika, nari MTN/Airtel Mobile Money okuraba omuri Flutterwave.',
+    full:'Emiringo ebiri egy’okusasura nigyayebwa aha kusasura: Sente z’Omukono Eduka Nirihika, nari Mobile Money (MTN MoMo nari Airtel Money) erikutwarwa omuri Flutterwave, ekitongore ky’okusasura ekiine layisensi. Tonninyira tegataho PIN yawe eya mobile money nari amakuru gaawe ga kaadi gaijwire.' },
+  privacy: { summary:'Nitwega gusa ebi twine okwetenga kutuuza oda n’obwiremwa, kandi nitubigumaho okurabira omu ebiragiro bya Uganda ery’okugumaho amakuru.',
+    full:'Tonninyira negega namba z’esimu (kuyingira akaunti, kuhikaanisa ebirikukwataho okutwara), amakuru g’ahantu (omwanya gw’okutwariisibwamu ogw’Omuguzi n’ahantu Omuhagizi arikuba ari omu bwire bw’okuhagiza, ebirikukoresebwa kutunga oda n’okubara omusaho okusigikirira aha bwenkanwa), namba za National ID okuruga aha Bahagizi (kuhamya omu bwihisho gwonka, tikyorekwa Abaguzi nari Abaguzi b’ebicweka), na ebyandiko by’amateeka by’Abaguzi b’ebicweka (layisensi ya KCCA, URA TIN, satifikeiti ya UNBS). Ebi nibikorwa nitubigumaho Ebiragiro bya Uganda ery’Okugumaho Amakuru n’Ebyihisho, 2019. Tonninyira tegatunda makuru g’abantu ahari bandi. <span class="flag">[Tom: add a data-controller contact here once available]</span>' },
+  suspension: { summary:'Akaunti ezirikucwamu amateeka aga nizibaasa kuhagarikwa nari kwihwamu Tonninyira obudde bwona.',
+    full:'Okushaba kw’Abaguzi b’ebicweka n’Abahagizi nikuraba omu kifo ky’okuhamizibwa — pending, approved, nari rejected. Tonninyira negabaasa kwanga okushaba, nari kuhagarika nari kucwamu akaunti eyahamiziibwe, ahakaba amakuru agaayebirwe agaba ari ag’obucweke, ebyandiko bitari bya mateeka nari byahwireho, nari amateeka aga gaacwamu. Okuhika kw’Omuguzi nikubaasa kuhagarikwa habw’okukoresa ipuraatifoomu kubi.' },
+  disputes: { summary:'Amateeka aga nigagumizibwaho amateeka ga Uganda, kandi nitulikugezaaho kumaraho enkoni omu kati waitu tubanze.',
+    full:'Amateeka aga nigagumizibwaho amateeka ga Republic ya Uganda. Enkoni zishemereire kubanza kwetwa omu "Something wrong?" chat nari support ya Tonninyira. Enkoni ezitamaraho ziri ahansi y’obushoboorozi bw’enkiiko za Uganda.' }
+}
+};
+
+const LANGS = [
+  { code:'en', label:'English' },
+  { code:'lg', label:'Luganda' },
+  { code:'sw', label:'Kiswahili' },
+  { code:'ach', label:'Acholi' },
+  { code:'myx', label:'Lumasaba' },
+  { code:'nyn', label:'Runyankole' }
+];
+const LOWER_CONFIDENCE = ['ach', 'myx', 'nyn'];
+let gLang = 'en';
+try{ const saved = localStorage.getItem('tn_lang'); if (LANGS.some(function(l){ return l.code === saved; })) gLang = saved; }catch(_){}
+
+function sectionText(sec){
+  const t = I18N[gLang] && I18N[gLang][sec.id];
+  return t || { summary: sec.summary, full: sec.full };
+}
 
 function speakText(text){
   try{ if (window.speechSynthesis) speechSynthesis.cancel(); }catch(_){}
@@ -134,33 +266,63 @@ const jumpNav = document.getElementById('jumpNav');
 const sectionsHost = document.getElementById('sections');
 const speechOk = ('speechSynthesis' in window);
 
-jumpNav.innerHTML = TERMS_SECTIONS.map(function(s){
-  return '<a href="#' + s.id + '">' + s.eyebrow.replace('&', '&amp;') + '</a>';
-}).join('');
-
-sectionsHost.innerHTML = TERMS_SECTIONS.map(function(s){
-  return '' +
-    '<section class="t-sec" id="' + s.id + '">' +
-      '<div class="icon-row">' +
-        '<div class="icon-tile" aria-hidden="true">' + (TERMS_ICON[s.icon] || '') + '</div>' +
-        '<div class="eyebrow">' + s.eyebrow + '</div>' +
-      '</div>' +
-      '<div class="summary">' + s.summary + '</div>' +
-      '<button class="listen" type="button" data-summary="' + encodeURIComponent(s.summary) + '"' + (speechOk ? '' : ' disabled') + '>' +
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>' +
-        (speechOk ? 'Listen' : 'Listen (not supported here)') +
-      '</button>' +
-      '<div class="full">' + s.full + '</div>' +
-    '</section>';
-}).join('');
-
-/* Listen reads only the plain summary aloud, never the dense full text --
-   the same rule the Guide follows: keep the audio short and useful. */
-sectionsHost.querySelectorAll('.listen').forEach(function(btn){
-  btn.addEventListener('click', function(){
-    speakText(decodeURIComponent(btn.dataset.summary));
+function renderLangs(){
+  const wrap = document.getElementById('langs');
+  wrap.innerHTML = LANGS.map(function(l){
+    return '<button class="lang-btn' + (l.code === gLang ? ' is-on' : '') + '" data-lang="' + l.code + '">' + l.label + '</button>';
+  }).join('');
+  wrap.querySelectorAll('button').forEach(function(b){
+    b.addEventListener('click', function(){
+      gLang = b.dataset.lang;
+      try{ localStorage.setItem('tn_lang', gLang); }catch(_){}
+      renderLangs();
+      renderSections();
+    });
   });
-});
+  const notice = document.getElementById('langNotice');
+  if (gLang === 'en'){
+    notice.classList.remove('show');
+  } else {
+    notice.classList.add('show');
+    notice.textContent = LOWER_CONFIDENCE.indexOf(gLang) !== -1
+      ? 'Machine-translated. English is the official text of this Terms page. This language has had less checking than Luganda or Kiswahili — please have a native speaker confirm it before relying on it.'
+      : 'Machine-translated. English is the official text of this Terms page.';
+  }
+}
+
+function renderSections(){
+  jumpNav.innerHTML = TERMS_SECTIONS.map(function(s){
+    return '<a href="#' + s.id + '">' + s.eyebrow.replace('&', '&amp;') + '</a>';
+  }).join('');
+
+  sectionsHost.innerHTML = TERMS_SECTIONS.map(function(s){
+    const t = sectionText(s);
+    return '' +
+      '<section class="t-sec" id="' + s.id + '">' +
+        '<div class="icon-row">' +
+          '<div class="icon-tile" aria-hidden="true">' + (TERMS_ICON[s.icon] || '') + '</div>' +
+          '<div class="eyebrow">' + s.eyebrow + '</div>' +
+        '</div>' +
+        '<div class="summary">' + t.summary + '</div>' +
+        '<button class="listen" type="button" data-summary="' + encodeURIComponent(t.summary) + '"' + (speechOk ? '' : ' disabled') + '>' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>' +
+          (speechOk ? 'Listen' : 'Listen (not supported here)') +
+        '</button>' +
+        '<div class="full">' + t.full + '</div>' +
+      '</section>';
+  }).join('');
+
+  /* Listen reads only the plain summary aloud, never the dense full text --
+     the same rule the Guide follows: keep the audio short and useful. */
+  sectionsHost.querySelectorAll('.listen').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      speakText(decodeURIComponent(btn.dataset.summary));
+    });
+  });
+}
+
+renderLangs();
+renderSections();
 </script>
 </body>
 </html>
