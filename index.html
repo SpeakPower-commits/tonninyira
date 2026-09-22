@@ -1266,7 +1266,7 @@ async function renderAccountPage(){
       </a>
     </div>
 
-    <a href="#help" class="tn-act" style="background:#1B2140;border:1px solid #2C3566;margin-bottom:12px" onclick="event.preventDefault();if(window.tnOpenSupport)window.tnOpenSupport();else goView('profile')">
+    <a href="#help" class="tn-act" style="background:#1B2140;border:1px solid #2C3566;margin-bottom:12px" onclick="event.preventDefault();tnOpenHelp()">
       <span aria-hidden="true" style="width:42px;height:42px;border-radius:14px;background:#8B9BFF;display:flex;align-items:center;justify-content:center;flex-shrink:0">${TN_ICON.chat}</span>
       <span style="flex-grow:1">
         <span class="tn-dsp" style="font-size:1.15rem;color:#fff;display:block">Something wrong?</span>
@@ -1290,6 +1290,13 @@ async function renderAccountPage(){
     ${await tnPartnerSection(session.user.id)}
 
     <button class="tn-btn tn-btn-ghost" style="margin-top:14px;border-color:#4A2A22;color:#FF8A6B" onclick="tnAuthEntry()">Use a different account</button>`;
+}
+
+/* The chat lives in profile-copy-enhancements.js. If that file has not loaded,
+   say so rather than bouncing the customer to a page they are already on. */
+function tnOpenHelp(){
+  if(typeof window.tnOpenSupport === 'function'){ window.tnOpenSupport(); return; }
+  alert('Chat is still loading. Give it a moment and tap again — if it keeps happening, please reload the page.');
 }
 
 /* The cover rotates through the delivery story. Kept deliberately slow, it

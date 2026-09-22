@@ -66,7 +66,42 @@
   async function customers(){setHead('Customers','Customer activity, orders, saved intent and loyalty.');const [p,o,w,l]=await Promise.all([rows('profiles','id,role,display_name,phone,created_at'),rows('orders','user_id,total,created_at'),rows('wishlists'),rows('loyalty_accounts')]);const count={};o.forEach(x=>{if(x.user_id)count[x.user_id]=(count[x.user_id]||0)+1});const wl={};w.forEach(x=>{if(x.user_id)wl[x.user_id]=(wl[x.user_id]||0)+1});const pts={};l.forEach(x=>{if(x.user_id)pts[x.user_id]=x.points||0});app.innerHTML='<div class="panel">'+table(p.filter(x=>x.role==='customer'),[{label:'Name',key:'display_name'},{label:'Phone',key:'phone'},{label:'Orders',render:r=>count[r.id]||0},{label:'Wishlist',render:r=>wl[r.id]||0},{label:'Points',render:r=>pts[r.id]||0},{label:'Joined',key:'created_at'}])+'</div>'}
   async function partners(){setHead('Vendors & riders','Partner onboarding, approval and payout queues.');const [v,r,p]=await Promise.all([rows('vendors'),rows('riders'),rows('partner_payouts')]);app.innerHTML='<div class="panel"><h3>Vendors</h3>'+table(v,[{label:'Business',key:'business_name'},{label:'TID',key:'tonninyira_id'},{label:'Location',key:'location'},{label:'Category',key:'category'},{label:'Approval',render:r=>pill(r.approval_status)},{label:'Owner',key:'owner_name'},{label:'Phone',key:'phone'}])+'</div><div class="panel" style="margin-top:10px"><h3>Riders</h3>'+table(r,[{label:'Name',key:'full_name'},{label:'TID',key:'tonninyira_id'},{label:'Vehicle',key:'vehicle_type'},{label:'Plate',key:'plate_number'},{label:'Approval',render:r=>pill(r.approval_status)}])+'</div><div class="panel" style="margin-top:10px"><h3>Payout queue</h3>'+table(p,[{label:'Type',key:'partner_type'},{label:'Amount',render:r=>money(r.amount)},{label:'Method',key:'method'},{label:'Status',render:r=>pill(r.status)},{label:'Reference',key:'reference'}])+'</div>'}
   async function finance(){setHead('Payments & payouts','Payment reconciliation, settlement and partner cash-out.');const [p,s]=await Promise.all([rows('payment_transactions'),rows('platform_settlements')]);app.innerHTML='<div class="panel"><h3>Payment transactions</h3>'+table(p,[{label:'Order',key:'order_id'},{label:'Provider',key:'provider'},{label:'Network',key:'network'},{label:'Amount',render:r=>money(r.amount)},{label:'Status',render:r=>pill(r.status)},{label:'TX ref',key:'tx_ref'},{label:'Verified',key:'verified_at'}])+'</div><div class="panel" style="margin-top:10px"><h3>Platform settlements</h3>'+table(s,[{label:'Vendor',key:'vendor_id'},{label:'Rider',key:'rider_tid'},{label:'Gross',render:r=>money(r.gross_amount)},{label:'Platform fee',render:r=>money(r.platform_fee)},{label:'Vendor net',render:r=>money(r.vendor_amount)},{label:'Rider net',render:r=>money(r.rider_amount)},{label:'Status',render:r=>pill(r.status)}])+'</div>'}
-  async function support(){setHead('Support','Customer service conversations and recent messages.');const [c,m]=await Promise.all([rows('support_conversations'),rows('support_messages')]);app.innerHTML='<div class="panel"><h3>Conversations</h3>'+table(c,[{label:'ID',key:'id'},{label:'Customer',key:'customer_id'},{label:'Status',render:r=>pill(r.status)},{label:'Updated',render:r=>r.updated_at||r.created_at||'—'}])+'</div><div class="panel" style="margin-top:10px"><h3>Recent messages</h3>'+table(m.slice(-250).reverse(),[{label:'Conversation',key:'conversation_id'},{label:'Sender',key:'sender_user_id'},{label:'Message',key:'body'},{label:'Time',key:'created_at'}])+'</div>'}
+  /* Reading messages is not support. Without a way to answer, every customer who
+     writes in is met with silence -- so each conversation carries a reply box.
+     support_messages_insert already permits staff to post into an open one. */
+  async function support(){
+    setHead('Support','Customer service conversations and recent messages.');
+    const [c,m]=await Promise.all([rows('support_conversations'),rows('support_messages')]);
+    const byConvo={};
+    for(const msg of m){ (byConvo[msg.conversation_id]=byConvo[msg.conversation_id]||[]).push(msg); }
+    const open=c.filter(x=>String(x.status||'').toLowerCase()==='open');
+    const rest=c.filter(x=>String(x.status||'').toLowerCase()!=='open');
+
+    const thread=conv=>{
+      const msgs=(byConvo[conv.id]||[]).sort((a,b)=>String(a.created_at).localeCompare(String(b.created_at)));
+      const last=msgs.slice(-8).map(x=>
+        '<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)"><span class="muted" style="font-size:11px">'
+        +esc(String(x.created_at||'').replace('T',' ').slice(0,16))+'</span><br>'+esc(x.body||'')+'</div>').join('')
+        || '<div class="muted" style="padding:6px 0">No messages yet.</div>';
+      return '<div class="panel" style="margin-top:10px"><h3 style="margin:0 0 2px">'+esc(conv.customer_id||'Unknown customer')+'</h3>'
+        +'<div class="muted" style="font-size:11px;margin-bottom:8px">'+pill(conv.status)+' &middot; '+esc(String(conv.updated_at||conv.created_at||'').slice(0,16))+'</div>'
+        +'<div style="max-height:220px;overflow:auto">'+last+'</div>'
+        +'<div style="display:flex;gap:8px;margin-top:10px">'
+        +'<input class="tn-reply-input" data-convo="'+esc(conv.id)+'" placeholder="Reply to this customer…" maxlength="1000" '
+        +'style="flex:1;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,.2);background:#1f1712;color:inherit;font:inherit">'
+        +'<button type="button" class="tn-reply-send" data-convo="'+esc(conv.id)+'" '
+        +'style="border:0;border-radius:9px;padding:10px 16px;font-weight:800;cursor:pointer;background:#4C9A5B;color:#fff">Send</button>'
+        +'</div></div>';
+    };
+
+    app.innerHTML='<div class="panel"><h3>Open conversations ('+open.length+')</h3>'
+      +(open.length?'':'<div class="muted">Nothing waiting on a reply.</div>')+'</div>'
+      +open.map(thread).join('')
+      +(rest.length?'<div class="panel" style="margin-top:10px"><h3>Closed</h3>'
+        +table(rest,[{label:'Customer',key:'customer_id'},{label:'Status',render:r=>pill(r.status)},
+                     {label:'Updated',render:r=>r.updated_at||r.created_at||'—'}])+'</div>':'');
+  }
+
   async function trust(){setHead('Approvals & trust','Identity, partner approvals and trust signals.');const [v,r,rev]=await Promise.all([rows('vendors'),rows('riders'),rows('reviews')]);app.innerHTML='<div class="grid"><div class="panel"><h3>Vendor approvals</h3>'+table(v,[{label:'Business',key:'business_name'},{label:'TID',key:'tonninyira_id'},{label:'Approval',render:x=>pill(x.approval_status)},{label:'Decision',render:x=>approvalActions('vendor',x)}])+'</div><div class="panel"><h3>Rider approvals</h3>'+table(r,[{label:'Name',key:'full_name'},{label:'TID',key:'tonninyira_id'},{label:'Approval',render:x=>pill(x.approval_status)},{label:'Decision',render:x=>approvalActions('rider',x)}])+'</div></div><div class="panel" style="margin-top:10px"><h3>Reviews</h3>'+table(rev.slice(-250).reverse(),[{label:'Rating',key:'rating'},{label:'Comment',key:'comment'},{label:'Created',key:'created_at'}])+'</div>'}
   async function growth(){setHead('Growth & analytics','Demand, customer activity and marketplace movement.');const [o,p,e]=await Promise.all([rows('orders'),rows('profiles','id,role,created_at'),rows('market_events')]);const days={};o.forEach(x=>{const d=String(x.created_at||'').slice(0,10)||'Unknown';days[d]=(days[d]||0)+1});const series=Object.entries(days).sort((a,b)=>a[0].localeCompare(b[0])).slice(-14);app.innerHTML='<div class="grid"><div class="panel"><h3>Orders by day</h3>'+table(series.map(x=>({day:x[0],orders:x[1]})),[{label:'Date',key:'day'},{label:'Orders',key:'orders'}])+'</div><div class="panel"><h3>Audience & activity</h3>'+table([{m:'Customers',n:p.filter(x=>x.role==='customer').length},{m:'Total orders',n:o.length},{m:'Completed orders',n:o.filter(x=>String(x.status).toLowerCase()==='completed').length},{m:'Marketplace events',n:e.length}],[{label:'Metric',key:'m'},{label:'Value',key:'n'}])+'</div></div>'}
   async function system(){setHead('System data','Operational records and configuration signals.');const [events,admins,guides]=await Promise.all([rows('market_events'),rows('admin_users'),rows('admin_guides','slug,title,updated_at')]);app.innerHTML='<div class="grid"><div class="panel"><h3>Recent events</h3>'+table(events.slice(-200).reverse(),[{label:'Type',key:'event_type'},{label:'Status',key:'status'},{label:'Reference',key:'reference'},{label:'Created',key:'created_at'}])+'</div><div class="panel"><h3>Admin access registry</h3>'+table(admins,[{label:'User ID',key:'user_id'},{label:'Role',key:'role'},{label:'Active',key:'is_active'}])+'</div></div><div class="panel" style="margin-top:10px"><h3>Protected guides</h3>'+table(guides,[{label:'Slug',key:'slug'},{label:'Title',key:'title'},{label:'Updated',key:'updated_at'}])+'</div>'}
@@ -155,6 +190,22 @@
       status.className='status error';
       status.textContent='Could not update approval: '+String(err?.message||err);
     }
+  });
+
+  app.addEventListener('click',async e=>{
+    const b=e.target.closest('.tn-reply-send');
+    if(!b)return;
+    const input=app.querySelector('.tn-reply-input[data-convo="'+b.dataset.convo+'"]');
+    const body=(input?.value||'').trim();
+    if(!body)return;
+    const me=(await client().auth.getUser())?.data?.user;
+    if(!me){status.className='status error';status.textContent='Your admin session has expired. Sign in again.';return}
+    b.disabled=true;b.textContent='Sending…';
+    const r=await client().from('support_messages').insert({conversation_id:b.dataset.convo,sender_user_id:me.id,body});
+    b.disabled=false;b.textContent='Send';
+    if(r.error){status.className='status error';status.textContent='Could not send: '+r.error.message;return}
+    if(input)input.value='';
+    await load(current);
   });
 
   const V={overview,operations,customers,partners,finance,support,trust,growth,system};

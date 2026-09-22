@@ -215,6 +215,10 @@
     }
     if(!convo){ alert('Could not open support right now.'); return; }
 
+    /* enhanceProfile() injects these, but it returns early when it cannot find
+       the old profile container -- which is now always, since the account page
+       was rebuilt. Without this the sheet opened as unstyled markup. */
+    injectStyles();
     document.getElementById(SUPPORT_ID)?.remove();
     const modal=document.createElement('div'); modal.id=SUPPORT_ID; modal.className='tn-support-modal';
     modal.innerHTML=`<div class="tn-support-sheet" role="dialog" aria-label="Tonninyira Support">
@@ -247,6 +251,13 @@
     }
   }
 
+  /* Published unconditionally. This used to live inside upgradeSupportButton,
+     which returns early when #tnSupportBtn is absent -- so after the account
+     page was rebuilt the global was never assigned and the Help card silently
+     did nothing. The chat's entry point must not depend on a button that the
+     redesign removed. */
+  window.tnOpenSupport = openSupportChat;
+
   function upgradeSupportButton(main){
     const old=main.querySelector('#tnSupportBtn');
     if(!old || old.dataset.tnSupportUpgrade) return;
@@ -254,9 +265,6 @@
     const fresh=old.cloneNode(true);
     old.replaceWith(fresh);
     fresh.addEventListener('click',openSupportChat);
-    /* The account page's Help card calls this by name; without it the card
-       would look live and do nothing. */
-    window.tnOpenSupport=openSupportChat;
   }
 
   function enhanceProfile(){
