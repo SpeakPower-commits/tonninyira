@@ -356,7 +356,7 @@
       <option value="Kisugu"><option value="Kansanga"><option value="Ggaba">
       <option value="Namwongo"><option value="Entebbe"><option value="Kasangati"><option value="Jinja">
     </datalist>
-    <button id="gpsBtn" onclick="captureCustomerLocation()" style="background:var(--card2); border:1px solid rgba(243,232,216,0.15); color:var(--gold); border-radius:8px; padding:6px 10px; font-size:0.72rem; font-weight:800; white-space:nowrap; cursor:pointer;">📍 Use My Location</button>
+    <button id="gpsBtn" onclick="captureCustomerLocation()" style="background:var(--card2); border:1px solid rgba(243,232,216,0.15); color:var(--gold); border-radius:8px; padding:6px 10px; font-size:0.72rem; font-weight:800; white-space:nowrap; cursor:pointer;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Use My Location</button>
   </div>
 
   <div class="search-row">
@@ -594,19 +594,26 @@ function computeDeliveryFee(){
   if(dists.some(d=>d===null)) return DEFAULT_DELIVERY_FEE;
   return feeForDistance(Math.max(...dists));
 }
+/* A hand-drawn line pin, not the platform's 📍 emoji glyph -- that glyph
+   renders differently per device and, paired with "Use My Location," is
+   about the most recognisable stock AI-app tell there is. currentColor
+   means it tracks the button's own state color (gold, then green once a
+   fix is captured) with no extra styling to keep in sync. */
+const TN_PIN = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+
 function captureCustomerLocation(){
   const btn = document.getElementById('gpsBtn');
-  if(!navigator.geolocation){ btn.textContent = '📍 Not supported on this device'; return; }
-  btn.textContent = '📍 Locating…';
+  if(!navigator.geolocation){ btn.innerHTML = TN_PIN + 'Not supported on this device'; return; }
+  btn.innerHTML = TN_PIN + 'Locating…';
   navigator.geolocation.getCurrentPosition(
     pos=>{
       AppState.customerLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      btn.textContent = '📍 Location captured ✓';
+      btn.innerHTML = TN_PIN + 'Location captured ✓';
       btn.style.color = 'var(--green)';
       if(document.getElementById('cartSheet') && !document.getElementById('cartSheet').classList.contains('hidden')) updateCartUI();
     },
     err=>{
-      btn.textContent = '📍 Use My Location';
+      btn.innerHTML = TN_PIN + 'Use My Location';
       alert("Couldn't get your location — check your phone's location permission for this site and try again. You can still order using your typed area.");
       console.log('Geolocation error:', err.message||err);
     },

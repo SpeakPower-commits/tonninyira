@@ -117,7 +117,7 @@
         <option value="Kisugu"><option value="Kansanga"><option value="Ggaba"><option value="Namwongo">
         <option value="Owino Market"><option value="Bwaise"><option value="Entebbe"><option value="Kasangati"><option value="Jinja">
       </datalist>
-      <button type="button" id="vendorGpsBtn" onclick="captureVendorLocation()" style="background:var(--card2); border:1px solid rgba(243,232,216,0.15); color:var(--gold); border-radius:8px; padding:9px 12px; font-size:0.78rem; font-weight:800; cursor:pointer; margin-top:6px; width:100%;">📍 Set Exact Stall Location (for accurate delivery pricing)</button>
+      <button type="button" id="vendorGpsBtn" onclick="captureVendorLocation()" style="background:var(--card2); border:1px solid rgba(243,232,216,0.15); color:var(--gold); border-radius:8px; padding:9px 12px; font-size:0.78rem; font-weight:800; cursor:pointer; margin-top:6px; width:100%;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Set Exact Stall Location (for accurate delivery pricing)</button>
       <p class="helper">Optional, but it's what lets Tonninyira quote a fair distance-based delivery fee instead of a flat guess.</p>
       <label>Category</label>
       <select id="vCategory" name="category" onchange="updateSubcatOptions()">
@@ -412,18 +412,20 @@ async function hashPin(phone, pin){
 }
 
 let vendorCoords = null;
+const TN_PIN = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+
 function captureVendorLocation(){
   const btn = document.getElementById('vendorGpsBtn');
-  if(!navigator.geolocation){ btn.textContent = '📍 Not supported on this device'; return; }
-  btn.textContent = '📍 Locating…';
+  if(!navigator.geolocation){ btn.innerHTML = TN_PIN + 'Not supported on this device'; return; }
+  btn.innerHTML = TN_PIN + 'Locating…';
   navigator.geolocation.getCurrentPosition(
     pos=>{
       vendorCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      btn.textContent = '📍 Stall location captured ✓';
+      btn.innerHTML = TN_PIN + 'Stall location captured ✓';
       btn.style.color = 'var(--green)';
     },
     err=>{
-      btn.textContent = '📍 Set Exact Stall Location (for accurate delivery pricing)';
+      btn.innerHTML = TN_PIN + 'Set Exact Stall Location (for accurate delivery pricing)';
       showToast("Couldn't get your location — check your phone's permission for this site.", true);
       console.log('Vendor geolocation error:', err.message||err);
     },

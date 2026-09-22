@@ -68,8 +68,11 @@
       area.placeholder = 'Enter your area';
       area.setAttribute('aria-label','Enter your delivery area');
     }
+    /* Matches the hand-drawn pin SVG index.html now uses for this button
+       (TN_PIN in its inline script) -- textContent here would have wiped
+       that icon back to the platform's 📍 emoji glyph on every pass. */
     const gps = document.getElementById('gpsBtn');
-    if(gps) gps.textContent = '📍 Use my location';
+    if(gps && !gps.querySelector('svg')) gps.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Use My Location';
 
     document.querySelectorAll('.cat-tab').forEach(btn=>{
       const value = btn.textContent.trim().toLowerCase();
