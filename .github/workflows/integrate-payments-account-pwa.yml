@@ -8,7 +8,6 @@ on:
       - 'account-session-ui.js'
       - 'session-compat.js'
       - 'wishlist-account.js'
-      - 'support-session-fix.js'
       - 'manifest.webmanifest'
       - 'sw.js'
       - 'payment-return.html'
@@ -61,7 +60,6 @@ jobs:
           body_tags=[
             '<script src="session-compat.js"></script>',
             '<script src="account-session-ui.js"></script>',
-            '<script src="support-session-fix.js"></script>',
             '<script src="wishlist-account.js"></script>',
             '<script src="flutterwave-payments-v2.js"></script>',
           ]
