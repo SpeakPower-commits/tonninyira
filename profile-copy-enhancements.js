@@ -58,15 +58,22 @@
   }
 
   function enhanceGeneralCopy(){
+    /* index.html's TN_I18N owns these two fields' copy (chrome.searchPlaceholder,
+       chrome.areaPlaceholder/areaAriaLabel) so a language switch sticks -- this
+       runs once at boot, before any switch, so it must read through TN_I18N
+       rather than hardcode English, or it would silently undo a returning
+       visitor's already-persisted language choice on every page load. */
+    const I = window.TN_I18N;
     const search = document.getElementById('searchInput');
     if(search){
-      search.placeholder = 'Find food, groceries, clothes or a stall';
-      search.setAttribute('aria-label','Find food, groceries, clothes or a stall');
+      const label = I ? I.t('chrome.searchPlaceholder') : 'Find food, groceries, clothes or a stall';
+      search.placeholder = label;
+      search.setAttribute('aria-label', label);
     }
     const area = document.getElementById('areaSelect');
     if(area){
-      area.placeholder = 'Enter your area';
-      area.setAttribute('aria-label','Enter your delivery area');
+      area.placeholder = I ? I.t('chrome.areaPlaceholder') : 'Enter your area';
+      area.setAttribute('aria-label', I ? I.t('chrome.areaAriaLabel') : 'Enter your delivery area');
     }
     /* Matches the hand-drawn pin SVG index.html now uses for this button
        (TN_PIN in its inline script) -- textContent here would have wiped
