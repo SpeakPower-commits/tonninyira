@@ -114,6 +114,9 @@
         <input class="tn-flow-input" id="tnPass2" type="password" autocomplete="new-password">
         <label style="display:flex;align-items:center;gap:7px;margin-top:9px;font-size:.76rem;cursor:pointer">
           <input type="checkbox" id="tnShowPass" style="width:auto;margin:0"> Show password</label>
+        <p class="tn-flow-legal" style="font-size:.72rem;color:var(--muted);margin:10px 0 0;line-height:1.4">
+          By continuing you agree to our <a href="terms.html" target="_blank" rel="noopener" style="color:var(--gold)">Terms &amp; Conditions</a>.
+        </p>
         <button class="btn-primary" id="tnFlowGo" style="width:100%;margin-top:14px">Create account</button>`;
       f.querySelector('#tnFlowGo').onclick=doSignUp;
       /* A confirm field without this makes phone typing worse, not better:

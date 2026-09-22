@@ -371,6 +371,12 @@
 <div id="popularWrap" class="popular-wrap"></div>
 <main id="mainArea"></main>
 
+<footer style="text-align:center;padding:18px 16px 4px;font-size:.72rem;color:var(--muted)">
+  <a href="guide.html" style="color:var(--muted);text-decoration:underline">How Tonninyira Works</a>
+  &middot;
+  <a href="terms.html" style="color:var(--muted);text-decoration:underline">Terms &amp; Conditions</a>
+</footer>
+
 <nav class="bottom-nav">
   <button class="nav-btn active" id="navHome" onclick="goView('shop')"><span id="navHomeIcon"></span><span>Home</span></button>
   <button class="nav-btn" id="navOrders" onclick="goView('orders')"><span id="navOrdersIcon"></span><span>Orders</span></button>
@@ -1224,7 +1230,8 @@ async function renderAccountPage(){
       </div>
       <button class="tn-btn tn-btn-gold" style="margin-top:20px" onclick="tnAuthEntry()">Create your account</button>
       <button class="tn-btn tn-btn-ghost" style="margin-top:10px" onclick="tnAuthEntry()">I already have one</button>
-      <p class="tn-sub" style="text-align:center;margin-top:16px">Selling on Tonninyira, or delivering as a rider, also starts with an account.</p>`;
+      <p class="tn-sub" style="text-align:center;margin-top:16px">Selling on Tonninyira, or delivering as a rider, also starts with an account.</p>
+      <p style="text-align:center;margin-top:14px"><a href="guide.html" style="color:var(--gold);font-size:.8rem;font-weight:700;text-decoration:underline">New here? See how Tonninyira works</a></p>`;
     tnStartStory(story.map(x => x[1]));
     return;
   }
@@ -1271,6 +1278,14 @@ async function renderAccountPage(){
       <span style="flex-grow:1">
         <span class="tn-dsp" style="font-size:1.15rem;color:#fff;display:block">Something wrong?</span>
         <span style="font-size:.74rem;font-weight:500;color:#AEB6E8">Chat to us &mdash; we can see your order</span>
+      </span>${TN_ICON.chevron}
+    </a>
+
+    <a href="guide.html" class="tn-act" style="background:#1B2140;border:1px solid #2C3566;margin-bottom:12px">
+      <span aria-hidden="true" style="width:42px;height:42px;border-radius:14px;background:var(--gold);display:flex;align-items:center;justify-content:center;flex-shrink:0">${TN_ICON.star}</span>
+      <span style="flex-grow:1">
+        <span class="tn-dsp" style="font-size:1.15rem;color:#fff;display:block">How Tonninyira Works</span>
+        <span style="font-size:.74rem;font-weight:500;color:#AEB6E8">A quick illustrated guide</span>
       </span>${TN_ICON.chevron}
     </a>
 

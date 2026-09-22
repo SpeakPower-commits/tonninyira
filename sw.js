@@ -6,7 +6,7 @@
    subresources it requests. */
 const SHELL_CACHE='tonninyira-shell-v3';
 const IMAGE_CACHE='tonninyira-images-v1';
-const SHELL=['./','./index.html','./manifest.webmanifest','./apple-touch-icon.png','./payment-return.html','./payment-return-fixed.html','./assets/market/manifest.json'];
+const SHELL=['./','./index.html','./manifest.webmanifest','./apple-touch-icon.png','./payment-return.html','./payment-return-fixed.html','./guide.html','./terms.html','./assets/market/manifest.json'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(SHELL_CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()));
