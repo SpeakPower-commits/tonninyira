@@ -280,7 +280,10 @@ tryLoadLogo(['assets/logo.png','logo.png','Assets/logo.png','images/logo.png','a
 
 const SUBCATS = {
   eats: [['breakfast','Breakfast'],['lunch','Lunch'],['fastfoods','Fast Foods']],
-  shop: [['groceries','Raw Foods'],['rawfoods','Groceries'],['mivumba','Mivumba/Second-Hand']],
+  /* Labels were swapped against their keys here too (the same bug
+     independently duplicated in index.html's CATALOG) -- fixed before
+     either gets bound to a translated string. */
+  shop: [['groceries','Groceries'],['rawfoods','Raw Foods'],['mivumba','Mivumba/Second-Hand']],
 };
 function updateSubcatOptions(){
   const cat = document.getElementById('vCategory').value;
