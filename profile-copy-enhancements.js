@@ -28,7 +28,7 @@
       .tn-action-title{font-weight:800;color:var(--sand);font-size:.9rem}
       .tn-action-sub{font-size:.76rem;color:var(--muted);line-height:1.4;margin-top:3px}
       .tn-profile-list{margin-top:4px}
-      .tn-support-modal{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.72);display:grid;place-items:end center;padding:0}
+      .tn-support-modal{position:fixed;inset:0;z-index:10050;background:rgba(0,0,0,.72);display:grid;place-items:end center;padding:0}
       .tn-support-sheet{width:min(520px,100%);max-height:82vh;background:var(--card);border-radius:20px 20px 0 0;border:1px solid rgba(243,232,216,.1);overflow:hidden;display:flex;flex-direction:column}
       .tn-support-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(243,232,216,.08)}
       .tn-support-messages{padding:14px 16px;overflow:auto;min-height:140px;max-height:48vh}
@@ -161,25 +161,27 @@
     return node;
   }
 
+  /* Assigning textContent replaces the text node even when the string is
+     identical, and every replacement is a childList record the observer below
+     picks up -- which called this function again. Measured on the deployed
+     build: 8,400 mutations in three seconds on the profile view, roughly 700
+     re-decorations a second. The page was not frozen, but the text node under
+     a finger was being swapped between touchstart and touchend, so the browser
+     declined to synthesise the click and the card only looked tappable.
+     Guarded twice: once per block, and once per string. */
+  function setTextOnce(el, next){ if(el && el.textContent !== next) el.textContent = next; }
+
   function decorateExistingRewards(main){
     const reward=main.querySelector('[data-tn-enhancements]');
-    if(!reward) return;
+    if(!reward || reward.dataset.tnDecorated==='1') return;
+    reward.dataset.tnDecorated='1';
     const cards=[...reward.children];
     const first=cards[0];
     if(first){
       const title=first.querySelector('div');
-      if(title) title.textContent='MY REWARDS';
+      setTextOnce(title,'MY REWARDS');
       const sub=first.querySelector('div[style*="muted"]');
-      if(sub) sub.textContent='Earn points from completed orders. Your rewards grow as you keep shopping.';
-    }
-    const second=cards[1];
-    if(second){
-      const title=second.querySelector('div');
-      if(title) title.textContent='NEED HELP?';
-      const status=second.querySelector('#tnSupportStatus');
-      if(status) status.textContent='Talk privately to Tonninyira Support about an order, delivery or account problem.';
-      const button=second.querySelector('#tnSupportBtn');
-      if(button) button.textContent='Chat with Support';
+      setTextOnce(sub,'Earn points from completed orders. Your rewards grow as you keep shopping.');
     }
   }
 
@@ -187,7 +189,10 @@
     const client = (typeof supabaseClient !== 'undefined') ? supabaseClient : null;
     if(!client || !conversationId || !container) return;
     const {data,error}=await client.from('support_messages').select('body,created_at,sender_user_id').eq('conversation_id',conversationId).order('created_at');
-    if(error) return;
+    if(error){
+      container.innerHTML=`<div style="color:#ffb0b0;font-size:.78rem;padding:16px 0;text-align:center;line-height:1.5">Could not load your messages.<br>${esc(error.message)}</div>`;
+      return;
+    }
     container.innerHTML = (data||[]).map(m=>`<div class="tn-msg ${m.sender_user_id===session.user.id?'me':''}"><div class="tn-msg-bubble">${esc(m.body)}</div></div>`).join('') || '<div style="color:var(--muted);font-size:.8rem;padding:16px 0;text-align:center;">No messages yet. Tell us what you need help with.</div>';
     container.scrollTop=container.scrollHeight;
   }
@@ -207,13 +212,23 @@
       return;
     }
 
-    const found=await client.from('support_conversations').select('id,status').eq('customer_id',session.user.id).eq('status','open').order('updated_at',{ascending:false}).limit(1).maybeSingle();
-    let convo=found.data;
+    /* A chat that fails quietly is indistinguishable from a dead button, which
+       is what cost a day here. Every failure below names itself. */
+    let convo=null, why='';
+    try{
+      const found=await client.from('support_conversations').select('id,status').eq('customer_id',session.user.id).eq('status','open').order('updated_at',{ascending:false}).limit(1).maybeSingle();
+      if(found.error) why=found.error.message;
+      convo=found.data;
+      if(!convo){
+        const created=await client.from('support_conversations').insert({customer_id:session.user.id,status:'open'}).select('id,status').single();
+        if(created.error) why=created.error.message;
+        convo=created.data;
+      }
+    }catch(e){ why=e?.message||'Could not reach Tonninyira.'; }
     if(!convo){
-      const created=await client.from('support_conversations').insert({customer_id:session.user.id,status:'open'}).select('id,status').single();
-      convo=created.data;
+      alert('Could not open support right now.'+(why?'\n\n'+why:'\n\nPlease check your connection and try again.'));
+      return;
     }
-    if(!convo){ alert('Could not open support right now.'); return; }
 
     /* enhanceProfile() injects these, but it returns early when it cannot find
        the old profile container -- which is now always, since the account page
@@ -238,7 +253,7 @@
       const button=modal.querySelector('#tnSupportSend'); button.disabled=true;
       const result=await client.from('support_messages').insert({conversation_id:convo.id,sender_user_id:session.user.id,body});
       button.disabled=false;
-      if(result.error){ alert('Could not send your message. Please try again.'); return; }
+      if(result.error){ alert('Could not send your message.\n\n'+result.error.message); return; }
       input.value=''; await loadSupportMessages(convo.id,session,messages);
     };
     modal.querySelector('#tnSupportSend').onclick=send;
@@ -251,38 +266,42 @@
     }
   }
 
-  /* Published unconditionally. This used to live inside upgradeSupportButton,
-     which returns early when #tnSupportBtn is absent -- so after the account
-     page was rebuilt the global was never assigned and the Help card silently
-     did nothing. The chat's entry point must not depend on a button that the
-     redesign removed. */
+  /* Published unconditionally, at module top level. This once sat inside a
+     function that returned early when the old #tnSupportBtn was absent, so
+     after the account page was rebuilt the global was never assigned and the
+     Help card silently did nothing. The chat's entry point must not depend on
+     any element the design might remove. */
   window.tnOpenSupport = openSupportChat;
 
-  function upgradeSupportButton(main){
-    const old=main.querySelector('#tnSupportBtn');
-    if(!old || old.dataset.tnSupportUpgrade) return;
-    old.dataset.tnSupportUpgrade='1';
-    const fresh=old.cloneNode(true);
-    old.replaceWith(fresh);
-    fresh.addEventListener('click',openSupportChat);
-  }
-
+  let enhancing = false;
   function enhanceProfile(){
+    /* renderAccountPage() in index.html owns the profile view now. These
+       decorators were written for the markup it replaced, and every element
+       they inject fires the MutationObserver below, which calls this again --
+       a loop that re-renders the view continuously and makes taps miss, because
+       the element under the finger is rebuilt between press and release. */
+    if(document.getElementById('tnAccountPage')) return;
+    if(enhancing) return;
     const main=findProfileContainer();
     if(!main) return;
+    enhancing = true;
+    try{
     injectStyles();
     addIntro(main);
     labelCustomerActions(main);
     decorateExistingRewards(main);
-    upgradeSupportButton(main);
     labelPartnerActions(main);
     addSectionLabels(main);
+    } finally { enhancing = false; }
   }
 
   function observe(){
     const main=document.getElementById('mainArea');
     if(!main) return;
-    const observer=new MutationObserver(()=>setTimeout(enhanceProfile,0));
+    const observer=new MutationObserver(()=>{
+      if(enhancing) return;                       /* our own edits, not the app's */
+      setTimeout(enhanceProfile,0);
+    });
     observer.observe(main,{childList:true,subtree:true});
   }
 

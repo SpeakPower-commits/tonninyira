@@ -352,6 +352,13 @@
     } catch (_) { return safeParse(localStorage.getItem(REWARD_CACHE_KEY), null); }
   }
 
+  /* The SUPPORT card that used to live here opened the conversation through
+     window.prompt(). Two problems: it duplicated the "Something wrong?" card on
+     the rebuilt account page, and a browser that has been told "don't let this
+     page create more dialogs" returns null from prompt() instantly and silently
+     from then on -- support that worked once and then never again, with nothing
+     on screen to say why. The modal sheet in profile-copy-enhancements.js is now
+     the only chat. */
   function injectProfileExtras() {
     const s = state();
     if (!s || s.view !== 'profile') return;
@@ -365,11 +372,6 @@
         <div style="font-weight:800;color:var(--gold);margin-bottom:6px;">MY REWARDS</div>
         <div id="tnRewardsLine" style="font-weight:700;">Checking your points…</div>
         <div style="font-size:.76rem;color:var(--muted);margin-top:4px;">Earn points when completed orders are recorded.</div>
-      </div>
-      <div style="background:var(--card);border-radius:14px;padding:14px;margin-top:10px;border:1px solid rgba(243,232,216,.08)">
-        <div style="font-weight:800;color:var(--gold);margin-bottom:6px;">SUPPORT</div>
-        <div style="font-size:.82rem;color:var(--muted);">Private support is available from your signed-in account.</div>
-        <button id="tnSupportBtn" class="btn-primary" style="width:100%;margin-top:10px;">Open Support</button>
       </div>`;
     main.appendChild(wrap);
 
@@ -377,27 +379,6 @@
     loadRewards().then(reward => {
       if (!rewardLine) return;
       rewardLine.textContent = reward ? `Available: ${Number(reward.points||0).toLocaleString()} points · Lifetime: ${Number(reward.lifetime_points||0).toLocaleString()}` : 'Sign in to see your points.';
-    });
-
-    wrap.querySelector('#tnSupportBtn')?.addEventListener('click', async () => {
-      const client = db();
-      const session = await getSession();
-      if (!client || !session) { ensureAuthModal(); return; }
-      let convo;
-      const found = await client.from('support_conversations').select('id,status').eq('customer_id', session.user.id).eq('status','open').order('updated_at',{ascending:false}).limit(1).maybeSingle();
-      if (found.data) convo = found.data;
-      else {
-        const created = await client.from('support_conversations').insert({customer_id:session.user.id,status:'open'}).select('id,status').single();
-        convo = created.data;
-      }
-      if (!convo) { alert('Could not open support right now.'); return; }
-      const messages = await client.from('support_messages').select('body,created_at,sender_user_id').eq('conversation_id',convo.id).order('created_at');
-      const text = (messages.data||[]).map(m => `${m.sender_user_id===session.user.id?'You':'Support'}: ${m.body}`).join('\n\n');
-      const body = prompt(`Private support chat\n\n${text || 'No messages yet.'}\n\nType your message:`);
-      if (!body?.trim()) return;
-      const sent = await client.from('support_messages').insert({conversation_id:convo.id,sender_user_id:session.user.id,body:body.trim()});
-      if (sent.error) alert('Your support message could not be sent. Please try again.');
-      else alert('Message sent to Tonninyira Support.');
     });
   }
 
