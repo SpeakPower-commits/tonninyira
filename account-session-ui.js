@@ -16,6 +16,11 @@
       .tn-acct-line{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.07)}
       .tn-acct-value{font-weight:800;text-align:right;word-break:break-word}
       .tn-acct-danger{width:100%;padding:13px 14px;border-radius:12px;border:1px solid rgba(255,100,100,.3);background:rgba(255,80,80,.08);color:#ffb0b0;font-weight:800;cursor:pointer;margin-top:16px}
+      .tn-acct-langs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+      .tn-acct-lang-btn{font-family:inherit;font-size:11px;font-weight:700;color:var(--muted);background:var(--card2);border:1px solid transparent;border-radius:99px;padding:7px 11px;cursor:pointer;min-height:32px}
+      .tn-acct-lang-btn.is-on{color:var(--ink);background:var(--gold);font-weight:800}
+      .tn-acct-lang-notice{margin-top:8px;padding:8px 10px;border-radius:9px;background:rgba(245,180,0,.1);border:1px solid rgba(245,180,0,.35);font-size:11px;line-height:1.5;color:var(--muted);display:none}
+      .tn-acct-lang-notice.show{display:block}
     `;document.head.appendChild(s);
   }
   async function session(){
@@ -41,16 +46,42 @@
       <div class="tn-acct-line"><span>Name</span><span class="tn-acct-value">${esc(p?.display_name||'Not set')}</span></div>
       <div class="tn-acct-line"><span>Phone</span><span class="tn-acct-value">${esc(p?.phone||s.user.phone||'Not set')}</span></div>
       <div class="tn-acct-line"><span>Role</span><span class="tn-acct-value">${esc(p?.role||'customer')}</span></div>
+      <div class="tn-acct-line" style="flex-direction:column;align-items:stretch;gap:8px"><span>Language</span><div class="tn-acct-langs" id="tnAcctLangs"></div><div class="tn-acct-lang-notice" id="tnAcctLangNotice"></div></div>
       <div style="display:grid;gap:9px;margin-top:16px"><button class="btn-secondary" id="tnAcctWishlist">My wishlist</button><button class="btn-secondary" id="tnAcctOrders">My orders</button><button class="btn-secondary" id="tnAcctProfile">Open profile</button>${admin?'<button class="btn-secondary" id="tnAcctAdmin">Admin workspace</button>':''}</div>
       <button class="tn-acct-danger" id="tnAcctSignOut">Sign out</button>
       <div id="tnAcctMsg" style="min-height:20px;color:var(--muted);font-size:.76rem;margin-top:8px"></div>
     </div>`;
+    renderLangPicker(el);
     el.querySelector('#tnAcctClose').onclick=close;
     el.querySelector('#tnAcctWishlist').onclick=()=>{close();if(typeof window.tnOpenWishlist==='function')window.tnOpenWishlist()};
     el.querySelector('#tnAcctOrders').onclick=()=>{close();if(typeof window.goView==='function')window.goView('orders')};
     el.querySelector('#tnAcctProfile').onclick=()=>{close();if(typeof window.goView==='function')window.goView('profile')};
     el.querySelector('#tnAcctAdmin')?.addEventListener('click',()=>{close();location.href='./admin-control-tower.html'});
     el.querySelector('#tnAcctSignOut').onclick=async()=>{const b=el.querySelector('#tnAcctSignOut');const msg=el.querySelector('#tnAcctMsg');b.disabled=true;b.textContent='Signing out…';const r=await c().auth.signOut({scope:'global'});if(r.error){b.disabled=false;b.textContent='Sign out';msg.textContent=r.error.message;return}try{localStorage.removeItem('tonninyira_customer');sessionStorage.removeItem('tn_pending_payment')}catch(_){}close();location.reload()};
+  }
+  /* Reads/writes window.TN_I18N (defined in index.html's inline script) --
+     never a local copy of the current language -- so a choice made here
+     stays in step with every other page and decorator sharing the same
+     localStorage key (tn_lang). Re-rendered on each open() rather than left
+     live in the background: the sheet is torn down and rebuilt every time
+     it opens, so there is nothing to keep in sync while it is closed. */
+  function renderLangPicker(el){
+    const I=window.TN_I18N;
+    const wrap=el.querySelector('#tnAcctLangs');
+    const notice=el.querySelector('#tnAcctLangNotice');
+    if(!I||!wrap){if(wrap)wrap.closest('.tn-acct-line')?.remove();return}
+    wrap.innerHTML=I.LANGS.map(l=>`<button type="button" class="tn-acct-lang-btn${l.code===I.lang?' is-on':''}" data-lang="${l.code}">${esc(l.label)}</button>`).join('');
+    wrap.querySelectorAll('button').forEach(b=>{
+      b.onclick=()=>{I.setLang(b.dataset.lang);renderLangPicker(el)};
+    });
+    if(I.lang==='en'){
+      notice.classList.remove('show');
+    }else{
+      notice.classList.add('show');
+      notice.textContent=I.LOWER_CONFIDENCE.includes(I.lang)
+        ?'Machine-translated. This language has had less checking than Luganda or Kiswahili.'
+        :'Machine-translated.';
+    }
   }
   /* The button used to read "Account" whether or not anyone was signed in,
      and the storefront looked identical either way -- so a returning

@@ -324,6 +324,8 @@
 #tnAccountPage .tn-strip figure{margin:0;width:148px;flex-shrink:0;scroll-snap-align:start}
 #tnAccountPage .tn-strip img{width:148px;height:186px;object-fit:cover;border-radius:18px;display:block;background:#1F1916}
 #tnAccountPage .tn-strip figcaption{font-size:.78rem;font-weight:700;line-height:1.35;margin-top:8px;color:var(--sand)}
+#tnAccountPage .tn-langs button{font-family:inherit;font-size:.68rem;font-weight:700;color:var(--muted);background:var(--card2);border:1px solid transparent;border-radius:99px;padding:7px 11px;cursor:pointer;min-height:32px}
+#tnAccountPage .tn-langs button.is-on{color:var(--ink);background:var(--gold);font-weight:800}
 </style>
 <link rel="preconnect" href="https://alxzmjgepftohwpqibmn.supabase.co">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -541,11 +543,86 @@ const CATALOG = {
     fastfoods: { label:"Fast Foods", vendors:[] },
   }},
   shop: { label:"Shop", subs: {
-    groceries: { label:"Raw Foods", vendors:[] },
-    rawfoods: { label:"Groceries", vendors:[] },
+    /* Labels were swapped against their keys (groceries -> "Raw Foods",
+       rawfoods -> "Groceries") -- fixed here, before any key gets bound to
+       a translated string, so five language tables don't inherit the bug. */
+    groceries: { label:"Groceries", vendors:[] },
+    rawfoods: { label:"Raw Foods", vendors:[] },
     mivumba: { label:"Mivumba/Second-Hand", vendors:[] },
   }},
 };
+
+/* Whole-app localization, phase 1: the mechanism only -- no visible copy
+   moves yet. This is defined once, here, before any render function runs,
+   and exposed on window because the storefront's 9 decorator .js files
+   (enhancements.js, guest-access-flow.js, account-session-ui.js, etc.) are
+   each their own IIFE with no shared state today -- a module-scope `let`
+   here would be invisible to them. Every read/write goes through methods,
+   never a raw variable a decorator could cache and go stale on:
+     - t(id, vars)     look up a string, falling back to English, then to
+                        the id itself (visibly wrong, never blank/undefined)
+     - setLang(code)   change language; persists to the SAME localStorage
+                        key guide.html/terms.html already use, so a choice
+                        made on any page carries to every other
+     - onChange(fn)     a decorator's own already-guarded re-render entry
+                        point (e.g. profile-copy-enhancements.js's
+                        enhanceProfile, which already has re-entrancy
+                        protection from an earlier MutationObserver-loop
+                        fix) subscribes here instead of polling
+     - epoch            bumped on every language change; an async render
+                        that awaited a session/profile fetch checks this
+                        before writing to the DOM, so a slow, now-stale
+                        render can never overwrite a newer one
+
+   setLang() defers its notification to a microtask so no listener fires
+   while some other function is still mid-execution on the call stack --
+   the same class of bug profile-copy-enhancements.js's `enhancing` guard
+   already exists to prevent, now guarded against a second trigger. */
+window.TN_I18N = (function(){
+  const STRINGS = { en:{}, lg:{}, sw:{}, ach:{}, myx:{}, nyn:{} };
+  const LANGS = [
+    { code:'en',  label:'English' },
+    { code:'lg',  label:'Luganda' },
+    { code:'sw',  label:'Kiswahili' },
+    { code:'ach', label:'Acholi' },
+    { code:'myx', label:'Lumasaba' },
+    { code:'nyn', label:'Runyankole' }
+  ];
+  const LOWER_CONFIDENCE = ['ach', 'myx', 'nyn'];
+  let lang = 'en';
+  try{ const saved = localStorage.getItem('tn_lang'); if (LANGS.some(function(l){ return l.code === saved; })) lang = saved; }catch(_){}
+
+  let epoch = 0;
+  const listeners = new Set();
+
+  function t(id, vars){
+    const table = STRINGS[lang] || {};
+    let str = (id in table) ? table[id] : ((id in STRINGS.en) ? STRINGS.en[id] : id);
+    if (vars) str = str.replace(/\{(\w+)\}/g, function(_, k){ return vars[k] != null ? String(vars[k]) : ''; });
+    return str;
+  }
+  function setLang(code){
+    if (!LANGS.some(function(l){ return l.code === code; }) || code === lang) return;
+    lang = code;
+    epoch++;
+    try{ localStorage.setItem('tn_lang', code); }catch(_){}
+    Promise.resolve().then(function(){
+      listeners.forEach(function(fn){ try{ fn(); }catch(_){} });
+    });
+  }
+  function onChange(fn){ listeners.add(fn); return function(){ listeners.delete(fn); }; }
+  function statusLabel(kind, rawValue){
+    const key = String(rawValue || '').trim().toLowerCase();
+    return t('status.' + kind + '.' + key);
+  }
+
+  return {
+    t: t, setLang: setLang, onChange: onChange, statusLabel: statusLabel,
+    get lang(){ return lang; },
+    get epoch(){ return epoch; },
+    LANGS: LANGS, LOWER_CONFIDENCE: LOWER_CONFIDENCE
+  };
+})();
 
 const SAMPLE_RIDERS = [];
 
@@ -1172,11 +1249,18 @@ async function tnAccountStats(userId){
 async function renderAccountPage(){
   const host = document.getElementById('tnAccountPage');
   if(!host) return;
+  /* A language switch mid-await must not let this render overwrite a
+     newer one: capture the epoch now, check it right before every
+     host.innerHTML write below, and discard our own output if a switch
+     happened while we were waiting on the network. */
+  const myLangEpoch = window.TN_I18N ? TN_I18N.epoch : 0;
+  if(window.TN_I18N) TN_I18N.onChange(renderAccountPage); /* Set dedupes by reference -- safe on every call */
   let session = null, prof = null;
   try{
     session = (await supabaseClient?.auth?.getSession())?.data?.session || null;
     if(session) prof = (await supabaseClient.from('profiles').select('display_name,role,phone').eq('id', session.user.id).maybeSingle()).data;
   }catch(_){}
+  if(window.TN_I18N && TN_I18N.epoch !== myLangEpoch) return; /* superseded by a newer language switch */
 
   if(!session){
     const perks = [
@@ -1219,6 +1303,8 @@ async function renderAccountPage(){
           ${story.map((_,i)=>`<button type="button" role="tab" data-i="${i}" aria-current="${i===0}" aria-label="Step ${i+1} of ${story.length}"></button>`).join('')}
         </div>
       </div>
+      <div class="tn-langs" id="tnHomeLangs" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px"></div>
+      <div class="tn-lang-notice" id="tnHomeLangNotice" style="display:none;margin-top:8px;padding:8px 10px;border-radius:9px;background:rgba(245,180,0,.1);border:1px solid rgba(245,180,0,.35);font-size:11px;line-height:1.5;color:var(--muted)"></div>
       <p class="tn-sub" style="font-size:.86rem;margin:10px 0 16px">Browsing is free forever. An account is where your stuff actually lives.</p>
       <div class="tn-strip">
         ${slides.map(([src,cap,alt])=>`<figure>
@@ -1240,6 +1326,7 @@ async function renderAccountPage(){
       <p class="tn-sub" style="text-align:center;margin-top:16px">Selling on Tonninyira, or delivering as a rider, also starts with an account.</p>
       <p style="text-align:center;margin-top:14px"><a href="guide.html" style="color:var(--gold);font-size:.8rem;font-weight:700;text-decoration:underline">New here? See how Tonninyira works</a></p>`;
     tnStartStory(story.map(x => x[1]));
+    tnRenderHomeLangPicker();
     return;
   }
 
@@ -1249,6 +1336,7 @@ async function renderAccountPage(){
   const phone = prof?.phone || session.user.phone || '';
   const stats = await tnAccountStats(session.user.id);
   const pts = Number(stats.points || 0);
+  if(window.TN_I18N && TN_I18N.epoch !== myLangEpoch) return; /* superseded by a newer language switch */
 
   host.innerHTML = `
     <div style="display:flex;align-items:center;gap:13px;margin:18px 0 14px">
@@ -1312,6 +1400,32 @@ async function renderAccountPage(){
     ${await tnPartnerSection(session.user.id)}
 
     <button class="tn-btn tn-btn-ghost" style="margin-top:14px;border-color:#4A2A22;color:#FF8A6B" onclick="tnAuthEntry()">Use a different account</button>`;
+}
+
+/* Second of the two picker placements (the first is inside
+   account-session-ui.js's signed-in sheet): the signed-out marketing view
+   is the highest-visibility surface a guest reaches without an account, so
+   a Luganda- or Kiswahili-reading guest can set their language before ever
+   hitting the sign-up funnel. Reads/writes window.TN_I18N only -- no local
+   copy of the current language -- so the choice stays in step with every
+   other page sharing the tn_lang localStorage key. */
+function tnRenderHomeLangPicker(){
+  const wrap = document.getElementById('tnHomeLangs');
+  const notice = document.getElementById('tnHomeLangNotice');
+  if(!wrap || !window.TN_I18N) return;
+  const I = TN_I18N;
+  wrap.innerHTML = I.LANGS.map(l => `<button type="button" class="${l.code===I.lang?'is-on':''}" data-lang="${l.code}">${esc(l.label)}</button>`).join('');
+  wrap.querySelectorAll('button').forEach(b => {
+    b.onclick = () => I.setLang(b.dataset.lang); /* re-render happens via the onChange listener registered above */
+  });
+  if(I.lang === 'en'){
+    notice.style.display = 'none';
+  }else{
+    notice.style.display = 'block';
+    notice.textContent = I.LOWER_CONFIDENCE.includes(I.lang)
+      ? 'Machine-translated. This language has had less checking than Luganda or Kiswahili.'
+      : 'Machine-translated.';
+  }
 }
 
 /* The chat lives in profile-copy-enhancements.js. If that file has not loaded,
@@ -1697,17 +1811,17 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>{
   });
 });
 </script>
-<script src="account-session-ui.js"></script>
-<script src="flutterwave-payments-v2.js"></script>
 <script src="enhancements.js"></script>
 <script src="enhancements-fix.js"></script>
 <script src="profile-copy-enhancements.js"></script>
 <script src="guest-access-flow.js"></script>
 <script src="admin-entrypoint.js"></script>
-<script src="session-compat.js"></script>
-<script src="wishlist-account.js"></script>
 <script src="partner-wallet-payouts.js"></script>
 <script src="signout-visible.js"></script>
 <script src="performance-optimizations.js"></script>
+<script src="session-compat.js"></script>
+<script src="account-session-ui.js"></script>
+<script src="wishlist-account.js"></script>
+<script src="flutterwave-payments-v2.js"></script>
 </body>
 </html>
