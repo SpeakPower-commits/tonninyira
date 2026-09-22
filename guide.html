@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Tonninyira Works</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Work+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!--
+  Standalone page, no Supabase dependency: this must work signed out and
+  offline (see sw.js's SHELL list), the same way auth-callback.html and
+  payment-return.html stand alone from the main app shell.
+
+  Typography: Work Sans throughout, not the Plus Jakarta Sans / Bricolage
+  Grotesque pairing used on the account-page redesign. That pairing was
+  chosen for stylistic distinctiveness aimed at Gen-Z university students --
+  the opposite persona from this page's audience. Work Sans is already the
+  sitewide body font (nothing new to learn visually), has a large x-height,
+  and reads better at low literacy than a stylised display face. Alfa Slab
+  One stays reserved for the wordmark only.
+
+  Icon style: Option A from the demo -- flat, high-contrast pictograms
+  (dark stroke on a plain sand tile), chosen over the warmer colour-tile
+  style already used elsewhere in the app, specifically because this page's
+  job is to never be misread, not to look distinctive.
+-->
+<style>
+  :root{--ink:#1C1410;--card:#2A1F19;--card2:#33261C;--gold:#F5B400;--sand:#F3E8D8;--muted:#9C897A;--safe2:#CBB9A6;--green:#4C9A5B}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;background:var(--ink);color:var(--sand);font-family:'Work Sans',Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  .wrap{max-width:460px;margin:0 auto;padding:20px 20px 40px;min-height:100vh;display:flex;flex-direction:column}
+  .head{display:flex;align-items:center;justify-content:space-between}
+  .mark{font-family:'Alfa Slab One',cursive;color:var(--gold);font-size:15px;letter-spacing:.01em}
+  .back{font-size:13px;font-weight:600;color:var(--safe2);text-decoration:none}
+  .back:hover{color:var(--sand)}
+  .tabs{display:flex;gap:6px;margin-top:20px;background:var(--card);border-radius:14px;padding:5px}
+  .tab{flex:1;text-align:center;padding:11px 4px;border-radius:10px;font-family:inherit;font-size:13px;font-weight:700;color:var(--muted);background:transparent;border:0;cursor:pointer;min-height:44px}
+  .tab.is-on{font-weight:800;color:var(--ink);background:var(--gold)}
+  .counter{text-align:center;margin-top:26px;font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--safe2)}
+  .tile-row{display:flex;justify-content:center;margin-top:18px}
+  .tile{width:124px;height:124px;border-radius:30px;background:var(--sand);display:flex;align-items:center;justify-content:center}
+  .tile svg{width:60px;height:60px}
+  .step-text{text-align:center;margin-top:20px}
+  .caption{font-weight:800;font-size:26px;line-height:1.2}
+  .detail{font-weight:400;font-size:15px;line-height:1.55;color:var(--safe2);margin-top:10px;padding:0 6px}
+  .listen-row{display:flex;justify-content:center;margin-top:18px}
+  .listen{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 20px;border-radius:22px;border:2px solid var(--gold);background:transparent;color:var(--gold);font-family:inherit;font-weight:800;font-size:14px;cursor:pointer}
+  .listen:disabled{opacity:.45;cursor:default}
+  .listen svg{width:18px;height:18px}
+  .spacer{flex-grow:1;min-height:24px}
+  .nav-row{display:flex;gap:12px}
+  .btn{flex:1;min-height:48px;border-radius:16px;font-family:inherit;font-weight:800;font-size:15px;cursor:pointer}
+  .btn-back{border:1px solid #3A302A;background:transparent;color:var(--sand)}
+  .btn-back:disabled{opacity:.4;cursor:default}
+  .btn-next{border:0;background:var(--gold);color:var(--ink)}
+  .dots{display:flex;justify-content:center;flex-wrap:wrap;gap:7px;margin-top:16px}
+  .dot{width:6px;height:6px;border-radius:99px;background:#5A4C40;border:0;padding:0;cursor:pointer;min-width:6px}
+  .dot.is-on{width:18px;background:var(--gold)}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+  @media (max-width:380px){.caption{font-size:23px}.tile{width:104px;height:104px}.tile svg{width:50px;height:50px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <span class="mark">TONNINYIRA</span>
+    <a class="back" href="index.html">&larr; Back to app</a>
+  </div>
+
+  <h1 class="sr-only">How Tonninyira Works</h1>
+
+  <div class="tabs" role="tablist" aria-label="Choose your role">
+    <button class="tab" role="tab" id="tabShopper" data-role="shopper">Shopper</button>
+    <button class="tab" role="tab" id="tabVendor" data-role="vendor">Stall Owner</button>
+    <button class="tab" role="tab" id="tabRider" data-role="rider">Rider</button>
+  </div>
+
+  <div class="counter" id="counter"></div>
+
+  <div class="tile-row"><div class="tile" id="tile"></div></div>
+
+  <div class="step-text">
+    <div class="caption" id="caption"></div>
+    <div class="detail" id="detail"></div>
+  </div>
+
+  <div class="listen-row">
+    <button class="listen" id="listenBtn" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a9 9 0 0 1 0 12"/></svg>
+      <span id="listenLabel">Listen</span>
+    </button>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="nav-row">
+    <button class="btn btn-back" id="backBtn" type="button">&larr; Back</button>
+    <button class="btn btn-next" id="nextBtn" type="button">Next &rarr;</button>
+  </div>
+
+  <div class="dots" id="dots" role="tablist" aria-label="Step"></div>
+
+  <div class="sr-only" aria-live="polite" id="announce"></div>
+</div>
+
+<script>
+'use strict';
+
+/* Flat, high-contrast line icons -- copied verbatim from the sitewide
+   ICONS object in index.html (the codebase's own established convention:
+   register.html, admin.html and admin-control-tower.html each already keep
+   a small page-local icon set rather than sharing one module), plus three
+   new icons this guide needed that the storefront never did. */
+const GUIDE_ICON = {
+  home: '<svg viewBox="0 0 24 24" fill="none" stroke="#1C1410" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5l9-7 9 7V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>',
+  pin: '<svg viewBox="0 0 24 24" fill="none" stroke="#1C1410" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="#1C1410" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  star: '<svg viewBox="0 0 24 24" fill="#1C1410"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+  heart: '<svg viewBox="0 0 24 24" fill="none" stroke="#1C1410" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>',
+  cart: '<svg viewBox="0 0 24 24" fill="none" stroke="#1C1410" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>',
+  phone: '<svg viewBox="0 0 24 24" fill="none" stroke="#1C1410" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
+  moto: '<svg viewBox="0 0 24 24" fill="none" stroke="#1C1410" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="18" r="3"/><circle cx="19" cy="18" r="3"/><path d="M5 18h9l3-6h3M14 12l-2-5H8l-2 5"/></svg>',
+  receipt: '<svg viewBox="0 0 24 24" fill="none" stroke="#1C1410" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/></svg>',
+  user: '<svg viewBox="0 0 24 24" fill="none" stroke="#1C1410" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="#1C1410" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  sack: '<svg viewBox="0 0 24 24" fill="none" stroke="#1C1410" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9h10l-1 10a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2z"/><path d="M9 9V7a3 3 0 0 1 6 0v2"/></svg>',
+  doc: '<svg viewBox="0 0 24 24" fill="none" stroke="#1C1410" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M15 2v5h5"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>',
+  camera: '<svg viewBox="0 0 24 24" fill="none" stroke="#1C1410" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h3l2-3h6l2 3h3a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="4"/></svg>',
+  hourglass: '<svg viewBox="0 0 24 24" fill="none" stroke="#1C1410" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12"/><path d="M6 22h12"/><path d="M6 2c0 6 4 8 6 10-2 2-6 4-6 10"/><path d="M18 2c0 6-4 8-6 10 2 2 6 4 6 10"/></svg>'
+};
+
+/* One entry per step: {icon, caption, detail}. i18n and audioSrc are
+   deliberately empty today -- filling either later is a pure content
+   change, never a redesign. speakStep() below already prefers a real
+   recording over synthesis whenever one exists for the active language. */
+const GUIDE_DATA = {
+  shopper: { label: 'Shopper', steps: [
+    { icon:'home', caption:'Open the app', detail:'Tonninyira opens on the Eats tab, showing stalls near your area — "Kisugu" to start.', i18n:{}, audioSrc:{} },
+    { icon:'pin', caption:'Set your delivery area', detail:'Type your area, or tap the location button to use where you are right now.', i18n:{}, audioSrc:{} },
+    { icon:'search', caption:'Browse or search', detail:'Look through Eats and Shop tabs and their categories, or search for what you want.', i18n:{}, audioSrc:{} },
+    { icon:'star', caption:'Open a stall', detail:'Check its verification badge, ratings, and the items it sells.', i18n:{}, audioSrc:{} },
+    { icon:'heart', caption:'Save it, or add to basket', detail:'Tap the heart to save a stall for later. Tap + on an item to add it to your basket.', i18n:{}, audioSrc:{} },
+    { icon:'cart', caption:'Review your basket', detail:'The delivery fee is shown before you pay — no surprises.', i18n:{}, audioSrc:{} },
+    { icon:'phone', caption:'Choose how to pay', detail:'Cash on Delivery, or Mobile Money (MTN or Airtel). Sign in, or choose "I’m buying," if you haven’t yet.', i18n:{}, audioSrc:{} },
+    { icon:'moto', caption:'Order placed', detail:'You’ll see a confirmation with the rider assigned to bring your order.', i18n:{}, audioSrc:{} },
+    { icon:'receipt', caption:'Track it, then rate it', detail:'Follow it under "Orders." Rate it once delivered. Your Profile shows your points (1 per UGX 1,000 spent), saved stalls, and a "Something wrong?" chat.', i18n:{}, audioSrc:{} }
+  ]},
+  vendor: { label: 'Stall Owner', steps: [
+    { icon:'user', caption:'Create your account', detail:'Email or phone and a password, or continue with Google.', i18n:{}, audioSrc:{} },
+    { icon:'sack', caption:'Choose "I’m selling"', detail:'Pick this on the role screen to start a stall application.', i18n:{}, audioSrc:{} },
+    { icon:'check', caption:'Confirm you’re applying', detail:'A banner confirms you’re applying to open a stall.', i18n:{}, audioSrc:{} },
+    { icon:'home', caption:'Fill in Stall Details', detail:'Stall name, your name, phone, a 4-digit PIN, location, and category.', i18n:{}, audioSrc:{} },
+    { icon:'doc', caption:'Add Compliance Documents', detail:'KCCA trading license and URA TIN are required. Add a UNBS certificate too, if it applies.', i18n:{}, audioSrc:{} },
+    { icon:'camera', caption:'Add photos and prices', detail:'Upload a logo and gallery photos, then list your commodities and prices.', i18n:{}, audioSrc:{} },
+    { icon:'hourglass', caption:'Submit your application', detail:'You get your Tonninyira ID right away; your status starts as "pending."', i18n:{}, audioSrc:{} },
+    { icon:'check', caption:'Wait for approval', detail:'An admin reviews your documents and approves or rejects your stall.', i18n:{}, audioSrc:{} },
+    { icon:'user', caption:'Sign in to your Stall Dashboard', detail:'Use the same account email/phone and password you signed up with — not the PIN.', i18n:{}, audioSrc:{} },
+    { icon:'sack', caption:'Manage orders and earnings', detail:'Accept/Decline, then Start Preparing, then Mark Ready for Pickup. Track earnings — Tonninyira keeps a 5% service cut — in Wallet & payouts.', i18n:{}, audioSrc:{} }
+  ]},
+  rider: { label: 'Rider', steps: [
+    { icon:'user', caption:'Create your account', detail:'Email or phone and a password, or continue with Google.', i18n:{}, audioSrc:{} },
+    { icon:'moto', caption:'Choose "I’m delivering"', detail:'Pick this on the role screen to apply as a rider.', i18n:{}, audioSrc:{} },
+    { icon:'doc', caption:'Fill in Your Details', detail:'Name, phone, a 4-digit PIN, your National ID, and a photo. Your National ID stays private — never shown to customers.', i18n:{}, audioSrc:{} },
+    { icon:'moto', caption:'Add your vehicle, then submit', detail:'Vehicle type and plate number.', i18n:{}, audioSrc:{} },
+    { icon:'hourglass', caption:'Status: pending', detail:'Your application is now in the review queue.', i18n:{}, audioSrc:{} },
+    { icon:'check', caption:'Get approved', detail:'An admin reviews your application.', i18n:{}, audioSrc:{} },
+    { icon:'user', caption:'Sign in to your Rider Dashboard', detail:'Same account email/phone and password — not the PIN.', i18n:{}, audioSrc:{} },
+    { icon:'pin', caption:'Go live', detail:'Turn on your location to see nearby delivery offers, with distance shown.', i18n:{}, audioSrc:{} },
+    { icon:'receipt', caption:'Accept a delivery', detail:'Get the pickup/drop-off details and a map link to the customer.', i18n:{}, audioSrc:{} },
+    { icon:'sack', caption:'Deliver, then get paid', detail:'Mark "Picked Up From All Stalls," then "Mark Delivered." Track earnings — 5% cut — in Wallet & payouts.', i18n:{}, audioSrc:{} }
+  ]}
+};
+
+let role = 'shopper';
+let stepIndex = 0;
+const gLang = 'en'; /* no switcher built yet -- nothing to switch between until a translation exists */
+
+function stepText(step){
+  const t = step.i18n && step.i18n[gLang];
+  return { caption: (t && t.caption) || step.caption, detail: (t && t.detail) || step.detail };
+}
+
+function speakStep(step){
+  try{ if (window.speechSynthesis) speechSynthesis.cancel(); }catch(_){}
+  const src = step.audioSrc && step.audioSrc[gLang];
+  if (src){ new Audio(src).play(); return; }
+  if (!('speechSynthesis' in window)){ return; }
+  const t = stepText(step);
+  const u = new SpeechSynthesisUtterance(t.detail ? (t.caption + '. ' + t.detail) : t.caption);
+  u.rate = 0.95;
+  speechSynthesis.speak(u);
+}
+
+function renderTabs(){
+  document.querySelectorAll('.tab').forEach(function(btn){
+    const isOn = btn.dataset.role === role;
+    btn.classList.toggle('is-on', isOn);
+    btn.setAttribute('aria-selected', isOn ? 'true' : 'false');
+  });
+}
+
+function renderDots(){
+  const steps = GUIDE_DATA[role].steps;
+  const wrap = document.getElementById('dots');
+  wrap.innerHTML = steps.map(function(s, i){
+    return '<button class="dot' + (i === stepIndex ? ' is-on' : '') + '" role="tab" aria-label="Step ' + (i + 1) + ' of ' + steps.length + '" aria-selected="' + (i === stepIndex ? 'true' : 'false') + '" data-i="' + i + '"></button>';
+  }).join('');
+  wrap.querySelectorAll('button').forEach(function(b){
+    b.addEventListener('click', function(){ stepIndex = Number(b.dataset.i); renderStep(); });
+  });
+}
+
+function renderStep(){
+  const steps = GUIDE_DATA[role].steps;
+  if (stepIndex < 0) stepIndex = 0;
+  if (stepIndex > steps.length - 1) stepIndex = steps.length - 1;
+  const step = steps[stepIndex];
+  const t = stepText(step);
+
+  document.getElementById('counter').textContent = 'STEP ' + (stepIndex + 1) + ' OF ' + steps.length;
+  document.getElementById('tile').innerHTML = GUIDE_ICON[step.icon] || '';
+  document.getElementById('caption').textContent = t.caption;
+  document.getElementById('detail').textContent = t.detail;
+  document.getElementById('announce').textContent = t.caption + '. ' + t.detail;
+
+  const backBtn = document.getElementById('backBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  backBtn.disabled = stepIndex === 0;
+  nextBtn.textContent = (stepIndex === steps.length - 1) ? 'Back to app →' : 'Next →';
+
+  document.getElementById('listenBtn').onclick = function(){ speakStep(step); };
+  document.getElementById('listenLabel').textContent = ('speechSynthesis' in window) ? 'Listen' : 'Listen (not supported here)';
+  document.getElementById('listenBtn').disabled = !('speechSynthesis' in window);
+
+  renderDots();
+  renderTabs();
+}
+
+document.querySelectorAll('.tab').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    role = btn.dataset.role;
+    stepIndex = 0;
+    renderStep();
+  });
+});
+
+document.getElementById('backBtn').addEventListener('click', function(){
+  if (stepIndex > 0){ stepIndex--; renderStep(); }
+});
+
+document.getElementById('nextBtn').addEventListener('click', function(){
+  const steps = GUIDE_DATA[role].steps;
+  if (stepIndex < steps.length - 1){ stepIndex++; renderStep(); }
+  else { window.location.href = 'index.html'; }
+});
+
+renderStep();
+</script>
+</body>
+</html>

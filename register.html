@@ -107,7 +107,7 @@
       <input type="text" name="ownerName" required>
       <label>Phone Number</label>
       <input type="tel" name="phone" required>
-      <label>Set a 4-Digit PIN <span class="opt">(this + your phone number logs you into your stall dashboard later)</span></label>
+      <label>Set a 4-Digit PIN <span class="opt">(kept on file as a backup code &mdash; you'll actually sign in to your Stall Dashboard with your account email/phone and password)</span></label>
       <input type="tel" name="vendorPin" id="vendorPin" required pattern="\d{4}" maxlength="4" inputmode="numeric" placeholder="e.g. 4821">
       <label>Registration Date</label>
       <input type="date" name="regDate" id="vendorRegDate" required>
@@ -151,6 +151,11 @@
       <div id="itemFields"></div>
       <button type="button" class="btn-add-row" onclick="addItemRow()">+ Add Another Commodity</button>
 
+      <label style="display:flex;align-items:flex-start;gap:9px;margin-top:16px;font-size:.8rem;line-height:1.4;cursor:pointer;font-weight:400;text-transform:none;">
+        <input type="checkbox" id="vendorAgreeTerms" required style="width:auto;margin-top:3px;min-width:18px;min-height:18px;">
+        <span>I agree to Tonninyira's <a href="terms.html" target="_blank" rel="noopener" style="color:var(--gold)">Terms &amp; Conditions</a>, including the 5% platform commission on completed orders.</span>
+      </label>
+
       <button class="btn-primary" type="submit">Register My Stall &amp; Get My Tonninyira ID</button>
     </form>
 
@@ -166,7 +171,7 @@
       <input type="text" name="riderName" required>
       <label>Phone Number</label>
       <input type="tel" name="riderPhone" required>
-      <label>Set a 4-Digit PIN <span class="opt">(this + your phone number logs you into your rider dashboard later)</span></label>
+      <label>Set a 4-Digit PIN <span class="opt">(kept on file as a backup code &mdash; you'll actually sign in to your Rider Dashboard with your account email/phone and password)</span></label>
       <input type="tel" name="riderPin" id="riderPin" required pattern="\d{4}" maxlength="4" inputmode="numeric" placeholder="e.g. 4821">
       <label>National ID Number (NID)</label>
       <input type="text" name="nid" required placeholder="Used for verification only — never shown to customers">
@@ -190,6 +195,11 @@
       </datalist>
       <label>Plate / Registration Number</label>
       <input type="text" name="plate" required placeholder="e.g. UEB 245K">
+
+      <label style="display:flex;align-items:flex-start;gap:9px;margin-top:16px;font-size:.8rem;line-height:1.4;cursor:pointer;font-weight:400;text-transform:none;">
+        <input type="checkbox" id="riderAgreeTerms" required style="width:auto;margin-top:3px;min-width:18px;min-height:18px;">
+        <span>I agree to Tonninyira's <a href="terms.html" target="_blank" rel="noopener" style="color:var(--gold)">Terms &amp; Conditions</a>, including the 5% platform commission on completed deliveries.</span>
+      </label>
 
       <button class="btn-primary" type="submit">Register Me &amp; Get My Tonninyira ID</button>
     </form>
