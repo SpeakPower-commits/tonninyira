@@ -342,7 +342,7 @@
       <div class="brand-badge" id="brandBadge"></div>
       <div class="brand-text">
         <div class="brand-name display">Tonninyira</div>
-        <div class="brand-tag">Affordable Fast Service</div>
+        <div class="brand-tag" id="brandTag">Affordable Fast Service</div>
       </div>
     </div>
     <button class="icon-btn" id="cartIconBtn" aria-label="Cart">
@@ -358,7 +358,7 @@
       <option value="Kisugu"><option value="Kansanga"><option value="Ggaba">
       <option value="Namwongo"><option value="Entebbe"><option value="Kasangati"><option value="Jinja">
     </datalist>
-    <button id="gpsBtn" onclick="captureCustomerLocation()" style="background:var(--card2); border:1px solid rgba(243,232,216,0.15); color:var(--gold); border-radius:8px; padding:6px 10px; font-size:0.72rem; font-weight:800; white-space:nowrap; cursor:pointer;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Use My Location</button>
+    <button id="gpsBtn" onclick="captureCustomerLocation()" style="background:var(--card2); border:1px solid rgba(243,232,216,0.15); color:var(--gold); border-radius:8px; padding:6px 10px; font-size:0.72rem; font-weight:800; white-space:nowrap; cursor:pointer;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span id="gpsBtnLabel">Use My Location</span></button>
   </div>
 
   <div class="search-row">
@@ -374,19 +374,19 @@
 <main id="mainArea"></main>
 
 <footer style="text-align:center;padding:18px 16px 4px;font-size:.72rem;color:var(--muted)">
-  <a href="guide.html" style="color:var(--muted);text-decoration:underline">How Tonninyira Works</a>
+  <a href="guide.html" id="footerGuideLink" style="color:var(--muted);text-decoration:underline">How Tonninyira Works</a>
   &middot;
-  <a href="terms.html" style="color:var(--muted);text-decoration:underline">Terms &amp; Conditions</a>
+  <a href="terms.html" id="footerTermsLink" style="color:var(--muted);text-decoration:underline">Terms &amp; Conditions</a>
 </footer>
 
 <nav class="bottom-nav">
-  <button class="nav-btn active" id="navHome" onclick="goView('shop')"><span id="navHomeIcon"></span><span>Home</span></button>
-  <button class="nav-btn" id="navOrders" onclick="goView('orders')"><span id="navOrdersIcon"></span><span>Orders</span></button>
+  <button class="nav-btn active" id="navHome" onclick="goView('shop')"><span id="navHomeIcon"></span><span id="navHomeLabel">Home</span></button>
+  <button class="nav-btn" id="navOrders" onclick="goView('orders')"><span id="navOrdersIcon"></span><span id="navOrdersLabel">Orders</span></button>
   <button class="nav-btn" onclick="openCart()">
-    <span id="navCartIcon"></span><span>Cart</span>
+    <span id="navCartIcon"></span><span id="navCartLabel">Cart</span>
     <span class="nav-cart-badge hidden" id="navCartBadge">0</span>
   </button>
-  <button class="nav-btn" id="navProfile" onclick="goView('profile')"><span id="navProfileIcon"></span><span>Profile</span></button>
+  <button class="nav-btn" id="navProfile" onclick="goView('profile')"><span id="navProfileIcon"></span><span id="navProfileLabel">Profile</span></button>
 </nav>
 
 <div id="cartOverlay" class="overlay hidden" onclick="closeCart()"></div>
@@ -579,7 +579,560 @@ const CATALOG = {
    the same class of bug profile-copy-enhancements.js's `enhancing` guard
    already exists to prevent, now guarded against a second trigger. */
 window.TN_I18N = (function(){
-  const STRINGS = { en:{}, lg:{}, sw:{}, ach:{}, myx:{}, nyn:{} };
+  const STRINGS = {
+    en: {
+      "chrome.tagline": "Affordable Fast Service",
+      "chrome.cartAria": "Cart",
+      "chrome.areaPlaceholder": "Enter your area",
+      "chrome.areaAriaLabel": "Enter your delivery area",
+      "chrome.gpsLabel": "Use My Location",
+      "chrome.searchPlaceholder": "Find food, groceries, clothes or a stall",
+      "chrome.footerGuide": "How Tonninyira Works",
+      "chrome.footerTerms": "Terms & Conditions",
+      "chrome.navHome": "Home",
+      "chrome.navOrders": "Orders",
+      "chrome.navCart": "Cart",
+      "chrome.navProfile": "Profile",
+      "guest.perkPointsTitle": "Points",
+      "guest.perkPointsDesc": "A point for every UGX 1,000 you spend",
+      "guest.perkOrdersTitle": "Orders",
+      "guest.perkOrdersDesc": "Track it to your door. Reorder in a tap.",
+      "guest.perkSavedTitle": "Saved",
+      "guest.perkSavedDesc": "Your traders, kept in one place.",
+      "guest.perkHelpTitle": "Help",
+      "guest.perkHelpDesc": "We can see which order you mean.",
+      "guest.storyCap1": "Straight from the market.",
+      "guest.storyCap2": "Your rider, verified.",
+      "guest.storyCap3": "Minutes away.",
+      "guest.storyCap4": "At your door.",
+      "guest.storyCap5": "Enjoy — and collect your points.",
+      "guest.storyAlt1": "A rider with a bicycle basket full of fresh greens, bananas and tomatoes",
+      "guest.storyAlt2": "A delivery rider smiling, holding a parcel ready to hand over",
+      "guest.storyAlt3": "A rider walking with paper bags in one hand, checking the app on his phone",
+      "guest.storyAlt4": "A rider handing boxes to a customer at her doorway, both smiling",
+      "guest.storyAlt5": "A woman smiling as she opens a food box beside a paper delivery bag",
+      "guest.tagline": "Make it yours.",
+      "guest.browsingFree": "Browsing is free forever. An account is where your stuff actually lives.",
+      "guest.slideCap1": "Between lectures, everyone&rsquo;s ordering.",
+      "guest.slideCap2": "Found the stall. Told everyone.",
+      "guest.slideCap3": "Wait &mdash; it&rsquo;s here already?",
+      "guest.slideCap4": "One order. Four opinions.",
+      "guest.slideCap5": "Rolex money, sorted.",
+      "guest.slideAlt1": "Four students along a library shelf, each looking at their phone",
+      "guest.slideAlt2": "A young woman laughing at her phone while a friend leans in to look",
+      "guest.slideAlt3": "Two people at a table reacting with surprise to something on a phone",
+      "guest.slideAlt4": "Looking up at four friends standing in a circle, phones in hand",
+      "guest.slideAlt5": "Three friends sitting outside on a step, laughing around a phone",
+      "guest.createAccountBtn": "Create your account",
+      "guest.alreadyHaveBtn": "I already have one",
+      "guest.sellingAlsoNote": "Selling on Tonninyira, or delivering as a rider, also starts with an account.",
+      "guest.seeHowWorksLink": "New here? See how Tonninyira works",
+      "account.defaultName": "Your account",
+      "account.roleCustomer": "customer",
+      "account.notSet": "Not set",
+      "account.pointsEyebrow": "YOUR POINTS",
+      "account.pointsEarnedNote": "Earned on your completed orders",
+      "account.pointsZeroNote": "You earn 1 point for every UGX 1,000 on a completed order",
+      "account.ordersTitle": "Orders",
+      "account.ordersSubTrack": "Track and reorder",
+      "account.ordersSubEmpty": "Nothing yet",
+      "account.savedTitle": "Saved",
+      "account.savedSubHas": "Your stalls",
+      "account.savedSubEmpty": "Save a stall to find it fast",
+      "account.helpTitle": "Something wrong?",
+      "account.helpSub": "Chat to us &mdash; we can see your order",
+      "account.guideTitle": "How Tonninyira Works",
+      "account.guideSub": "A quick illustrated guide",
+      "account.emailLabel": "Email",
+      "account.phoneLabel": "Phone",
+      "account.addNumberBtn": "Add your number",
+      "account.useDifferentAccountBtn": "Use a different account",
+      "account.addPhonePrompt": "Your mobile number\n\nThis is the number your rider calls when they arrive. Example: 0772 123 456",
+      "account.addPhoneBadFormat": "That does not look like a Ugandan mobile number. Try it as 0772 123 456.",
+      "account.addPhoneSessionExpired": "Your session has expired. Please sign in again.",
+      "account.addPhoneSendCodeError": "Could not send the verification code: {msg}",
+      "account.addPhoneCodePrompt": "Enter the 6-digit code we sent to {phone} by SMS.",
+      "account.addPhoneCodeInvalidFormat": "Enter the 6-digit code exactly as it was sent.",
+      "account.addPhoneVerifyError": "That code didn't work: {msg}",
+      "account.addPhoneNetworkError": "Could not reach Tonninyira. Check your connection and try again.",
+      "account.signinUnavailable": "Sign-in is unavailable right now. Please reload the page and try again.",
+      "account.helpLoading": "Chat is still loading. Give it a moment and tap again — if it keeps happening, please reload the page.",
+      "partner.sectionEyebrow": "TRADING ON TONNINYIRA",
+      "partner.vendorSellTitle": "Sell on Tonninyira",
+      "partner.vendorSellSub": "Your stall, your prices, your customers",
+      "partner.riderDeliverTitle": "Deliver with Tonninyira",
+      "partner.riderDeliverSub": "Pick up work near you",
+      "partner.vendorManageTitle": "Manage my stall",
+      "partner.riderViewTitle": "View my deliveries",
+      "partner.approvedSub": "Approved &middot; open your dashboard",
+      "partner.vendorNoteLabel": "Your stall",
+      "partner.riderNoteLabel": "Your rider profile",
+      "partner.rejectedNote": "Your {noun} application was not approved. Reply to the email we sent you if you would like it looked at again.",
+      "partner.pendingNote": "Your {noun} application is with our team for review. We will email you as soon as it is decided.",
+      "partner.nounStall": "stall",
+      "partner.nounRiderProfile": "rider profile"
+    },
+    sw: {
+      "chrome.tagline": "Huduma ya Haraka na Nafuu",
+      "chrome.cartAria": "Kikapu",
+      "chrome.areaPlaceholder": "Weka eneo lako",
+      "chrome.areaAriaLabel": "Weka eneo lako la usafirishaji",
+      "chrome.gpsLabel": "Tumia Mahali Nilipo",
+      "chrome.searchPlaceholder": "Tafuta chakula, vyakula vya dukani, mavazi au duka",
+      "chrome.footerGuide": "Jinsi Tonninyira Inavyofanya Kazi",
+      "chrome.footerTerms": "Vigezo na Masharti",
+      "chrome.navHome": "Nyumbani",
+      "chrome.navOrders": "Maagizo",
+      "chrome.navCart": "Kikapu",
+      "chrome.navProfile": "Wasifu",
+      "guest.perkPointsTitle": "Pointi",
+      "guest.perkPointsDesc": "Pointi moja kwa kila UGX 1,000 unayotumia",
+      "guest.perkOrdersTitle": "Maagizo",
+      "guest.perkOrdersDesc": "Fuatilia hadi mlangoni kwako. Agiza tena kwa mguso mmoja.",
+      "guest.perkSavedTitle": "Zilizohifadhiwa",
+      "guest.perkSavedDesc": "Wachuuzi wako, wote mahali pamoja.",
+      "guest.perkHelpTitle": "Msaada",
+      "guest.perkHelpDesc": "Tunaweza kuona agizo unalomaanisha.",
+      "guest.storyCap1": "Moja kwa moja kutoka sokoni.",
+      "guest.storyCap2": "Rider wako, aliyethibitishwa.",
+      "guest.storyCap3": "Dakika chache tu.",
+      "guest.storyCap4": "Mlangoni kwako.",
+      "guest.storyCap5": "Furahia — na kusanya pointi zako.",
+      "guest.storyAlt1": "Rider akiwa na kikapu cha baiskeli kimejaa mboga mbichi, ndizi na nyanya",
+      "guest.storyAlt2": "Rider wa kusafirisha akitabasamu, ameshika kifurushi tayari kukikabidhi",
+      "guest.storyAlt3": "Rider akitembea akiwa na mifuko ya karatasi mkononi, akiangalia programu kwenye simu yake",
+      "guest.storyAlt4": "Rider akikabidhi masanduku kwa mteja mlangoni pake, wote wakitabasamu",
+      "guest.storyAlt5": "Mwanamke akitabasamu huku akifungua sanduku la chakula karibu na mfuko wa karatasi wa usafirishaji",
+      "guest.tagline": "Ifanye iwe yako.",
+      "guest.browsingFree": "Kuvinjari ni bure milele. Akaunti ndipo mahali vitu vyako halisi vinapokaa.",
+      "guest.slideCap1": "Kati ya masomo, kila mtu anaagiza.",
+      "guest.slideCap2": "Nilipata duka. Niliwaambia wote.",
+      "guest.slideCap3": "Ngoja &mdash; tayari limefika?",
+      "guest.slideCap4": "Agizo moja. Maoni manne.",
+      "guest.slideCap5": "Pesa za rolex, zimetatuliwa.",
+      "guest.slideAlt1": "Wanafunzi wanne kando ya rafu ya maktaba, kila mmoja akiangalia simu yake",
+      "guest.slideAlt2": "Msichana mchanga akicheka kwenye simu yake huku rafiki akiegemea kutazama",
+      "guest.slideAlt3": "Watu wawili mezani wakishangaa kitu kwenye simu",
+      "guest.slideAlt4": "Wakiangalia juu marafiki wanne wamesimama kwenye duara, simu mikononi",
+      "guest.slideAlt5": "Marafiki watatu wamekaa nje kwenye ngazi, wakicheka wakizunguka simu",
+      "guest.createAccountBtn": "Fungua akaunti yako",
+      "guest.alreadyHaveBtn": "Tayari ninayo",
+      "guest.sellingAlsoNote": "Kuuza kwenye Tonninyira, au kusafirisha kama rider, pia huanza na akaunti.",
+      "guest.seeHowWorksLink": "Mgeni hapa? Ona jinsi Tonninyira inavyofanya kazi",
+      "account.defaultName": "Akaunti yako",
+      "account.roleCustomer": "mteja",
+      "account.notSet": "Haijawekwa",
+      "account.pointsEyebrow": "POINTI ZAKO",
+      "account.pointsEarnedNote": "Zimepatikana kutoka maagizo yako yaliyokamilika",
+      "account.pointsZeroNote": "Unapata pointi 1 kwa kila UGX 1,000 kwenye agizo lililokamilika",
+      "account.ordersTitle": "Maagizo",
+      "account.ordersSubTrack": "Fuatilia na uagize tena",
+      "account.ordersSubEmpty": "Bado hakuna",
+      "account.savedTitle": "Zilizohifadhiwa",
+      "account.savedSubHas": "Maduka yako",
+      "account.savedSubEmpty": "Hifadhi duka ili ulipate haraka",
+      "account.helpTitle": "Kuna tatizo?",
+      "account.helpSub": "Zungumza nasi &mdash; tunaweza kuona agizo lako",
+      "account.guideTitle": "Jinsi Tonninyira Inavyofanya Kazi",
+      "account.guideSub": "Mwongozo mfupi wenye picha",
+      "account.emailLabel": "Barua pepe",
+      "account.phoneLabel": "Simu",
+      "account.addNumberBtn": "Ongeza namba yako",
+      "account.useDifferentAccountBtn": "Tumia akaunti nyingine",
+      "account.addPhonePrompt": "Namba yako ya simu\n\nHii ndiyo namba rider wako atakayopiga akifika. Mfano: 0772 123 456",
+      "account.addPhoneBadFormat": "Hiyo haionekani kama namba ya simu ya Uganda. Jaribu kama 0772 123 456.",
+      "account.addPhoneSessionExpired": "Muda wako wa kuingia umeisha. Tafadhali ingia tena.",
+      "account.addPhoneSendCodeError": "Imeshindwa kutuma nambari ya uthibitisho: {msg}",
+      "account.addPhoneCodePrompt": "Weka nambari ya tarakimu 6 tuliyokutumia kwa SMS kwenye {phone}.",
+      "account.addPhoneCodeInvalidFormat": "Weka nambari ya tarakimu 6 kama ilivyotumwa.",
+      "account.addPhoneVerifyError": "Nambari hiyo haikufanya kazi: {msg}",
+      "account.addPhoneNetworkError": "Imeshindwa kufikia Tonninyira. Angalia mtandao wako na ujaribu tena.",
+      "account.signinUnavailable": "Kuingia hakupatikani kwa sasa. Tafadhali pakua upya ukurasa na ujaribu tena.",
+      "account.helpLoading": "Mazungumzo bado yanapakia. Subiri kidogo kisha gusa tena — likiendelea kutokea, tafadhali pakua upya ukurasa.",
+      "partner.sectionEyebrow": "BIASHARA KWENYE TONNINYIRA",
+      "partner.vendorSellTitle": "Uza kwenye Tonninyira",
+      "partner.vendorSellSub": "Duka lako, bei zako, wateja wako",
+      "partner.riderDeliverTitle": "Safirisha na Tonninyira",
+      "partner.riderDeliverSub": "Chukua kazi karibu nawe",
+      "partner.vendorManageTitle": "Simamia duka langu",
+      "partner.riderViewTitle": "Ona usafirishaji wangu",
+      "partner.approvedSub": "Imeidhinishwa &middot; fungua dashibodi yako",
+      "partner.vendorNoteLabel": "Duka lako",
+      "partner.riderNoteLabel": "Wasifu wako wa rider",
+      "partner.rejectedNote": "Ombi lako la {noun} halikuidhinishwa. Jibu barua pepe tuliyokutumia kama unataka litazamwe tena.",
+      "partner.pendingNote": "Ombi lako la {noun} liko kwa timu yetu kwa ukaguzi. Tutakutumia barua pepe mara tu litakapoamuliwa.",
+      "partner.nounStall": "duka",
+      "partner.nounRiderProfile": "wasifu wa rider"
+    },
+    lg: {
+      "chrome.tagline": "Obuweereza bw'Amangu era Obwa Bbeeyi Ennyangu",
+      "chrome.cartAria": "Ekibiina",
+      "chrome.areaPlaceholder": "Wandiika ekitundu kyo",
+      "chrome.areaAriaLabel": "Wandiika ekitundu ky'osindikirwamu",
+      "chrome.gpsLabel": "Kozesa Ekifo Kwe Ndi",
+      "chrome.searchPlaceholder": "Noonya emmere, ebyennyanja, engoye oba eddaala",
+      "chrome.footerGuide": "Tonninyira Bw'ekola",
+      "chrome.footerTerms": "Ebiragiro n'Obukwakkulizo",
+      "chrome.navHome": "Awaka",
+      "chrome.navOrders": "Ebyasabiddwa",
+      "chrome.navCart": "Ekibiina",
+      "chrome.navProfile": "Ebikukwatako",
+      "guest.perkPointsTitle": "Points",
+      "guest.perkPointsDesc": "Poyinti emu ku buli UGX 1,000 gy'oteka",
+      "guest.perkOrdersTitle": "Ebyasabiddwa",
+      "guest.perkOrdersDesc": "Goberera okutuuka ku luggi lwo. Ddamu okusaba mu kukwata kumu.",
+      "guest.perkSavedTitle": "Ebiterekeddwa",
+      "guest.perkSavedDesc": "Abasuubuzi bo, bonna mu kifo kimu.",
+      "guest.perkHelpTitle": "Obuyambi",
+      "guest.perkHelpDesc": "Tusobola okulaba ekyasabiddwa kye wogerako.",
+      "guest.storyCap1": "Butereevu okuva ku katale.",
+      "guest.storyCap2": "Omuleese wo, akakasiddwa.",
+      "guest.storyCap3": "Eddakiika si nnyingi.",
+      "guest.storyCap4": "Ku luggi lwo.",
+      "guest.storyCap5": "Sanyuka — era okuŋŋaanye poyinti zo.",
+      "guest.storyAlt1": "Omuleese ng'alina ekibbo kya gaali ekijjudde enva endiirwa empya, bbinaana n'entungo",
+      "guest.storyAlt2": "Omuleese asanyufu, akutte ekipakiti nga yeetegese okukiwaayo",
+      "guest.storyAlt3": "Omuleese atambula ng'akutte obuveera mu mukono ogumu, ng'akebera app ku ssimu ye",
+      "guest.storyAlt4": "Omuleese awaayo obusanduuko eri omugenyi ku luggi lwe, bombi nga basanyuse",
+      "guest.storyAlt5": "Omukazi mu kusanyuka ng'agguddewo akasanduuko k'emmere okumpi n'ensawo y'obuveera",
+      "guest.tagline": "Kifuule ekyo.",
+      "guest.browsingFree": "Okunoonyereza bwa bwereere emirembe gyonna. Akawunti y'ekifo ebintu byo mwe bibeera ddala.",
+      "guest.slideCap1": "Wakati w'emisomo, buli omu asaba.",
+      "guest.slideCap2": "Nasanga eddaala. Nnagitegeeza bonna.",
+      "guest.slideCap3": "Linda &mdash; ekituuseewo dda?",
+      "guest.slideCap4": "Ekyasabiddwa kimu. Endowooza nnya.",
+      "guest.slideCap5": "Ssente za rolex, zaakolebbwa.",
+      "guest.slideAlt1": "Abayizi bana ku lujjuliro lw'ebitabo, buli omu ng'atunula ku ssimu ye",
+      "guest.slideAlt2": "Omuwala omuto asesa ku ssimu ye ng'omukwano gwe yeewunzikeko okutunula",
+      "guest.slideAlt3": "Abantu babiri ku mmeeza nga beewuunya ekintu ku ssimu",
+      "guest.slideAlt4": "Nga batunula waggulu mikwano gyabwe bana bayimiridde mu kizinga, ssimu mu mikono",
+      "guest.slideAlt5": "Mikwano bwe basatu batudde ebweru ku madaala, nga baseka nga beetooloddeko ssimu",
+      "guest.createAccountBtn": "Kola akawunti yo",
+      "guest.alreadyHaveBtn": "Nnina emu dda",
+      "guest.sellingAlsoNote": "Okutunda ku Tonninyira, oba okuleeta nga omuleese, nakyo kitandika n'akawunti.",
+      "guest.seeHowWorksLink": "Mugenyi wano? Laba Tonninyira bw'ekola",
+      "account.defaultName": "Akawunti yo",
+      "account.roleCustomer": "muguzi",
+      "account.notSet": "Tekiteekeddwa",
+      "account.pointsEyebrow": "POYINTI ZO",
+      "account.pointsEarnedNote": "Zifunibbwa ku byasabiddwa byo ebimaze okutuukirira",
+      "account.pointsZeroNote": "Ofuna poyinti 1 ku buli UGX 1,000 ku kyasabiddwa ekimaze okutuukirira",
+      "account.ordersTitle": "Ebyasabiddwa",
+      "account.ordersSubTrack": "Goberera era oddemu okusaba",
+      "account.ordersSubEmpty": "Tewali kya kaziba",
+      "account.savedTitle": "Ebiterekeddwa",
+      "account.savedSubHas": "Amaduuka go",
+      "account.savedSubEmpty": "Tereka eddaala okusobola okuligoberera mangu",
+      "account.helpTitle": "Waliwo ekitali kirungi?",
+      "account.helpSub": "Twogere naffe &mdash; tusobola okulaba ekyasabiddwa kyo",
+      "account.guideTitle": "Tonninyira Bw'ekola",
+      "account.guideSub": "Akabuulirira akatono akalimu ebifaananyi",
+      "account.emailLabel": "Email",
+      "account.phoneLabel": "Ssimu",
+      "account.addNumberBtn": "Wandiika namba yo",
+      "account.useDifferentAccountBtn": "Kozesa akawunti endala",
+      "account.addPhonePrompt": "Namba yo ey'ekyuma\n\nEyo y'omuleese wo gy'akubira ng'atuuse. Ekyokulabirako: 0772 123 456",
+      "account.addPhoneBadFormat": "Eyo teetera ng'ennamba ya Uganda ey'ekyuma. Gezaako nga 0772 123 456.",
+      "account.addPhoneSessionExpired": "Akaseera ko kaweddeko. Yingira nate.",
+      "account.addPhoneSendCodeError": "Tetusobodde kuweereza nambari y'okukakasa: {msg}",
+      "account.addPhoneCodePrompt": "Wandiika nambari y'ennamba 6 gye twaweereza ku {phone} nga SMS.",
+      "account.addPhoneCodeInvalidFormat": "Wandiika nambari y'ennamba 6 nga bwe yaweerezebbwa.",
+      "account.addPhoneVerifyError": "Nambari eyo teyakoze: {msg}",
+      "account.addPhoneNetworkError": "Tetusobodde kutuuka ku Tonninyira. Kebera intaneeti yo ogezeeko nate.",
+      "account.signinUnavailable": "Okuyingira tekukyanguddwa kaakano. Ddamu oteeke olupapula oluvannyuma ogezeeko nate.",
+      "account.helpLoading": "Emboozi ekyagenda mu maaso okulinda. Linda katono nate okwate — bwe kigenda kweyongera, ddamu oteeke olupapula.",
+      "partner.sectionEyebrow": "OKUSUUBULA KU TONNINYIRA",
+      "partner.vendorSellTitle": "Tunda ku Tonninyira",
+      "partner.vendorSellSub": "Eddaala lyo, ebbeeyi zo, bakasitoma bo",
+      "partner.riderDeliverTitle": "Leeta ne Tonninyira",
+      "partner.riderDeliverSub": "Kwata omulimu okumpi naawe",
+      "partner.vendorManageTitle": "Ddaala lyange lifuge",
+      "partner.riderViewTitle": "Laba ebyo bye nleese",
+      "partner.approvedSub": "Kikkirizibbwa &middot; zibula dashboard yo",
+      "partner.vendorNoteLabel": "Eddaala lyo",
+      "partner.riderNoteLabel": "Ebikukwatako ng'omuleese",
+      "partner.rejectedNote": "Okusaba kwo okw'{noun} tekukkirizibbwa. Ddamu ku email gye twakuweereza singa oyagala kudinnye nate.",
+      "partner.pendingNote": "Okusaba kwo okw'{noun} kuli n'ekibinja kyaffe okulikebera. Tujja kukuweereza email nga bakimazeewo.",
+      "partner.nounStall": "eddaala",
+      "partner.nounRiderProfile": "ebikukwatako ng'omuleese"
+    },
+    ach: {
+      "chrome.tagline": "Tic ma Oyot dok pe Tek",
+      "chrome.cartAria": "Otoo",
+      "chrome.areaPlaceholder": "Ket kabedo ni",
+      "chrome.areaAriaLabel": "Ket kabedo ma gikelo iye jami ni",
+      "chrome.gpsLabel": "Ti ki kabedo na",
+      "chrome.searchPlaceholder": "Yeny cam, jami me cuk, boŋo nyo cuk",
+      "chrome.footerGuide": "Kit ma Tonninyira Tiyo kwede",
+      "chrome.footerTerms": "Cik ki Winyo",
+      "chrome.navHome": "Paco",
+      "chrome.navOrders": "Gin ma Ki Cwalo",
+      "chrome.navCart": "Otoo",
+      "chrome.navProfile": "Kom In",
+      "guest.perkPointsTitle": "Points",
+      "guest.perkPointsDesc": "Poi acel pi UGX 1,000 ma icato",
+      "guest.perkOrdersTitle": "Gin ma Ki Cwalo",
+      "guest.perkOrdersDesc": "Lub nio wa i doggola. Cwal doki ki mo lo acel.",
+      "guest.perkSavedTitle": "Ma Ki Gwoko",
+      "guest.perkSavedDesc": "Lulokke, gubedo kabedo acel.",
+      "guest.perkHelpTitle": "Kony",
+      "guest.perkHelpDesc": "Wanongo neno gin ma icwalo.",
+      "guest.storyCap1": "Tere ki i cuk.",
+      "guest.storyCap2": "Lakelo ni, oketti.",
+      "guest.storyCap3": "Dakika manok.",
+      "guest.storyCap4": "I doggola ni.",
+      "guest.storyCap5": "Bed ki yom — dok ikwany poi ni.",
+      "guest.storyAlt1": "Lakelo tye ki atoo mucalo ma opong ki nyig doo, marakwac ki nyanya",
+      "guest.storyAlt2": "Lakelo kelo cam kimwomo, omako gin acel me miyo",
+      "guest.storyAlt3": "Lakelo wot ki oduku pa cente i cing acel, ka neno app i telefun mere",
+      "guest.storyAlt4": "Lakelo miyo agulu bot lakwenyo i doggola mere, giryo gikwomo",
+      "guest.storyAlt5": "Dako kimwomo ka yabo agulu me cam bute oduku pa cente",
+      "guest.tagline": "Ket obed meni.",
+      "guest.browsingFree": "Neno cente pe abongo cul. Akaunti aye kabedo ma gin peki tye iye.",
+      "guest.slideCap1": "I kin karatwony, dano ducu gicwalo.",
+      "guest.slideCap2": "Anongo cuk. Awaco bot dano ducu.",
+      "guest.slideCap3": "Kur &mdash; obino kombeddi?",
+      "guest.slideCap4": "Gin acel ma ki cwalo. Tam angwen.",
+      "guest.slideCap5": "Sente pa rolex, otyeko kwiyo.",
+      "guest.slideAlt1": "Lupwonye angwen i but karatwony, ngat ka ngat ka neno telefun mere",
+      "guest.slideAlt2": "Latin nyako ka nyiro i telefun mere ka lawote lweny me neno",
+      "guest.slideAlt3": "Dano aryo i mesa ka giwuoro gin mo i telefun",
+      "guest.slideAlt4": "Ka gineno malo lumego ma angwen gicungo i alii, telefun i cing",
+      "guest.slideAlt5": "Lumego adek gibedo woko i wi lakwac, ka gimwomo ka gilwor telefun",
+      "guest.createAccountBtn": "Yub akaunti ni",
+      "guest.alreadyHaveBtn": "Atye kwede con",
+      "guest.sellingAlsoNote": "Cato jami i Tonninyira, nyo tic macalo lakelo, bene acaka ki akaunti.",
+      "guest.seeHowWorksLink": "Cakke ka? Nen kit ma Tonninyira tiyo kwede",
+      "account.defaultName": "Akaunti ni",
+      "account.roleCustomer": "lawil",
+      "account.notSet": "Peya ki keto",
+      "account.pointsEyebrow": "POI NI",
+      "account.pointsEarnedNote": "Ginonge ki i gin ma icwalo ma otyeko",
+      "account.pointsZeroNote": "Inongo poi 1 pi buli UGX 1,000 i gin ma ki cwalo ma otyeko",
+      "account.ordersTitle": "Gin ma Ki Cwalo",
+      "account.ordersSubTrack": "Lub dok cwal doki",
+      "account.ordersSubEmpty": "Pud pe tye gin mo",
+      "account.savedTitle": "Ma Ki Gwoko",
+      "account.savedSubHas": "Cuk ni",
+      "account.savedSubEmpty": "Gwok cuk me nongo iye oyot",
+      "account.helpTitle": "Tye gin marac?",
+      "account.helpSub": "Lok kwedwa &mdash; wanongo neno gin ma icwalo",
+      "account.guideTitle": "Kit ma Tonninyira Tiyo kwede",
+      "account.guideSub": "Buk manok ma tye ki cal",
+      "account.emailLabel": "Imeel",
+      "account.phoneLabel": "Simu",
+      "account.addNumberBtn": "Med namba ni",
+      "account.useDifferentAccountBtn": "Ti ki akaunti mukene",
+      "account.addPhonePrompt": "Namba pa simu ni\n\nMeno namba ma lakelo bikoyo ka obino. Lanen: 0772 123 456",
+      "account.addPhoneBadFormat": "Meno pe nen calo namba pa Uganda. Tem kit man 0772 123 456.",
+      "account.addPhoneSessionExpired": "Kare ni oting woko. Donyo doki.",
+      "account.addPhoneSendCodeError": "Pe otwero cwalo namba me lok ada: {msg}",
+      "account.addPhoneCodePrompt": "Coo namba me namba 6 ma wacwalo boti i {phone} macalo SMS.",
+      "account.addPhoneCodeInvalidFormat": "Coo namba me namba 6 kit macalo kit ma kicwalo kwede.",
+      "account.addPhoneVerifyError": "Namba meno pe otiyo: {msg}",
+      "account.addPhoneNetworkError": "Pe otwero cobo Tonninyira. Nen intanet ni tem doki.",
+      "account.signinUnavailable": "Donyo pe romo kombeddi. Yab pot doki tem doki.",
+      "account.helpLoading": "Lok pud tye ka donyo. Kur manok doki mok doki — ka dong ococo, yab pot doki.",
+      "partner.sectionEyebrow": "CATO JAMI I TONNINYIRA",
+      "partner.vendorSellTitle": "Cat i Tonninyira",
+      "partner.vendorSellSub": "Cuk ni, wel ni, luwilo ni",
+      "partner.riderDeliverTitle": "Kel ki Tonninyira",
+      "partner.riderDeliverSub": "Kwany tic macegge kwedi",
+      "partner.vendorManageTitle": "Rit cuk na",
+      "partner.riderViewTitle": "Nen gin ma akelo",
+      "partner.approvedSub": "Oye &middot; yab dashboard ni",
+      "partner.vendorNoteLabel": "Cuk ni",
+      "partner.riderNoteLabel": "Kom ni macalo lakelo",
+      "partner.rejectedNote": "Kwayo mo pi {noun} pe oye. Dwok lok i imeel ma wacwalo ka imito ni ki nen doki.",
+      "partner.pendingNote": "Kwayo mo pi {noun} tye ki jo mwaka pi neno. Wabicwali imeel ma dong okeco.",
+      "partner.nounStall": "cuk",
+      "partner.nounRiderProfile": "kom macalo lakelo"
+    },
+    myx: {
+      "chrome.tagline": "Buweereza bwa Bwangu ne Ekiseera Kihoosi",
+      "chrome.cartAria": "Ekabu",
+      "chrome.areaPlaceholder": "Teekha ekifo kyo",
+      "chrome.areaAriaLabel": "Teekha ekifo khwo baleetsangamu",
+      "chrome.gpsLabel": "Kozesa Ekifo Kyendimu",
+      "chrome.searchPlaceholder": "Noonya ebiryo, ebindu bye iduuka, engubo nohomba iduuka",
+      "chrome.footerGuide": "Kali Tonninyira Yekolamu",
+      "chrome.footerTerms": "Ebiragilo n'Obukwakkulizo",
+      "chrome.navHome": "Awaka",
+      "chrome.navOrders": "Ebisaba",
+      "chrome.navCart": "Ekabu",
+      "chrome.navProfile": "Ebikwatako Iwe",
+      "guest.perkPointsTitle": "Points",
+      "guest.perkPointsDesc": "Point indala khu buli UGX 1,000 wu okuozamu",
+      "guest.perkOrdersTitle": "Ebisaba",
+      "guest.perkOrdersDesc": "Londa okhufika khu mulyango kwo. Saba khindi khu khukwata khamu.",
+      "guest.perkSavedTitle": "Ebiterekhwa",
+      "guest.perkSavedDesc": "Abasuubuzi bo, bosi habwe hamu.",
+      "guest.perkHelpTitle": "Obuyaambi",
+      "guest.perkHelpDesc": "Nikhwikhala okhulola ekhusaba khukho khwoyayo.",
+      "guest.storyCap1": "Khuhandi khukhula mu katale.",
+      "guest.storyCap2": "Omuletsi wo, akakasibwa.",
+      "guest.storyCap3": "Edakika sisi tinditsi.",
+      "guest.storyCap4": "Khu mulyango kwo.",
+      "guest.storyCap5": "Sangala — nokhukhung'aana ba point bo.",
+      "guest.storyAlt1": "Omuletsi ali nende ekhabu khe gaali khijulire ne nva ndya empia, mabinaana ni entungo",
+      "guest.storyAlt2": "Omuletsi wa khumaletsa nasangala, akwete ekhapaketi khali khweteekasi okhukhuwa",
+      "guest.storyAlt3": "Omuletsi natsya nabera nende ebiveera mu mukhono kumwi, nalola app khu simu ye",
+      "guest.storyAlt4": "Omuletsi khukhuwa amasanduku khu mugenyi khu mulyango kwe, bosi nibasangala",
+      "guest.storyAlt5": "Omukhasi nasangala nga yiguula esanduku lie chakhulya ekhwo ni ensawo ye biveera",
+      "guest.tagline": "Khikole khibe khikho.",
+      "guest.browsingFree": "Okhulola nibwo bwireere ebiro biosi. Akaunti niyo ehantu ebindu bio bibeela toto.",
+      "guest.slideCap1": "Hakari khe biigiliza, buli mundu naasaba.",
+      "guest.slideCap2": "Nanyoola isokoni. Nabawakoosia bosi.",
+      "guest.slideCap3": "Linda &mdash; khimalile khubere?",
+      "guest.slideCap4": "Isaba indala. Amang'ana kani.",
+      "guest.slideCap5": "Ssente tsa rolex, tsakhole.",
+      "guest.slideAlt1": "Abeegi bane khu lulwaanjo lwe bitabu, buli mundu nalola khu simu ye",
+      "guest.slideAlt2": "Omukhaana omutiti nasesa khu simu ye omusani niyeewuunda okhulola",
+      "guest.slideAlt3": "Abandu babili khu meesa nibewuunya khindu khu simu",
+      "guest.slideAlt4": "Nibalola khukhwiguru abasani bane bemeleyo mu lugulu, simu mu mikhono",
+      "guest.slideAlt5": "Abasani basatu bekhaye khunze khu madaala, nibasesa nibekulunga simu",
+      "guest.createAccountBtn": "Khole akaunti yo",
+      "guest.alreadyHaveBtn": "Nyaba nayo khale",
+      "guest.sellingAlsoNote": "Okhuguza khu Tonninyira, nohomba okhuleetsa nga omuletsi, nakho khaakanza nende akaunti.",
+      "guest.seeHowWorksLink": "Omugenyi hanu? Lola Tonninyira Kali yekolamu",
+      "account.defaultName": "Akaunti yo",
+      "account.roleCustomer": "omuguzi",
+      "account.notSet": "Sitasiibwa",
+      "account.pointsEyebrow": "BA POINT BO",
+      "account.pointsEarnedNote": "Bafunikha khu bisaba byo ebiwilire",
+      "account.pointsZeroNote": "Ofuna point indala khu buli UGX 1,000 khu khusaba khukhwiwilire",
+      "account.ordersTitle": "Ebisaba",
+      "account.ordersSubTrack": "Londa nosaba khindi",
+      "account.ordersSubEmpty": "Tikhali khindu",
+      "account.savedTitle": "Ebiterekhwa",
+      "account.savedSubHas": "Amaduuka wo",
+      "account.savedSubEmpty": "Terekha iduuka nolinyoola mangu",
+      "account.helpTitle": "Khuli khukhubi?",
+      "account.helpSub": "Khukhawale ninafwe &mdash; nikhwikhala okhulola khukhusaba khwoyo",
+      "account.guideTitle": "Kali Tonninyira Yekolamu",
+      "account.guideSub": "Ekhabuulirira khatiti khalimu ebifwanani",
+      "account.emailLabel": "Imeeli",
+      "account.phoneLabel": "Simu",
+      "account.addNumberBtn": "Ongeza namba yo",
+      "account.useDifferentAccountBtn": "Kozesa akaunti indi",
+      "account.addPhonePrompt": "Namba yo ye simu\n\nEyo niyo omuletsi wo koomubira nga afiche. Ekhyokhulolelako: 0772 123 456",
+      "account.addPhoneBadFormat": "Eyo sitera nga namba ya Uganda. Gezaho nga 0772 123 456.",
+      "account.addPhoneSessionExpired": "Ekiseera kyo khiwiile. Injira khindi.",
+      "account.addPhoneSendCodeError": "Sikhawesi okhutuma namba ye khukhakasia: {msg}",
+      "account.addPhoneCodePrompt": "Wandiike namba ye tsinamba 6 tsi khwakhuweresia khu {phone} khu SMS.",
+      "account.addPhoneCodeInvalidFormat": "Wandiike namba ye tsinamba 6 shinga tsyaweresibwa.",
+      "account.addPhoneVerifyError": "Namba eyo sitakholele: {msg}",
+      "account.addPhoneNetworkError": "Sikhawesi okhufika Tonninyira. Lola intaneti yo ogezaho khindi.",
+      "account.signinUnavailable": "Okhwinjila sikhukhonyeka hano. Teekha lupapula khindi ogezeho khindi.",
+      "account.helpLoading": "Ebulwaniilo bukhale bulikho. Linda khatiti khindi khukwate — nga khyongera okhuboolekha, teekha lupapula khindi.",
+      "partner.sectionEyebrow": "OKHUGUZA KHU TONNINYIRA",
+      "partner.vendorSellTitle": "Guza khu Tonninyira",
+      "partner.vendorSellSub": "Iduuka lyo, ebiraago byo, abakasitoma bo",
+      "partner.riderDeliverTitle": "Leeta ne Tonninyira",
+      "partner.riderDeliverSub": "Kwata umulimu okhwiruma nawe",
+      "partner.vendorManageTitle": "Fuga iduuka lyange",
+      "partner.riderViewTitle": "Lola ebyo mbileese",
+      "partner.approvedSub": "Khwikirisibwa &middot; funula dashboard yo",
+      "partner.vendorNoteLabel": "Iduuka lyo",
+      "partner.riderNoteLabel": "Ebikwatako iwe nga omuletsi",
+      "partner.rejectedNote": "Okhusaba khwo okhwe {noun} sikhwikirisibwa. Kalukha khu imeeli yetumire nga oyenya khudibonwa khindi.",
+      "partner.pendingNote": "Okhusaba khwo okhwe {noun} khuli ne ekibiina kiefwe khukebwa. Nikhukhuweereza imeeli nga bakhimalile.",
+      "partner.nounStall": "iduuka",
+      "partner.nounRiderProfile": "ebikwatako nga omuletsi"
+    },
+    nyn: {
+      "chrome.tagline": "Obuheereza bw'Bwango kandi Obw'Eby'okuguza Bike",
+      "chrome.cartAria": "Ekiibo",
+      "chrome.areaPlaceholder": "Teekateeka ahurumire",
+      "chrome.areaAriaLabel": "Teekateeka ahurumire aha baakutwaaraho",
+      "chrome.gpsLabel": "Koresa Aha Ndi",
+      "chrome.searchPlaceholder": "Shaaha eby'okurya, ebicuruzwa by'eduuka, emyenda nari eduuka",
+      "chrome.footerGuide": "Oku Tonninyira Ekorera",
+      "chrome.footerTerms": "Ebiragiro n'Endagaano",
+      "chrome.navHome": "Aka",
+      "chrome.navOrders": "Ebi Baasaba",
+      "chrome.navCart": "Ekiibo",
+      "chrome.navProfile": "Ebikukwatako",
+      "guest.perkPointsTitle": "Points",
+      "guest.perkPointsDesc": "Ekicweka kimwe ahari buri UGX 1,000 ei oshohoza",
+      "guest.perkOrdersTitle": "Ebi Baasaba",
+      "guest.perkOrdersDesc": "Kurikira kuhika aha muryango gwawe. Saba nikwo ondiijo aha kukwata kamwe.",
+      "guest.perkSavedTitle": "Ebyabikirwe",
+      "guest.perkSavedDesc": "Abaguzi baawe, boona omu mwanya gumwe.",
+      "guest.perkHelpTitle": "Oburamuzi",
+      "guest.perkHelpDesc": "Nitubaasa kureeba eki obaire noogamba.",
+      "guest.storyCap1": "Butunu kuruga aha katare.",
+      "guest.storyCap2": "Omuleeta waawe, yaikirizibwe.",
+      "guest.storyCap3": "Edakiika nkye.",
+      "guest.storyCap4": "Aha muryango gwawe.",
+      "guest.storyCap5": "Ijuka — kandi ojune ba point zaawe.",
+      "guest.storyAlt1": "Omuleeta aine ekitebe kya gaali ekijwire enva endiisa nsya, ebitooke n'entungo",
+      "guest.storyAlt2": "Omuleeta w'ebicweka naashemererwa, aine akapaketi keteekateekyerwe kutambwa",
+      "guest.storyAlt3": "Omuleeta naagyenda aine ebisaho by'ebiveera aha mukono gumwe, naareeba app aha simu ye",
+      "guest.storyAlt4": "Omuleeta naaha amasanduuko aha mugyenyi aha muryango gwe, boona nibashemererwa",
+      "guest.storyAlt5": "Omukazi naashemererwa naayigura akasanduuko k'eby'okurya haihi n'ensakiro y'ebiveera",
+      "guest.tagline": "Kikore kibe kyawe.",
+      "guest.browsingFree": "Kuraaba nikwo bwereere obusingye bwona. Akaunti niyo ahari ebintu byawe biba biriho ntamu.",
+      "guest.slideCap1": "Omu kati k'emisomo, buri omu naasaba.",
+      "guest.slideCap2": "Naanyoora eduuka. Nagambira boona.",
+      "guest.slideCap3": "Teegereza &mdash; ekahika kare?",
+      "guest.slideCap4": "Eby'okusaba bimwe. Ebiteekateeko bina.",
+      "guest.slideCap5": "Sente za rolex, zaashoborotse.",
+      "guest.slideAlt1": "Abeegi bana aha mucwe gw'ebitabo, buri omwe naareeba aha simu ye",
+      "guest.slideAlt2": "Omwishiki muto naaseka aha simu ye owo munywani naayerekyereza kureeba",
+      "guest.slideAlt3": "Abantu babiri aha meza nibeewuunda ekintu aha simu",
+      "guest.slideAlt4": "Nibareeba iguru abanywani bana bemereire omu kacweka, simu omu mikono",
+      "guest.slideAlt5": "Abanywani bashatu beikaire aheeru aha ntambi, nibaseka nibeteera aha simu",
+      "guest.createAccountBtn": "Kora akaunti yaawe",
+      "guest.alreadyHaveBtn": "Ninyine emwe kare",
+      "guest.sellingAlsoNote": "Kuguza aha Tonninyira, nari kutwara nk'omuleeta, na yo neitandikira aha akaunti.",
+      "guest.seeHowWorksLink": "Oli muhyaka? Reeba oku Tonninyira ekorera",
+      "account.defaultName": "Akaunti yaawe",
+      "account.roleCustomer": "omuguzi",
+      "account.notSet": "Tikiteekyerwe",
+      "account.pointsEyebrow": "BA POINT ZAAWE",
+      "account.pointsEarnedNote": "Zitungirwe aha biragiro byaawe ebiheirwe",
+      "account.pointsZeroNote": "Otunga point 1 aha buri UGX 1,000 aha eky'okusaba ekiheirwe",
+      "account.ordersTitle": "Ebi Baasaba",
+      "account.ordersSubTrack": "Kurikira noyongyera kusaba",
+      "account.ordersSubEmpty": "Tikiine kimwe",
+      "account.savedTitle": "Ebyabikirwe",
+      "account.savedSubHas": "Amaduuka gaawe",
+      "account.savedSubEmpty": "Bika eduuka kugishanga bwango",
+      "account.helpTitle": "Hariho ekitari kirungi?",
+      "account.helpSub": "Ganiira naitwe &mdash; nitubaasa kureeba eki obaire noosaba",
+      "account.guideTitle": "Oku Tonninyira Ekorera",
+      "account.guideSub": "Oburagiro buhwahwa obwine ebishushani",
+      "account.emailLabel": "Imeeri",
+      "account.phoneLabel": "Esimu",
+      "account.addNumberBtn": "Ongyera namba yaawe",
+      "account.useDifferentAccountBtn": "Koresa akaunti endiijo",
+      "account.addPhonePrompt": "Namba yaawe ya esimu\n\nEyo niyo omuleeta waawe aryakuhamagara yaahika. Eky'okureeberaho: 0772 123 456",
+      "account.addPhoneBadFormat": "Egyo tikireebeka nka namba ya Uganda. Gyerageza nka 0772 123 456.",
+      "account.addPhoneSessionExpired": "Obwire bwaawe bwahweireho. Yingira ondiijo.",
+      "account.addPhoneSendCodeError": "Tikibaasika kutuma namba y'okwemeeza: {msg}",
+      "account.addPhoneCodePrompt": "Handiika namba ya emibare 6 twakutumire aha {phone} okuraba omu SMS.",
+      "account.addPhoneCodeInvalidFormat": "Handiika namba ya emibare 6 nk'oku yaatumirwe.",
+      "account.addPhoneVerifyError": "Namba egyo teyakozire: {msg}",
+      "account.addPhoneNetworkError": "Tikibaasika kuhika aha Tonninyira. Reeba network yaawe ogyerageze ondiijo.",
+      "account.signinUnavailable": "Okwingira tikurikubaasika hati. Teekateeka rupapura ondiijo ogyerageze.",
+      "account.helpLoading": "Enganiira nichaali kwingira. Tegyereza kake ondiijo okwate — ky'aba nikigumizamu, teekateeka rupapura ondiijo.",
+      "partner.sectionEyebrow": "OKUGUZA AHA TONNINYIRA",
+      "partner.vendorSellTitle": "Guza aha Tonninyira",
+      "partner.vendorSellSub": "Eduuka ryawe, ebicungwa byawe, abaguzi baawe",
+      "partner.riderDeliverTitle": "Twara na Tonninyira",
+      "partner.riderDeliverSub": "Kwata omurimo hoona haihi naawe",
+      "partner.vendorManageTitle": "Fuga eduuka ryange",
+      "partner.riderViewTitle": "Reeba ebi ntwaire",
+      "partner.approvedSub": "Kwikirizibwe &middot; gurura dashboard yaawe",
+      "partner.vendorNoteLabel": "Eduuka ryawe",
+      "partner.riderNoteLabel": "Ebikukwatako nk'omuleeta",
+      "partner.rejectedNote": "Okusaba kwawe kwa {noun} tikwikirizibwe. Garuka aha imeeri twakutumire kakuba noyenda kugarurirwamu.",
+      "partner.pendingNote": "Okusaba kwawe kwa {noun} kuriho n'ekibiina kyaitu kukebwa. Turaakutumira imeeri baaba bamazeho kucweka.",
+      "partner.nounStall": "eduuka",
+      "partner.nounRiderProfile": "ebikukwatako nk'omuleeta"
+    }
+  };
   const LANGS = [
     { code:'en',  label:'English' },
     { code:'lg',  label:'Luganda' },
@@ -623,6 +1176,36 @@ window.TN_I18N = (function(){
     LANGS: LANGS, LOWER_CONFIDENCE: LOWER_CONFIDENCE
   };
 })();
+
+/* Header, footer and bottom-nav are static markup with no render pass of
+   their own, unlike renderAccountPage() below -- so they get this one small
+   synchronous localizer instead, run once on boot and again on every
+   language change. No epoch guard needed: nothing here awaits anything. */
+function tnLocalizeChrome(){
+  const I = window.TN_I18N;
+  if(!I) return;
+  const setText = (id, key) => { const el = document.getElementById(id); if(el) el.textContent = I.t(key); };
+  const setPlaceholder = (id, key) => { const el = document.getElementById(id); if(el) el.placeholder = I.t(key); };
+  setText('brandTag', 'chrome.tagline');
+  const cartBtn = document.getElementById('cartIconBtn');
+  if(cartBtn) cartBtn.setAttribute('aria-label', I.t('chrome.cartAria'));
+  setPlaceholder('areaSelect', 'chrome.areaPlaceholder');
+  const areaEl = document.getElementById('areaSelect');
+  if(areaEl) areaEl.setAttribute('aria-label', I.t('chrome.areaAriaLabel'));
+  setText('gpsBtnLabel', 'chrome.gpsLabel');
+  setPlaceholder('searchInput', 'chrome.searchPlaceholder');
+  const searchEl = document.getElementById('searchInput');
+  if(searchEl) searchEl.setAttribute('aria-label', I.t('chrome.searchPlaceholder'));
+  setText('footerGuideLink', 'chrome.footerGuide');
+  setText('footerTermsLink', 'chrome.footerTerms');
+  setText('navHomeLabel', 'chrome.navHome');
+  setText('navOrdersLabel', 'chrome.navOrders');
+  setText('navCartLabel', 'chrome.navCart');
+  setText('navProfileLabel', 'chrome.navProfile');
+}
+if(window.TN_I18N) TN_I18N.onChange(tnLocalizeChrome);
+if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tnLocalizeChrome);
+else tnLocalizeChrome();
 
 const SAMPLE_RIDERS = [];
 
@@ -1184,35 +1767,35 @@ async function tnPartnerState(userId){
 
 function tnPartnerBlock(kind, status){
   const vendor = kind === 'vendor';
-  const noun   = vendor ? 'stall' : 'rider profile';
+  const noun   = TN_I18N.t(vendor ? 'partner.nounStall' : 'partner.nounRiderProfile');
   const note = t => `<div class="tn-card-dark" style="border-radius:22px;padding:15px 17px;margin-bottom:10px">
-    <div style="font-size:.8rem;font-weight:700;color:#fff">${vendor?'Your stall':'Your rider profile'}</div>
+    <div style="font-size:.8rem;font-weight:700;color:#fff">${TN_I18N.t(vendor?'partner.vendorNoteLabel':'partner.riderNoteLabel')}</div>
     <div class="tn-sub">${t}</div></div>`;
 
   if(status === null){
     const bg = vendor ? 'background:#E8542F;color:#fff' : '';
     return `<a href="register.html?as=${kind}" class="tn-act ${vendor?'':'tn-card-dark'}" style="margin-bottom:10px;${bg}">
       <span style="flex-grow:1">
-        <span class="tn-dsp" style="font-size:1.25rem;display:block;${vendor?'':'color:#fff'}">${vendor?'Sell on Tonninyira':'Deliver with Tonninyira'}</span>
-        <span style="font-size:.74rem;font-weight:${vendor?'600':'500'};${vendor?'opacity:.92':'color:#A99684'}">${vendor?'Your stall, your prices, your customers':'Pick up work near you'}</span>
+        <span class="tn-dsp" style="font-size:1.25rem;display:block;${vendor?'':'color:#fff'}">${TN_I18N.t(vendor?'partner.vendorSellTitle':'partner.riderDeliverTitle')}</span>
+        <span style="font-size:.74rem;font-weight:${vendor?'600':'500'};${vendor?'opacity:.92':'color:#A99684'}">${TN_I18N.t(vendor?'partner.vendorSellSub':'partner.riderDeliverSub')}</span>
       </span>${TN_ICON.arrow}</a>`;
   }
   if(status === 'approved'){
     return `<a href="${vendor?'vendor-dashboard.html':'rider-dashboard.html'}" class="tn-act tn-card-dark" style="margin-bottom:10px;border-color:var(--gold)">
       <span style="flex-grow:1">
-        <span class="tn-dsp" style="font-size:1.25rem;display:block;color:var(--gold)">${vendor?'Manage my stall':'View my deliveries'}</span>
-        <span class="tn-sub" style="margin:0">Approved &middot; open your dashboard</span>
+        <span class="tn-dsp" style="font-size:1.25rem;display:block;color:var(--gold)">${TN_I18N.t(vendor?'partner.vendorManageTitle':'partner.riderViewTitle')}</span>
+        <span class="tn-sub" style="margin:0">${TN_I18N.t('partner.approvedSub')}</span>
       </span>${TN_ICON.arrow}</a>`;
   }
   if(status === 'rejected')
-    return note(`Your ${noun} application was not approved. Reply to the email we sent you if you would like it looked at again.`);
-  return note(`Your ${noun} application is with our team for review. We will email you as soon as it is decided.`);
+    return note(TN_I18N.t('partner.rejectedNote', {noun}));
+  return note(TN_I18N.t('partner.pendingNote', {noun}));
 }
 
 async function tnPartnerSection(userId){
   const { vendor, rider } = await tnPartnerState(userId);
   return `<div style="margin-top:6px">
-    <p class="tn-sub" style="margin:0 0 9px;font-size:.66rem;font-weight:800;letter-spacing:.13em;color:#7D6C5E">TRADING ON TONNINYIRA</p>
+    <p class="tn-sub" style="margin:0 0 9px;font-size:.66rem;font-weight:800;letter-spacing:.13em;color:#7D6C5E">${TN_I18N.t('partner.sectionEyebrow')}</p>
     ${tnPartnerBlock('vendor', vendor)}
     ${tnPartnerBlock('rider', rider)}
   </div>`;
@@ -1264,10 +1847,10 @@ async function renderAccountPage(){
 
   if(!session){
     const perks = [
-      ['Points', 'A point for every UGX 1,000 you spend', '#F5B400', '#1C1410', TN_ICON.star],
-      ['Orders', 'Track it to your door. Reorder in a tap.', null, null, TN_ICON.bag],
-      ['Saved', 'Your traders, kept in one place.', null, null, TN_ICON.heart],
-      ['Help', 'We can see which order you mean.', null, null, TN_ICON.chat]
+      [TN_I18N.t('guest.perkPointsTitle'), TN_I18N.t('guest.perkPointsDesc'), '#F5B400', '#1C1410', TN_ICON.star],
+      [TN_I18N.t('guest.perkOrdersTitle'), TN_I18N.t('guest.perkOrdersDesc'), null, null, TN_ICON.bag],
+      [TN_I18N.t('guest.perkSavedTitle'), TN_I18N.t('guest.perkSavedDesc'), null, null, TN_ICON.heart],
+      [TN_I18N.t('guest.perkHelpTitle'), TN_I18N.t('guest.perkHelpDesc'), null, null, TN_ICON.chat]
     ];
     /* The signed-out profile is the one screen whose job is to persuade rather
        than inform, so it opens on people. Photographs are cover-cropped webp
@@ -1277,18 +1860,18 @@ async function renderAccountPage(){
        reaches you -- market, rider, transit, door, table -- which is the thing
        a first-time customer is really asking about. */
     const story = [
-      ['assets/campus/story1.webp', 'Straight from the market.', 'A rider with a bicycle basket full of fresh greens, bananas and tomatoes'],
-      ['assets/campus/story2.webp', 'Your rider, verified.', 'A delivery rider smiling, holding a parcel ready to hand over'],
-      ['assets/campus/story3.webp', 'Minutes away.', 'A rider walking with paper bags in one hand, checking the app on his phone'],
-      ['assets/campus/story4.webp', 'At your door.', 'A rider handing boxes to a customer at her doorway, both smiling'],
-      ['assets/campus/story5.webp', 'Enjoy \u2014 and collect your points.', 'A woman smiling as she opens a food box beside a paper delivery bag']
+      ['assets/campus/story1.webp', TN_I18N.t('guest.storyCap1'), TN_I18N.t('guest.storyAlt1')],
+      ['assets/campus/story2.webp', TN_I18N.t('guest.storyCap2'), TN_I18N.t('guest.storyAlt2')],
+      ['assets/campus/story3.webp', TN_I18N.t('guest.storyCap3'), TN_I18N.t('guest.storyAlt3')],
+      ['assets/campus/story4.webp', TN_I18N.t('guest.storyCap4'), TN_I18N.t('guest.storyAlt4')],
+      ['assets/campus/story5.webp', TN_I18N.t('guest.storyCap5'), TN_I18N.t('guest.storyAlt5')]
     ];
     const slides = [
-      ['assets/campus/s1.webp', 'Between lectures, everyone&rsquo;s ordering.', 'Four students along a library shelf, each looking at their phone'],
-      ['assets/campus/s2.webp', 'Found the stall. Told everyone.', 'A young woman laughing at her phone while a friend leans in to look'],
-      ['assets/campus/s3.webp', 'Wait &mdash; it&rsquo;s here already?', 'Two people at a table reacting with surprise to something on a phone'],
-      ['assets/campus/s4.webp', 'One order. Four opinions.', 'Looking up at four friends standing in a circle, phones in hand'],
-      ['assets/campus/s5.webp', 'Rolex money, sorted.', 'Three friends sitting outside on a step, laughing around a phone']
+      ['assets/campus/s1.webp', TN_I18N.t('guest.slideCap1'), TN_I18N.t('guest.slideAlt1')],
+      ['assets/campus/s2.webp', TN_I18N.t('guest.slideCap2'), TN_I18N.t('guest.slideAlt2')],
+      ['assets/campus/s3.webp', TN_I18N.t('guest.slideCap3'), TN_I18N.t('guest.slideAlt3')],
+      ['assets/campus/s4.webp', TN_I18N.t('guest.slideCap4'), TN_I18N.t('guest.slideAlt4')],
+      ['assets/campus/s5.webp', TN_I18N.t('guest.slideCap5'), TN_I18N.t('guest.slideAlt5')]
     ];
     host.innerHTML = `
       <div class="tn-cover" id="tnStory">
@@ -1298,14 +1881,14 @@ async function renderAccountPage(){
           </div>`).join('')}
         <div class="tn-cover-scrim"></div>
         <p class="tn-story-cap" id="tnStoryCap">${story[0][1]}</p>
-        <h2 class="tn-dsp">Make it yours.</h2>
+        <h2 class="tn-dsp">${TN_I18N.t('guest.tagline')}</h2>
         <div class="tn-dots" id="tnStoryDots" role="tablist" aria-label="Story">
           ${story.map((_,i)=>`<button type="button" role="tab" data-i="${i}" aria-current="${i===0}" aria-label="Step ${i+1} of ${story.length}"></button>`).join('')}
         </div>
       </div>
       <div class="tn-langs" id="tnHomeLangs" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px"></div>
       <div class="tn-lang-notice" id="tnHomeLangNotice" style="display:none;margin-top:8px;padding:8px 10px;border-radius:9px;background:rgba(245,180,0,.1);border:1px solid rgba(245,180,0,.35);font-size:11px;line-height:1.5;color:var(--muted)"></div>
-      <p class="tn-sub" style="font-size:.86rem;margin:10px 0 16px">Browsing is free forever. An account is where your stuff actually lives.</p>
+      <p class="tn-sub" style="font-size:.86rem;margin:10px 0 16px">${TN_I18N.t('guest.browsingFree')}</p>
       <div class="tn-strip">
         ${slides.map(([src,cap,alt])=>`<figure>
           <img src="${src}" alt="${esc(alt)}" width="380" height="478" loading="lazy">
@@ -1321,10 +1904,10 @@ async function renderAccountPage(){
             </div>
           </div>`).join('')}
       </div>
-      <button class="tn-btn tn-btn-gold" style="margin-top:20px" onclick="tnAuthEntry()">Create your account</button>
-      <button class="tn-btn tn-btn-ghost" style="margin-top:10px" onclick="tnAuthEntry()">I already have one</button>
-      <p class="tn-sub" style="text-align:center;margin-top:16px">Selling on Tonninyira, or delivering as a rider, also starts with an account.</p>
-      <p style="text-align:center;margin-top:14px"><a href="guide.html" style="color:var(--gold);font-size:.8rem;font-weight:700;text-decoration:underline">New here? See how Tonninyira works</a></p>`;
+      <button class="tn-btn tn-btn-gold" style="margin-top:20px" onclick="tnAuthEntry()">${TN_I18N.t('guest.createAccountBtn')}</button>
+      <button class="tn-btn tn-btn-ghost" style="margin-top:10px" onclick="tnAuthEntry()">${TN_I18N.t('guest.alreadyHaveBtn')}</button>
+      <p class="tn-sub" style="text-align:center;margin-top:16px">${TN_I18N.t('guest.sellingAlsoNote')}</p>
+      <p style="text-align:center;margin-top:14px"><a href="guide.html" style="color:var(--gold);font-size:.8rem;font-weight:700;text-decoration:underline">${TN_I18N.t('guest.seeHowWorksLink')}</a></p>`;
     tnStartStory(story.map(x => x[1]));
     tnRenderHomeLangPicker();
     return;
@@ -1342,64 +1925,64 @@ async function renderAccountPage(){
     <div style="display:flex;align-items:center;gap:13px;margin:18px 0 14px">
       <div aria-hidden="true" style="width:54px;height:54px;border-radius:18px;background:#E8542F;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:1.3rem;color:#fff;flex-shrink:0">${esc(initials)}</div>
       <div style="flex-grow:1;min-width:0">
-        <div class="tn-dsp" style="font-size:1.55rem;color:#fff;word-break:break-word">${esc(first || 'Your account')}</div>
-        <div class="tn-sub" style="margin-top:1px">${esc(prof?.role || 'customer')} &middot; ${esc(session.user.email || '')}</div>
+        <div class="tn-dsp" style="font-size:1.55rem;color:#fff;word-break:break-word">${esc(first || TN_I18N.t('account.defaultName'))}</div>
+        <div class="tn-sub" style="margin-top:1px">${esc(prof?.role || TN_I18N.t('account.roleCustomer'))} &middot; ${esc(session.user.email || '')}</div>
       </div>
     </div>
 
     <div style="background:var(--gold);color:#1C1410;border-radius:26px;padding:20px;margin-bottom:12px">
-      <div class="tn-eyebrow">${TN_ICON.star} YOUR POINTS</div>
+      <div class="tn-eyebrow">${TN_ICON.star} ${TN_I18N.t('account.pointsEyebrow')}</div>
       <div class="tn-dsp" style="font-size:3.4rem;margin:6px 0 2px">${pts.toLocaleString()}</div>
-      <div style="font-size:.78rem;font-weight:600;opacity:.8">${pts>0?'Earned on your completed orders':'You earn 1 point for every UGX 1,000 on a completed order'}</div>
+      <div style="font-size:.78rem;font-weight:600;opacity:.8">${pts>0?TN_I18N.t('account.pointsEarnedNote'):TN_I18N.t('account.pointsZeroNote')}</div>
     </div>
 
     <div class="tn-grid" style="margin-bottom:12px">
       <a href="#orders" class="tn-card tn-card-dark" style="min-height:118px" onclick="event.preventDefault();goView('orders')">
         <div style="display:flex;align-items:center;justify-content:space-between">${TN_ICON.bag}
           ${stats.orders?`<span class="tn-pill" style="background:#4FB477;color:#08150E">${stats.orders}</span>`:''}</div>
-        <div><div class="tn-dsp" style="font-size:1.35rem;color:#fff">Orders</div>
-          <div class="tn-sub">${stats.orders?'Track and reorder':'Nothing yet'}</div></div>
+        <div><div class="tn-dsp" style="font-size:1.35rem;color:#fff">${TN_I18N.t('account.ordersTitle')}</div>
+          <div class="tn-sub">${stats.orders?TN_I18N.t('account.ordersSubTrack'):TN_I18N.t('account.ordersSubEmpty')}</div></div>
       </a>
       <a href="#saved" class="tn-card tn-card-dark" style="min-height:118px" onclick="event.preventDefault();AppState.view='favorites';renderMain();window.scrollTo(0,0)">
         <div style="display:flex;align-items:center;justify-content:space-between">${TN_ICON.heart}
           ${stats.saved?`<span class="tn-dsp" style="font-size:1.35rem;color:#FF7A5C">${stats.saved}</span>`:''}</div>
-        <div><div class="tn-dsp" style="font-size:1.35rem;color:#fff">Saved</div>
-          <div class="tn-sub">${stats.saved?'Your stalls':'Save a stall to find it fast'}</div></div>
+        <div><div class="tn-dsp" style="font-size:1.35rem;color:#fff">${TN_I18N.t('account.savedTitle')}</div>
+          <div class="tn-sub">${stats.saved?TN_I18N.t('account.savedSubHas'):TN_I18N.t('account.savedSubEmpty')}</div></div>
       </a>
     </div>
 
     <a href="#help" class="tn-act" style="background:#1B2140;border:1px solid #2C3566;margin-bottom:12px" onclick="event.preventDefault();tnOpenHelp()">
       <span aria-hidden="true" style="width:42px;height:42px;border-radius:14px;background:#8B9BFF;display:flex;align-items:center;justify-content:center;flex-shrink:0">${TN_ICON.chat}</span>
       <span style="flex-grow:1">
-        <span class="tn-dsp" style="font-size:1.15rem;color:#fff;display:block">Something wrong?</span>
-        <span style="font-size:.74rem;font-weight:500;color:#AEB6E8">Chat to us &mdash; we can see your order</span>
+        <span class="tn-dsp" style="font-size:1.15rem;color:#fff;display:block">${TN_I18N.t('account.helpTitle')}</span>
+        <span style="font-size:.74rem;font-weight:500;color:#AEB6E8">${TN_I18N.t('account.helpSub')}</span>
       </span>${TN_ICON.chevron}
     </a>
 
     <a href="guide.html" class="tn-act" style="background:#1B2140;border:1px solid #2C3566;margin-bottom:12px">
       <span aria-hidden="true" style="width:42px;height:42px;border-radius:14px;background:var(--gold);display:flex;align-items:center;justify-content:center;flex-shrink:0">${TN_ICON.star}</span>
       <span style="flex-grow:1">
-        <span class="tn-dsp" style="font-size:1.15rem;color:#fff;display:block">How Tonninyira Works</span>
-        <span style="font-size:.74rem;font-weight:500;color:#AEB6E8">A quick illustrated guide</span>
+        <span class="tn-dsp" style="font-size:1.15rem;color:#fff;display:block">${TN_I18N.t('account.guideTitle')}</span>
+        <span style="font-size:.74rem;font-weight:500;color:#AEB6E8">${TN_I18N.t('account.guideSub')}</span>
       </span>${TN_ICON.chevron}
     </a>
 
     <div class="tn-card-dark" style="border-radius:22px;padding:2px 18px;margin-bottom:12px">
       <div class="tn-row" style="border-bottom:1px solid #2A231E">
-        <span class="tn-sub" style="margin:0">Email</span>
-        <span style="font-size:.8rem;font-weight:700;word-break:break-all;text-align:right">${esc(session.user.email || 'Not set')}</span>
+        <span class="tn-sub" style="margin:0">${TN_I18N.t('account.emailLabel')}</span>
+        <span style="font-size:.8rem;font-weight:700;word-break:break-all;text-align:right">${esc(session.user.email || TN_I18N.t('account.notSet'))}</span>
       </div>
       <div class="tn-row">
-        <span class="tn-sub" style="margin:0">Phone</span>
+        <span class="tn-sub" style="margin:0">${TN_I18N.t('account.phoneLabel')}</span>
         ${phone
           ? `<span style="font-size:.8rem;font-weight:700">${esc(phone)}</span>`
-          : `<button type="button" onclick="tnAddPhone()" style="border:1px solid var(--gold);background:transparent;color:var(--gold);font-family:inherit;font-size:.72rem;font-weight:700;padding:8px 13px;border-radius:11px;cursor:pointer;min-height:44px">Add your number</button>`}
+          : `<button type="button" onclick="tnAddPhone()" style="border:1px solid var(--gold);background:transparent;color:var(--gold);font-family:inherit;font-size:.72rem;font-weight:700;padding:8px 13px;border-radius:11px;cursor:pointer;min-height:44px">${TN_I18N.t('account.addNumberBtn')}</button>`}
       </div>
     </div>
 
     ${await tnPartnerSection(session.user.id)}
 
-    <button class="tn-btn tn-btn-ghost" style="margin-top:14px;border-color:#4A2A22;color:#FF8A6B" onclick="tnAuthEntry()">Use a different account</button>`;
+    <button class="tn-btn tn-btn-ghost" style="margin-top:14px;border-color:#4A2A22;color:#FF8A6B" onclick="tnAuthEntry()">${TN_I18N.t('account.useDifferentAccountBtn')}</button>`;
 }
 
 /* Second of the two picker placements (the first is inside
@@ -1432,7 +2015,7 @@ function tnRenderHomeLangPicker(){
    say so rather than bouncing the customer to a page they are already on. */
 function tnOpenHelp(){
   if(typeof window.tnOpenSupport === 'function'){ window.tnOpenSupport(); return; }
-  alert('Chat is still loading. Give it a moment and tap again — if it keeps happening, please reload the page.');
+  alert(TN_I18N.t('account.helpLoading'));
 }
 
 /* The cover rotates through the delivery story. Kept deliberately slow, it
@@ -1485,27 +2068,63 @@ function tnAuthEntry(){
   if(typeof window.tnOpenAccount === 'function'){ window.tnOpenAccount(); return; }
   /* Falling back to the old name-and-phone sheet here would quietly reinstate
      the very flow this replaced, so say what is wrong instead. */
-  alert('Sign-in is unavailable right now. Please reload the page and try again.');
+  alert(TN_I18N.t('account.signinUnavailable'));
+}
+
+/* Edge Function error bodies don't reliably surface through res.error.message
+   across supabase-js versions -- res.error.context is the raw Response
+   carrying the {error:"..."} JSON this app's own Edge Functions always
+   return on failure, so read it directly rather than falling back to a
+   generic message when a real one is available. */
+async function tnFunctionError(res, fallback){
+  if(!res.error) return null;
+  try{
+    if(res.error.context && typeof res.error.context.json === 'function'){
+      const body = await res.error.context.json();
+      if(body?.error) return body.error;
+    }
+  }catch(_){}
+  return res.error.message || fallback;
 }
 
 /* Stored on the profile, not on the auth user: auth.users.phone is a login
-   credential Supabase will only accept after an SMS round-trip, and there is
-   no SMS provider configured. This number is delivery information. */
+   credential Supabase will only accept after an SMS round-trip. That round
+   trip is exactly what send-phone-otp/verify-phone-otp now provide via
+   YoolaSMS -- profiles.phone (and phone_verified) is written by
+   verify-phone-otp alone, via the service-role key; see the
+   guard_profile_phone_verified trigger for why the client can no longer
+   set either directly. */
 async function tnAddPhone(){
-  const raw = window.prompt('Your mobile number\n\nThis is the number your rider calls when they arrive. Example: 0772 123 456');
+  const raw = window.prompt(TN_I18N.t('account.addPhonePrompt'));
   if(raw === null) return;
   const t = String(raw).replace(/[\s()-]/g,'');
   const e164 = /^0\d{9}$/.test(t) ? '+256'+t.slice(1)
              : /^256\d{9}$/.test(t) ? '+'+t
              : /^\+256\d{9}$/.test(t) ? t : null;
-  if(!e164){ alert('That does not look like a Ugandan mobile number. Try it as 0772 123 456.'); return; }
+  if(!e164){ alert(TN_I18N.t('account.addPhoneBadFormat')); return; }
   try{
     const s = (await supabaseClient.auth.getSession())?.data?.session;
-    if(!s){ alert('Your session has expired. Please sign in again.'); return; }
-    const { error } = await supabaseClient.from('profiles').update({ phone: e164 }).eq('id', s.user.id);
-    if(error){ alert('Could not save your number: ' + error.message); return; }
+    if(!s){ alert(TN_I18N.t('account.addPhoneSessionExpired')); return; }
+
+    const sendRes = await supabaseClient.functions.invoke('send-phone-otp', { body: { phone: e164 } });
+    if(sendRes.error){
+      alert(TN_I18N.t('account.addPhoneSendCodeError', { msg: await tnFunctionError(sendRes, TN_I18N.t('account.addPhoneNetworkError')) }));
+      return;
+    }
+
+    const code = window.prompt(TN_I18N.t('account.addPhoneCodePrompt', { phone: e164 }));
+    if(code === null) return;
+    const cleanCode = String(code).replace(/\s+/g,'');
+    if(!/^\d{6}$/.test(cleanCode)){ alert(TN_I18N.t('account.addPhoneCodeInvalidFormat')); return; }
+
+    const verifyRes = await supabaseClient.functions.invoke('verify-phone-otp', { body: { code: cleanCode } });
+    if(verifyRes.error){
+      alert(TN_I18N.t('account.addPhoneVerifyError', { msg: await tnFunctionError(verifyRes, TN_I18N.t('account.addPhoneNetworkError')) }));
+      return;
+    }
+
     renderAccountPage();
-  }catch(_){ alert('Could not reach Tonninyira. Check your connection and try again.'); }
+  }catch(_){ alert(TN_I18N.t('account.addPhoneNetworkError')); }
 }
 
 function getCustomerIdentity(){
