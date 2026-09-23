@@ -80,7 +80,7 @@
     background:var(--card); border-radius:12px; padding:9px 12px;
   }
   .location-row input{
-    flex:1; background:transparent; border:none; color:var(--sand); font-family:'Work Sans'; font-weight:600; font-size:0.9rem;
+    flex:1; min-width:0; background:transparent; border:none; color:var(--sand); font-family:'Work Sans'; font-weight:600; font-size:0.9rem;
   }
   .location-row input::placeholder{color:var(--muted); font-weight:500;}
   .location-row input:focus{outline:none;}
@@ -224,6 +224,11 @@
     position:absolute; top:0; right:22%; background:var(--red); color:var(--sand);
     font-size:0.6rem; font-weight:800; min-width:16px; height:16px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
+  }
+  .tn-global-install{
+    position:fixed; left:12px; right:12px; z-index:39;
+    bottom:calc(70px + env(safe-area-inset-bottom));
+    max-width:428px; margin:0 auto;
   }
 
   .overlay{position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:50;}
@@ -392,6 +397,7 @@
   </button>
   <button class="nav-btn" id="navProfile" onclick="goView('profile')"><span id="navProfileIcon"></span><span id="navProfileLabel">Profile</span></button>
 </nav>
+<div id="tnGlobalInstall" class="tn-global-install hidden"></div>
 
 <div id="cartOverlay" class="overlay hidden" onclick="closeCart()"></div>
 <div id="cartSheet" class="sheet hidden">
@@ -1903,11 +1909,13 @@ window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   tnInstallPrompt = e;
   if(AppState.view === 'profile') renderAccountPage();
+  tnRenderGlobalInstall();
 });
 window.addEventListener('appinstalled', () => {
   tnInstallPrompt = null;
   try{ localStorage.setItem('tn_installed', '1'); }catch(_){}
   if(AppState.view === 'profile') renderAccountPage();
+  tnRenderGlobalInstall();
 });
 function tnIsStandalone(){
   try{ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; }catch(_){ return false; }
@@ -1930,10 +1938,39 @@ async function tnTriggerInstall(){
     try{ await tnInstallPrompt.userChoice; }catch(_){}
     tnInstallPrompt = null;
     renderAccountPage();
+    tnRenderGlobalInstall();
     return;
   }
   alert(TN_I18N.t('install.iosHint'));
 }
+/* The account-page card only reaches a visitor who already navigated to
+   Profile -- on Home (the default landing view) there was previously no
+   install affordance anywhere, on desktop or phone. This mirrors the same
+   card into a small dismissible banner shown above the bottom nav on every
+   view, driven by the exact same eligibility check. */
+function tnGlobalInstallDismissed(){
+  try{ return sessionStorage.getItem('tn_install_banner_dismissed') === '1'; }catch(_){ return false; }
+}
+function tnDismissGlobalInstall(){
+  try{ sessionStorage.setItem('tn_install_banner_dismissed', '1'); }catch(_){}
+  tnRenderGlobalInstall();
+}
+function tnRenderGlobalInstall(){
+  const el = document.getElementById('tnGlobalInstall');
+  if(!el) return;
+  if(!tnShowInstallCard() || tnGlobalInstallDismissed()){ el.classList.add('hidden'); el.innerHTML=''; return; }
+  el.classList.remove('hidden');
+  el.innerHTML = `<div style="background:#1B2140;border:1px solid #2C3566;border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(0,0,0,.35)">
+    <span aria-hidden="true" style="width:38px;height:38px;border-radius:12px;background:#4FB477;display:flex;align-items:center;justify-content:center;flex-shrink:0">${TN_ICON.download}</span>
+    <span style="flex-grow:1;min-width:0" onclick="tnTriggerInstall()" role="button">
+      <span class="tn-dsp" style="font-size:.95rem;color:#fff;display:block">${TN_I18N.t('install.cardTitle')}</span>
+      <span style="font-size:.7rem;font-weight:500;color:#AEB6E8">${tnInstallPrompt ? TN_I18N.t('install.cardSub') : TN_I18N.t('install.iosHint')}</span>
+    </span>
+    <button type="button" aria-label="Dismiss" onclick="tnDismissGlobalInstall()" style="background:none;border:0;color:#AEB6E8;font-size:1.1rem;line-height:1;padding:4px;cursor:pointer;flex-shrink:0">&times;</button>
+  </div>`;
+}
+tnRenderGlobalInstall();
+if(window.TN_I18N) TN_I18N.onChange(tnRenderGlobalInstall);
 function tnInstallCardHtml(){
   if(!tnShowInstallCard()) return '';
   return `<a href="#install" class="tn-act" style="background:#1B2140;border:1px solid #2C3566;margin-bottom:12px" onclick="event.preventDefault();tnTriggerInstall()">
