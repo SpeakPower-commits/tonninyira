@@ -91,7 +91,7 @@
 
     let timer=0;
     const advance=()=>{index=(index+1)%items.length;render();};
-    const start=()=>{if(timer)clearInterval(timer);timer=setInterval(advance,5000)};
+    const start=()=>{if(timer)clearInterval(timer);timer=setInterval(advance,7500)};
     const stop=()=>{if(timer){clearInterval(timer);timer=0}};
     gallery.addEventListener('mouseenter',stop);
     gallery.addEventListener('mouseleave',start);

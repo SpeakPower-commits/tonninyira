@@ -201,14 +201,19 @@
     return null;
   }
 
-  function writeOrderConfirmation(orderId, method, subtotal, deliveryFee, rider) {
+  function writeOrderConfirmation(orderId, method, subtotal, deliveryFee, rider, redemption) {
     if (typeof window.closeCart === 'function') window.closeCart();
     const idBox = document.getElementById('confirmOrderId');
     if (idBox) idBox.textContent = orderId;
     const summary = document.getElementById('confirmSummary');
     const s = state();
     if (summary && s) {
-      summary.innerHTML = `<div class="summary-box" style="text-align:left;">${s.cart.map(c => `<div class="summary-row"><span>${String(c.name).replace(/[&<>\"']/g,'')} ×${c.qty}</span><span>UGX ${(c.price*c.qty).toLocaleString()}</span></div>`).join('')}<div class="summary-row"><span>Delivery</span><span>UGX ${Number(deliveryFee).toLocaleString()}</span></div><div class="summary-row total"><span>Payment</span><span>${String(method)}</span></div><div class="summary-row total"><span>Total</span><span>UGX ${(Number(subtotal)+Number(deliveryFee)).toLocaleString()}</span></div></div>`;
+      const I = window.TN_I18N;
+      const escFn = typeof window.esc === 'function' ? window.esc : (v => String(v ?? '').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c])));
+      let note = '';
+      if (redemption?.actuallyRedeemed) note = `<p class="tn-sub" style="color:var(--gold);margin-top:8px">${escFn(I ? I.t('cart.redeemedNote') : 'Free delivery — paid for with your points')}</p>`;
+      else if (redemption?.wantsRedeem) note = `<p class="tn-sub" style="margin-top:8px">${escFn(I ? I.t('cart.redeemFailedNote') : "Your points balance changed, so this order was charged the normal delivery fee instead.")}</p>`;
+      summary.innerHTML = `<div class="summary-box" style="text-align:left;">${s.cart.map(c => `<div class="summary-row"><span>${String(c.name).replace(/[&<>\"']/g,'')} ×${c.qty}</span><span>UGX ${(c.price*c.qty).toLocaleString()}</span></div>`).join('')}<div class="summary-row"><span>Delivery</span><span>UGX ${Number(deliveryFee).toLocaleString()}</span></div><div class="summary-row total"><span>Payment</span><span>${String(method)}</span></div><div class="summary-row total"><span>Total</span><span>UGX ${(Number(subtotal)+Number(deliveryFee)).toLocaleString()}</span></div></div>${note}`;
     }
     const riderEl = document.getElementById('confirmRider');
     if (riderEl && rider) {
@@ -233,14 +238,27 @@
     const orderId = 'TN-' + Math.random().toString(36).slice(2, 9).toUpperCase();
     const subtotal = typeof cartSubtotal === 'function' ? cartSubtotal() : s.cart.reduce((sum, x) => sum + Number(x.price||0)*Number(x.qty||0), 0);
     const deliveryFee = typeof computeDeliveryFee === 'function' ? computeDeliveryFee() : 0;
+    /* Loyalty redemption intent -- the real fee is still what gets sent (the
+       redeem_free_delivery_points() DB trigger is the actual enforcement
+       point and needs an honest fallback if it has to refuse a stale
+       balance), and FREE_DELIVERY_POINTS_COST/AppState.loyaltyPoints are the
+       same globals index.html's cart UI already reads for the checkbox. */
+    const wantsRedeem = typeof AppState !== 'undefined' && AppState.redeemDelivery
+      && AppState.loyaltyPoints !== null && typeof FREE_DELIVERY_POINTS_COST !== 'undefined'
+      && AppState.loyaltyPoints >= FREE_DELIVERY_POINTS_COST;
     const rider = SAMPLE_RIDERS[Math.floor(Math.random() * SAMPLE_RIDERS.length)];
     const area = document.getElementById('areaSelect')?.value || '';
 
+    /* item_subtotal must be set on every row: award_order_loyalty() computes
+       earned points from coalesce(total, subtotal, item_subtotal, 0) -- when
+       this checkout path dropped it (along with each item's price), every
+       order placed through it earned its customer exactly zero points,
+       silently, with no error anywhere to notice it by. */
     const byVendor = {};
     s.cart.forEach(item => {
       const vendorId = item.vendorId;
       if (!byVendor[vendorId]) byVendor[vendorId] = { vendorName: item.vendorName, items: [] };
-      byVendor[vendorId].items.push({ name: item.name, qty: Number(item.qty||1) });
+      byVendor[vendorId].items.push({ name: item.name, qty: Number(item.qty||1), price: Number(item.price||0) });
     });
 
     const rows = Object.entries(byVendor).map(([vendorId, group]) => ({
@@ -248,6 +266,7 @@
       vendor_id: vendorId,
       vendor_name: group.vendorName,
       items: group.items,
+      item_subtotal: group.items.reduce((sum, i) => sum + i.price * i.qty, 0),
       user_id: session.user.id,
       user_email: session.user.email || null,
       customer_name: custId.name,
@@ -259,16 +278,26 @@
       rider_tid: rider.tid,
       customer_lat: s.customerLocation ? s.customerLocation.lat : null,
       customer_lng: s.customerLocation ? s.customerLocation.lng : null,
-      status: 'new'
+      status: 'new',
+      redeemed_free_delivery: wantsRedeem,
     }));
 
-    const { error } = await client.from('orders').insert(rows);
+    const { data: savedRows, error } = await client.from('orders').insert(rows).select('delivery_fee,redeemed_free_delivery');
     if (error) {
       alert(`Your order could not be placed — ${error.message}. Your basket has been kept.`);
       return false;
     }
 
-    writeOrderConfirmation(orderId, method, subtotal, deliveryFee, rider);
+    /* redeem_free_delivery_points() is the real word on whether the
+       redemption held (it can refuse a balance the client hasn't seen yet),
+       so the confirmation reads its answer back rather than assuming the
+       request sent was honoured. */
+    const actualFee = Number(savedRows?.[0]?.delivery_fee ?? deliveryFee);
+    const actuallyRedeemed = !!savedRows?.[0]?.redeemed_free_delivery;
+    if (typeof AppState !== 'undefined') AppState.redeemDelivery = false;
+    if (typeof tnRefreshLoyaltyPoints === 'function') tnRefreshLoyaltyPoints();
+
+    writeOrderConfirmation(orderId, method, subtotal, actualFee, rider, { wantsRedeem, actuallyRedeemed });
     s.cart = [];
     persistCart();
     if (typeof window.updateCartUI === 'function') window.updateCartUI();

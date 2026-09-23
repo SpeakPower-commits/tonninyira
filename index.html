@@ -4,9 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Tonninyira — Local Vendors. Real Prices. Your Door.</title>
-<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
-<link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+<!-- These three pointed at assets/favicon-*.png and assets/apple-touch-icon.png,
+     none of which exist in this repo -- every visitor's browser tab and any
+     manually-added iOS home-screen icon has been silently falling back to a
+     generic default this whole time. Pointed at the real generated files. -->
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="./favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Work+Sans:wght@400;500;600;700;800&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
@@ -110,7 +114,7 @@
 
   #marketBanner{overflow:hidden; border-bottom:1px solid rgba(243,232,216,0.08);}
   .hero-gallery{position:relative; height:150px; overflow:hidden;}
-  .hero-track{display:flex; height:100%; transition:transform 0.6s ease;}
+  .hero-track{display:flex; height:100%; transition:transform 0.9s ease;}
   .hero-slide{flex:0 0 100%; position:relative; height:100%;}
   .hero-slide img{width:100%; height:100%; object-fit:cover; display:block;}
   .hero-caption{
@@ -308,7 +312,7 @@
 #tnAccountPage .tn-cover img{width:100%;height:100%;object-fit:cover;display:block}
 #tnAccountPage .tn-cover-scrim{position:absolute;inset:0;background:linear-gradient(to top,var(--ink) 4%,rgba(28,20,16,.72) 38%,rgba(28,20,16,.12) 100%)}
 #tnAccountPage .tn-cover h2{position:absolute;left:16px;right:16px;bottom:12px;margin:0;color:#fff;font-size:2.35rem;white-space:nowrap}
-#tnAccountPage .tn-cover .tn-slide{position:absolute;inset:0;opacity:0;transition:opacity .7s ease}
+#tnAccountPage .tn-cover .tn-slide{position:absolute;inset:0;opacity:0;transition:opacity .9s ease}
 #tnAccountPage .tn-cover .tn-slide.is-on{opacity:1}
 #tnAccountPage .tn-story-cap{position:absolute;left:16px;right:70px;bottom:52px;margin:0;color:#fff;font-size:.86rem;font-weight:700;line-height:1.35;text-shadow:0 1px 10px rgba(0,0,0,.6);transition:opacity .35s ease}
 #tnAccountPage .tn-dots{position:absolute;right:14px;bottom:14px;display:flex;gap:6px}
@@ -670,7 +674,13 @@ window.TN_I18N = (function(){
       "partner.rejectedNote": "Your {noun} application was not approved. Reply to the email we sent you if you would like it looked at again.",
       "partner.pendingNote": "Your {noun} application is with our team for review. We will email you as soon as it is decided.",
       "partner.nounStall": "stall",
-      "partner.nounRiderProfile": "rider profile"
+      "partner.nounRiderProfile": "rider profile",
+      "cart.redeemLabel": "Use {cost} points for free delivery (you have {points})",
+      "cart.redeemedNote": "Free delivery — paid for with your points",
+      "cart.redeemFailedNote": "Your points balance changed, so this order was charged the normal delivery fee instead.",
+      "install.cardTitle": "Install Tonninyira",
+      "install.cardSub": "Add it to your home screen for faster access, even on a weak connection.",
+      "install.iosHint": "Tap the Share icon, then \"Add to Home Screen\"."
     },
     sw: {
       "chrome.tagline": "Huduma ya Haraka na Nafuu",
@@ -762,7 +772,13 @@ window.TN_I18N = (function(){
       "partner.rejectedNote": "Ombi lako la {noun} halikuidhinishwa. Jibu barua pepe tuliyokutumia kama unataka litazamwe tena.",
       "partner.pendingNote": "Ombi lako la {noun} liko kwa timu yetu kwa ukaguzi. Tutakutumia barua pepe mara tu litakapoamuliwa.",
       "partner.nounStall": "duka",
-      "partner.nounRiderProfile": "wasifu wa rider"
+      "partner.nounRiderProfile": "wasifu wa rider",
+      "cart.redeemLabel": "Tumia pointi {cost} kupata usafirishaji bure (una pointi {points})",
+      "cart.redeemedNote": "Usafirishaji bure — umelipwa kwa pointi zako",
+      "cart.redeemFailedNote": "Salio lako la pointi limebadilika, hivyo agizo hili limetozwa ada ya kawaida ya usafirishaji.",
+      "install.cardTitle": "Sakinisha Tonninyira",
+      "install.cardSub": "Iongeze kwenye skrini yako ya nyumbani kwa ufikiaji wa haraka, hata kwenye mtandao dhaifu.",
+      "install.iosHint": "Gusa aikoni ya Share, kisha \"Add to Home Screen\"."
     },
     lg: {
       "chrome.tagline": "Obuweereza bw'Amangu era Obwa Bbeeyi Ennyangu",
@@ -854,7 +870,13 @@ window.TN_I18N = (function(){
       "partner.rejectedNote": "Okusaba kwo okw'{noun} tekukkirizibbwa. Ddamu ku email gye twakuweereza singa oyagala kudinnye nate.",
       "partner.pendingNote": "Okusaba kwo okw'{noun} kuli n'ekibinja kyaffe okulikebera. Tujja kukuweereza email nga bakimazeewo.",
       "partner.nounStall": "eddaala",
-      "partner.nounRiderProfile": "ebikukwatako ng'omuleese"
+      "partner.nounRiderProfile": "ebikukwatako ng'omuleese",
+      "cart.redeemLabel": "Kozesa poyinti {cost} ofune okuleeta obwereere (olina poyinti {points})",
+      "cart.redeemedNote": "Okuleeta bwereere — kusasuddwa na poyinti zo",
+      "cart.redeemFailedNote": "Poyinti zo zikyuse, kyenva ekyasabiddwa kino kisasuza ku muwendo gwa bulijjo ogw'okuleeta.",
+      "install.cardTitle": "Teeka Tonninyira",
+      "install.cardSub": "Gyongereko ku screen yo ey'awaka osobole okugyingira mangu, ne bwe intaneeti eba nnafu.",
+      "install.iosHint": "Nyiga akapindisa ka Share, oluvannyuma \"Add to Home Screen\"."
     },
     ach: {
       "chrome.tagline": "Tic ma Oyot dok pe Tek",
@@ -946,7 +968,13 @@ window.TN_I18N = (function(){
       "partner.rejectedNote": "Kwayo mo pi {noun} pe oye. Dwok lok i imeel ma wacwalo ka imito ni ki nen doki.",
       "partner.pendingNote": "Kwayo mo pi {noun} tye ki jo mwaka pi neno. Wabicwali imeel ma dong okeco.",
       "partner.nounStall": "cuk",
-      "partner.nounRiderProfile": "kom macalo lakelo"
+      "partner.nounRiderProfile": "kom macalo lakelo",
+      "cart.redeemLabel": "Ti ki poi {cost} me nongo kelo abongo cul (itye ki poi {points})",
+      "cart.redeemedNote": "Kelo abongo cul — kicullo ki poi ni",
+      "cart.redeemFailedNote": "Poi ni oloke, pieno gin ma ki cwalo man gicullo ki wel me kelo macalo kare ducu.",
+      "install.cardTitle": "Ket Tonninyira",
+      "install.cardSub": "Med i wi screen pa ot ni me nongo iye oyot, kadi bed ka intanet doko manok.",
+      "install.iosHint": "Mok i icon me Share, ci \"Add to Home Screen\"."
     },
     myx: {
       "chrome.tagline": "Buweereza bwa Bwangu ne Ekiseera Kihoosi",
@@ -1038,7 +1066,13 @@ window.TN_I18N = (function(){
       "partner.rejectedNote": "Okhusaba khwo okhwe {noun} sikhwikirisibwa. Kalukha khu imeeli yetumire nga oyenya khudibonwa khindi.",
       "partner.pendingNote": "Okhusaba khwo okhwe {noun} khuli ne ekibiina kiefwe khukebwa. Nikhukhuweereza imeeli nga bakhimalile.",
       "partner.nounStall": "iduuka",
-      "partner.nounRiderProfile": "ebikwatako nga omuletsi"
+      "partner.nounRiderProfile": "ebikwatako nga omuletsi",
+      "cart.redeemLabel": "Kozesa ba point {cost} khunyoola khuleeta khutakhola sente (oli ne ba point {points})",
+      "cart.redeemedNote": "Khuleeta khutakhola sente — khusasulwa ne ba point bo",
+      "cart.redeemFailedNote": "Ba point bo bakhachenjile, khu ekhusaba khuno khwasasulwa khu muwendo kwe khuleeta kwe bulala.",
+      "install.cardTitle": "Teekha Tonninyira",
+      "install.cardSub": "Yongelekho khu screen yo ye owo nolinyoola mangu, nolwo intaneti nili tikhali amani.",
+      "install.iosHint": "Khukhuute khu icon ye Share, nga \"Add to Home Screen\"."
     },
     nyn: {
       "chrome.tagline": "Obuheereza bw'Bwango kandi Obw'Eby'okuguza Bike",
@@ -1130,7 +1164,13 @@ window.TN_I18N = (function(){
       "partner.rejectedNote": "Okusaba kwawe kwa {noun} tikwikirizibwe. Garuka aha imeeri twakutumire kakuba noyenda kugarurirwamu.",
       "partner.pendingNote": "Okusaba kwawe kwa {noun} kuriho n'ekibiina kyaitu kukebwa. Turaakutumira imeeri baaba bamazeho kucweka.",
       "partner.nounStall": "eduuka",
-      "partner.nounRiderProfile": "ebikukwatako nk'omuleeta"
+      "partner.nounRiderProfile": "ebikukwatako nk'omuleeta",
+      "cart.redeemLabel": "Koresa points {cost} kutunga kutwarwa kwa buseere (oine points {points})",
+      "cart.redeemedNote": "Kutwarwa kwa buseere — kusasuirwe na points zaawe",
+      "cart.redeemFailedNote": "Points zaawe zaahindutse, nikwo eky'okusaba kinu kyasasuriwe omuwendo gwa bulijjo ogw'okutwara.",
+      "install.cardTitle": "Teekateeka Tonninyira",
+      "install.cardSub": "Gyongyeraho aha screen yaawe ey'omu ka kugishanga bwango, n'obu network eraaba nkye.",
+      "install.iosHint": "Konda aha icon ya Share, bandi \"Add to Home Screen\"."
     }
   };
   const LANGS = [
@@ -1225,6 +1265,12 @@ const DELIVERY_TIERS = [
   {upToKm: Infinity, fee: 8000},
 ];
 const DEFAULT_DELIVERY_FEE = 3000;
+/* Loyalty redemption, phase 1: points -> free delivery only. The exact cost
+   is still Tom's call to make with his partners -- this constant and the
+   matching `cost` in the DB's redeem_free_delivery_points() trigger (the
+   real enforcement point; this one only decides what the checkbox offers)
+   are the two places to change it once they land on a number. */
+const FREE_DELIVERY_POINTS_COST = 100;
 
 function haversineKm(lat1, lon1, lat2, lon2){
   const R = 6371;
@@ -1281,7 +1327,24 @@ function captureCustomerLocation(){
   );
 }
 
-const AppState = { category:"eats", subcategory:"breakfast", view:"shop", searchTerm:"", cart:[], customerLocation:null };
+const AppState = { category:"eats", subcategory:"breakfast", view:"shop", searchTerm:"", cart:[], customerLocation:null, loyaltyPoints:null, redeemDelivery:false };
+
+/* Fetched fresh each time the cart opens rather than cached indefinitely --
+   a balance shown stale (e.g. after a previous order already spent it)
+   would offer a redemption the checkout is only going to refuse anyway. */
+async function tnRefreshLoyaltyPoints(){
+  try{
+    const s = (await supabaseClient.auth.getSession())?.data?.session;
+    if(!s){ AppState.loyaltyPoints = null; return; }
+    const { data } = await supabaseClient.from('loyalty_accounts').select('points').eq('user_id', s.user.id).maybeSingle();
+    AppState.loyaltyPoints = Number(data?.points || 0);
+  }catch(_){ AppState.loyaltyPoints = null; }
+  if(!document.getElementById('cartSheet')?.classList.contains('hidden')) updateCartUI();
+}
+function tnToggleRedeemDelivery(checked){
+  AppState.redeemDelivery = !!checked;
+  updateCartUI();
+}
 const AVATAR_COLORS = ['#E23F25','#F5B400','#4C9A5B','#C98F00','#B92E18'];
 
 /* Vendor- and shopper-supplied text is written into innerHTML throughout this
@@ -1690,7 +1753,10 @@ function updateCartUI(){
     body.innerHTML = `<div class="empty-state">${ICONS.emptyCart}<p style="font-weight:700; color:var(--sand);">Your basket is empty</p><p>Add something tasty or useful.</p></div>`;
     return;
   }
-  const deliveryFee = computeDeliveryFee();
+  const realFee = computeDeliveryFee();
+  const canRedeem = AppState.loyaltyPoints !== null && AppState.loyaltyPoints >= FREE_DELIVERY_POINTS_COST;
+  const redeeming = canRedeem && AppState.redeemDelivery;
+  const deliveryFee = redeeming ? 0 : realFee;
   body.innerHTML = `
     <div class="delivery-note">
       ${ICONS.moto}
@@ -1699,6 +1765,11 @@ function updateCartUI(){
         <p class="dn-body">Set by Tonninyira based on distance, included in what you pay now.${AppState.customerLocation?'':' Tap "Use My Location" above for an exact fee.'} Our riders are ID-verified and carry a Tonninyira Rider ID.</p>
       </div>
     </div>
+    ${canRedeem ? `
+    <label class="cart-redeem-row" style="display:flex;align-items:center;gap:10px;padding:11px 13px;margin:2px 0 10px;border-radius:12px;background:rgba(245,180,0,.09);border:1px solid rgba(245,180,0,.3);cursor:pointer">
+      <input type="checkbox" id="tnRedeemDeliveryBox" ${AppState.redeemDelivery?'checked':''} onchange="tnToggleRedeemDelivery(this.checked)" style="width:19px;height:19px;flex-shrink:0;accent-color:var(--gold)">
+      <span style="font-size:.82rem;font-weight:700;color:var(--sand)">${esc(TN_I18N.t('cart.redeemLabel', {cost: FREE_DELIVERY_POINTS_COST, points: AppState.loyaltyPoints}))}</span>
+    </label>` : ''}
     ${AppState.cart.map(c=>`
       <div class="cart-line-card">
         <div class="cart-line-top">
@@ -1736,7 +1807,7 @@ function updateCartUI(){
 }
 function toggleAltPay(){ document.getElementById('altPayBox').classList.toggle('hidden'); }
 
-function openCart(){ document.getElementById('cartOverlay').classList.remove('hidden'); document.getElementById('cartSheet').classList.remove('hidden'); }
+function openCart(){ document.getElementById('cartOverlay').classList.remove('hidden'); document.getElementById('cartSheet').classList.remove('hidden'); tnRefreshLoyaltyPoints(); }
 function closeCart(){ document.getElementById('cartOverlay').classList.add('hidden'); document.getElementById('cartSheet').classList.add('hidden'); }
 document.getElementById('cartIconBtn').addEventListener('click', openCart);
 
@@ -1814,8 +1885,65 @@ const TN_ICON = {
   heart:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF7A5C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 5.6a5 5 0 0 0-7.1 0L12 7.3l-1.7-1.7a5 5 0 1 0-7.1 7.1L12 21.5l8.8-8.8a5 5 0 0 0 0-7.1z"/></svg>',
   chat:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#141B3D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 21l1.8-5.5A8 8 0 1 1 21 12z"/></svg>',
   arrow:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
-  chevron:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#AEB6E8" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>'
+  chevron:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#AEB6E8" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>',
+  download:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#08150E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>'
 };
+
+/* PWA install. Android Chrome (and most other Chromium browsers) fire
+   beforeinstallprompt when the manifest/service-worker/icon criteria are
+   met and hand over a deferred prompt this app controls when to show; iOS
+   Safari never fires this event at all, under any circumstances, so there
+   the only honest offer is instructions for the manual Share -> Add to
+   Home Screen gesture. Chrome's own installability check specifically
+   requires a 192x192 and a 512x512 icon -- the manifest previously carried
+   only a single 180x180 one, which silently failed that check, so this
+   event may simply never have fired before now. */
+let tnInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  tnInstallPrompt = e;
+  if(AppState.view === 'profile') renderAccountPage();
+});
+window.addEventListener('appinstalled', () => {
+  tnInstallPrompt = null;
+  try{ localStorage.setItem('tn_installed', '1'); }catch(_){}
+  if(AppState.view === 'profile') renderAccountPage();
+});
+function tnIsStandalone(){
+  try{ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; }catch(_){ return false; }
+}
+function tnShowIOSInstallHint(){
+  if(tnIsStandalone()) return false;
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  const isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
+  return isIOS && isSafari;
+}
+function tnShowInstallCard(){
+  if(tnIsStandalone()) return false;
+  try{ if(localStorage.getItem('tn_installed') === '1') return false; }catch(_){}
+  return !!tnInstallPrompt || tnShowIOSInstallHint();
+}
+async function tnTriggerInstall(){
+  if(tnInstallPrompt){
+    tnInstallPrompt.prompt();
+    try{ await tnInstallPrompt.userChoice; }catch(_){}
+    tnInstallPrompt = null;
+    renderAccountPage();
+    return;
+  }
+  alert(TN_I18N.t('install.iosHint'));
+}
+function tnInstallCardHtml(){
+  if(!tnShowInstallCard()) return '';
+  return `<a href="#install" class="tn-act" style="background:#1B2140;border:1px solid #2C3566;margin-bottom:12px" onclick="event.preventDefault();tnTriggerInstall()">
+      <span aria-hidden="true" style="width:42px;height:42px;border-radius:14px;background:#4FB477;display:flex;align-items:center;justify-content:center;flex-shrink:0">${TN_ICON.download}</span>
+      <span style="flex-grow:1">
+        <span class="tn-dsp" style="font-size:1.15rem;color:#fff;display:block">${TN_I18N.t('install.cardTitle')}</span>
+        <span style="font-size:.74rem;font-weight:500;color:#AEB6E8">${tnInstallPrompt ? TN_I18N.t('install.cardSub') : TN_I18N.t('install.iosHint')}</span>
+      </span>${TN_ICON.chevron}
+    </a>`;
+}
 
 /* Counts the cards show. Each is its own table with an owner-read policy, so a
    failure on one must not blank the others -- hence the per-call catch. */
@@ -1907,7 +2035,8 @@ async function renderAccountPage(){
       <button class="tn-btn tn-btn-gold" style="margin-top:20px" onclick="tnAuthEntry()">${TN_I18N.t('guest.createAccountBtn')}</button>
       <button class="tn-btn tn-btn-ghost" style="margin-top:10px" onclick="tnAuthEntry()">${TN_I18N.t('guest.alreadyHaveBtn')}</button>
       <p class="tn-sub" style="text-align:center;margin-top:16px">${TN_I18N.t('guest.sellingAlsoNote')}</p>
-      <p style="text-align:center;margin-top:14px"><a href="guide.html" style="color:var(--gold);font-size:.8rem;font-weight:700;text-decoration:underline">${TN_I18N.t('guest.seeHowWorksLink')}</a></p>`;
+      <p style="text-align:center;margin-top:14px"><a href="guide.html" style="color:var(--gold);font-size:.8rem;font-weight:700;text-decoration:underline">${TN_I18N.t('guest.seeHowWorksLink')}</a></p>
+      ${tnInstallCardHtml()}`;
     tnStartStory(story.map(x => x[1]));
     tnRenderHomeLangPicker();
     return;
@@ -1966,6 +2095,8 @@ async function renderAccountPage(){
         <span style="font-size:.74rem;font-weight:500;color:#AEB6E8">${TN_I18N.t('account.guideSub')}</span>
       </span>${TN_ICON.chevron}
     </a>
+
+    ${tnInstallCardHtml()}
 
     <div class="tn-card-dark" style="border-radius:22px;padding:2px 18px;margin-bottom:12px">
       <div class="tn-row" style="border-bottom:1px solid #2A231E">
@@ -2058,7 +2189,7 @@ function tnStartStory(captions){
     /* Stop for good once the cover has left the page. */
     if(!document.body.contains(wrap)) return tnStopStory();
     show(i + 1);
-  }, 4200);
+  }, 6500);
 }
 
 /* Every "sign in" control routes through the one funnel in guest-access-flow.js
@@ -2166,6 +2297,13 @@ async function completeOrder(method){
   finishOrder(method, id);
 }
 
+/* enhancements.js's enhancedFinishOrder() unconditionally replaces
+   window.finishOrder on load -- this function only actually runs if that
+   override is somehow absent (a failed/blocked script load), so it stays
+   redemption-aware and correct as a fallback rather than being deleted. If
+   you're chasing a checkout bug and this function's edits don't seem to
+   take effect, that override is almost certainly why -- check
+   secureFinishOrder() in enhancements.js first. */
 async function finishOrder(method, custId){
   if(!SAMPLE_RIDERS.length){
     closeCart();
@@ -2174,7 +2312,8 @@ async function finishOrder(method, custId){
   }
   const orderId = 'TN-' + Math.random().toString(36).substr(2,7).toUpperCase();
   const subtotal = cartSubtotal();
-  const deliveryFee = computeDeliveryFee();
+  const deliveryFee = computeDeliveryFee(); // the real fee -- sent regardless of redemption, so the DB trigger has an honest fallback if it has to refuse the redemption
+  const wantsRedeem = AppState.redeemDelivery && AppState.loyaltyPoints !== null && AppState.loyaltyPoints >= FREE_DELIVERY_POINTS_COST;
   const rider = SAMPLE_RIDERS[Math.floor(Math.random()*SAMPLE_RIDERS.length)];
   const area = document.getElementById('areaSelect').value;
 
@@ -2208,16 +2347,22 @@ async function finishOrder(method, custId){
     customer_lat: AppState.customerLocation ? AppState.customerLocation.lat : null,
     customer_lng: AppState.customerLocation ? AppState.customerLocation.lng : null,
     status: 'new', created_at: new Date().toISOString(),
+    redeemed_free_delivery: wantsRedeem,
   }));
 
   /* Save FIRST, confirm it actually landed, THEN show success -- never the
      other way around. A customer should never see "order confirmed" for an
      order that was never recorded. If the save fails, the basket is kept
-     untouched so nothing is lost and they can just try again. */
-  let saveError = null;
+     untouched so nothing is lost and they can just try again.
+     redeem_free_delivery_points() (a DB trigger) is the real word on whether
+     the redemption held -- it can refuse a stale balance the client hasn't
+     seen yet, so the confirmation below reads its answer back rather than
+     assuming the request it sent was honoured. */
+  let saveError = null, savedRows = null;
   try{
-    const { error } = await supabaseClient.from('orders').insert(rows);
+    const { data, error } = await supabaseClient.from('orders').insert(rows).select('delivery_fee,redeemed_free_delivery');
     if(error) throw error;
+    savedRows = data;
   }catch(e){
     saveError = e.message || String(e);
     console.log('Order not saved:', saveError);
@@ -2227,14 +2372,20 @@ async function finishOrder(method, custId){
     return;
   }
 
+  const actualFee = Number(savedRows?.[0]?.delivery_fee ?? deliveryFee);
+  const actuallyRedeemed = !!savedRows?.[0]?.redeemed_free_delivery;
+  AppState.redeemDelivery = false;
+  tnRefreshLoyaltyPoints();
+
   closeCart();
   document.getElementById('confirmOrderId').textContent = orderId;
   document.getElementById('confirmSummary').innerHTML = `
     <div class="summary-box" style="text-align:left;">
       ${AppState.cart.map(c=>`<div class="summary-row"><span>${esc(c.name)} ×${esc(c.qty)}</span><span>UGX ${fmt(c.price*c.qty)}</span></div>`).join('')}
-      <div class="summary-row"><span>Delivery</span><span>UGX ${fmt(deliveryFee)}</span></div>
-      <div class="summary-row total"><span>Paid via ${method}</span><span>UGX ${fmt(subtotal+deliveryFee)}</span></div>
-    </div>`;
+      <div class="summary-row"><span>Delivery</span><span>UGX ${fmt(actualFee)}</span></div>
+      <div class="summary-row total"><span>Paid via ${method}</span><span>UGX ${fmt(subtotal+actualFee)}</span></div>
+    </div>
+    ${actuallyRedeemed ? `<p class="tn-sub" style="color:var(--gold);margin-top:8px">${esc(TN_I18N.t('cart.redeemedNote'))}</p>` : (wantsRedeem ? `<p class="tn-sub" style="margin-top:8px">${esc(TN_I18N.t('cart.redeemFailedNote'))}</p>` : '')}`;
 
   document.getElementById('confirmRider').innerHTML = `
     <div class="rider-card">
@@ -2332,76 +2483,23 @@ async function loadLiveRiders(){
   }catch(e){ console.log('Live rider data unavailable yet:', e.message); }
 }
 
-/* Market banner photos -- AUTO-DETECTED, no code edits needed anymore.
-   To add a photo: just upload it to assets/market/ as the next number in
-   line (4.jpg, 5.jpg, 6.jpg...) and it appears in the rotation next time
-   the page loads. Nothing else to touch.
-   Optional: give a specific photo its own caption below (keyed by number).
-   Anything not listed here gets a plain default caption. */
-const MARKET_CAPTIONS = {
-  1: 'Owino Market, Kampala',
-  2: 'Fresh produce, daily',
-  3: 'Real vendors, real stalls',
-};
-const MARKET_PHOTO_SCAN_LIMIT = 30; // raise this if you ever pass 30 photos
-
-function probeImage(src){
-  return new Promise(resolve=>{
-    const img = new Image();
-    img.onload = ()=>resolve(true);
-    img.onerror = ()=>resolve(false);
-    img.src = src;
-  });
-}
-async function detectMarketPhotos(){
-  const checks = [];
-  for(let i=1;i<=MARKET_PHOTO_SCAN_LIMIT;i++){
-    checks.push(probeImage(`assets/market/${i}.jpg`).then(ok=>ok?i:null));
-  }
-  const found = (await Promise.all(checks)).filter(i=>i!==null);
-  if(!found.length) return [{src:'assets/market/1.jpg', caption:'Owino Market, Kampala'}];
-  return found.map(i=>({src:`assets/market/${i}.jpg`, caption: MARKET_CAPTIONS[i] || 'Real market, Kampala'}));
-}
-
-let MARKET_PHOTOS = [];
-let heroIndex = 0, heroTimer = null;
-function renderHeroGallery(){
-  document.getElementById('heroTrack').innerHTML = MARKET_PHOTOS.map(p=>`
-    <div class="hero-slide">
-      <img src="${p.src}" alt="${p.caption}" loading="lazy">
-      <div class="hero-caption">${p.caption}</div>
-    </div>`).join('');
-  document.getElementById('heroDots').innerHTML = MARKET_PHOTOS.map((_,i)=>
-    `<button class="hero-dot" onclick="goToHeroSlide(${i})" aria-label="Slide ${i+1}"></button>`).join('');
-  updateHeroPosition();
-}
-function updateHeroPosition(){
-  document.getElementById('heroTrack').style.transform = `translateX(-${heroIndex*100}%)`;
-  document.querySelectorAll('.hero-dot').forEach((d,i)=>d.classList.toggle('active', i===heroIndex));
-}
-function goToHeroSlide(i){
-  heroIndex = i;
-  updateHeroPosition();
-  restartHeroTimer();
-}
-function restartHeroTimer(){
-  if(heroTimer) clearInterval(heroTimer);
-  if(MARKET_PHOTOS.length <= 1) return;
-  heroTimer = setInterval(()=>{
-    heroIndex = (heroIndex+1) % MARKET_PHOTOS.length;
-    updateHeroPosition();
-  }, 4000);
-}
+/* Market banner shell only -- performance-optimizations.js's optimizeHero()
+   populates it from assets/market/manifest.json (webp, cache-warmed, and
+   the only version the service worker's image cache actually matches).
+   A second, older implementation used to live right here: it probed
+   assets/market/1.jpg..30.jpg at runtime with plain <img> loads and
+   rendered whichever full-size JPGs answered, on its own 4-second timer.
+   Both wrote to this same #heroTrack element with no coordination, so
+   whichever one finished last silently overwrote the other -- and the
+   older one reliably won (a single manifest fetch loses a race against
+   30 parallel image probes purely by chance less often than it should),
+   which meant every visitor was served full-size JPGs the service worker
+   never cached, on a timer nothing here ever controlled. Removed rather
+   than patched, so there is exactly one implementation to reason about. */
 document.getElementById('marketBanner').innerHTML = `
   <div class="hero-gallery">
     <div class="hero-track" id="heroTrack"></div>
-    <div class="hero-dots" id="heroDots"></div>
   </div>`;
-detectMarketPhotos().then(photos=>{
-  MARKET_PHOTOS = photos;
-  renderHeroGallery();
-  restartHeroTimer();
-});
 
 function renderAll(){ renderCatTabs(); renderSubcatChips(); renderPopular(); renderMain(); }
 renderAll();
@@ -2430,17 +2528,17 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>{
   });
 });
 </script>
-<script src="account-session-ui.js"></script>
-<script src="flutterwave-payments-v2.js"></script>
 <script src="enhancements.js"></script>
 <script src="enhancements-fix.js"></script>
 <script src="profile-copy-enhancements.js"></script>
 <script src="guest-access-flow.js"></script>
 <script src="admin-entrypoint.js"></script>
-<script src="session-compat.js"></script>
-<script src="wishlist-account.js"></script>
 <script src="partner-wallet-payouts.js"></script>
 <script src="signout-visible.js"></script>
 <script src="performance-optimizations.js"></script>
+<script src="session-compat.js"></script>
+<script src="account-session-ui.js"></script>
+<script src="wishlist-account.js"></script>
+<script src="flutterwave-payments-v2.js"></script>
 </body>
 </html>
