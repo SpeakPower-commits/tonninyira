@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches:
+      - tonninyira-enhancements
+      - main
       - tn-performance-sprint
     paths:
       - 'assets/market/*.jpg'
@@ -16,10 +18,10 @@ jobs:
   optimize:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout performance branch
+      - name: Checkout the branch that triggered this run
         uses: actions/checkout@v4
         with:
-          ref: tn-performance-sprint
+          ref: ${{ github.ref_name }}
           fetch-depth: 0
 
       - name: Install Pillow
@@ -38,8 +40,12 @@ jobs:
           entries = []
 
           for src in sorted(src_dir.glob('*.jpg'), key=lambda p: int(p.stem) if p.stem.isdigit() else 9999):
-              # Ignore empty/placeholder files; real source photos are kept untouched.
+              # A placeholder/failed-upload file is too small to be a real photo.
+              # This used to be a silent `continue` -- a corrupt upload just
+              # vanished from the gallery with nothing in the Actions log to
+              # explain why. It's now a loud, un-missable warning instead.
               if src.stat().st_size < 10_000:
+                  print(f'::warning file={src}::Skipped {src.name} -- only {src.stat().st_size} bytes, looks like a failed or corrupted upload. Re-upload the real photo to this filename and push again.')
                   continue
               try:
                   with Image.open(src) as im:
@@ -54,9 +60,11 @@ jobs:
                           'width': im.width,
                           'height': im.height,
                       })
-              except (UnidentifiedImageError, OSError):
+              except (UnidentifiedImageError, OSError) as e:
+                  print(f'::warning file={src}::Skipped {src.name} -- Pillow could not read it ({e}). Re-upload the real photo to this filename and push again.')
                   continue
 
+          print(f'::notice::Market gallery manifest now lists {len(entries)} photo(s).')
           (src_dir / 'manifest.json').write_text(json.dumps({
               'version': 1,
               'images': entries,
@@ -73,4 +81,4 @@ jobs:
             exit 0
           fi
           git commit -m 'Optimize market images for fast storefront loading [skip enhancement injector]'
-          git push origin HEAD:tn-performance-sprint
+          git push origin HEAD:${{ github.ref_name }}
