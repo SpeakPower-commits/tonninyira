@@ -128,6 +128,10 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 let supabaseClient;
 try{ supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
 catch(e){ supabaseClient = { from:()=>({select:()=>({eq:()=>({order:async()=>({data:null,error:'no client'})})})}), }; }
+/* A top-level `let` never attaches to `window` -- partner-wallet-payouts.js
+   (loaded below) reads window.supabaseClient and, finding it undefined,
+   has silently done nothing on this page since it was added. */
+window.supabaseClient = supabaseClient;
 
 function paintBrandSVG(){ document.getElementById('brandBadge').style.display = 'none'; }
 function matchWordmarkWidth(){
@@ -269,6 +273,19 @@ function stageFor(rows){
 }
 const STAGE_LABEL = { preparing:'Stalls Still Preparing', ready:'Ready for Pickup', out:'Out for Delivery', done:'Delivered' };
 
+function escHtml(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function itemsLine(items){
+  if(!Array.isArray(items) || !items.length) return '';
+  return items.map(i=>`${Number(i.qty||1)}× ${escHtml(i.name||'item')}`).join(', ');
+}
+function paymentLine(group){
+  const first = group[0];
+  const paidAlready = String(first.payment_status||'').toLowerCase()==='paid' || String(first.payment_method||'').toLowerCase()!=='cash on delivery';
+  if(paidAlready) return `<div class="order-meta" style="color:var(--green)">Paid by ${escHtml(first.payment_method||'Mobile Money')} · nothing to collect</div>`;
+  const total = group.reduce((s,g)=>s+Number(g.item_subtotal||0),0) + Number(first.delivery_fee||0);
+  return `<div class="order-meta" style="color:var(--gold);font-weight:700">Cash on Delivery · Collect UGX ${Math.round(total).toLocaleString()} (incl. UGX ${Math.round(Number(first.delivery_fee||0)).toLocaleString()} delivery fee)</div>`;
+}
+
 function renderDeliveries(rows){
   const el = document.getElementById('deliveriesList');
   if(!rows.length){
@@ -282,7 +299,7 @@ function renderDeliveries(rows){
     const first = group[0];
     const stage = stageFor(group);
     const pickups = group.map(g=>`
-      <div class="pickup-line"><span>${g.vendor_name}</span>
+      <div class="pickup-line"><span>${g.vendor_name}${itemsLine(g.items)?' · '+itemsLine(g.items):''}</span>
         <span class="status-pill stage-${g.status==='ready'||g.status==='out_for_delivery'||g.status==='completed' ? 'ready':'preparing'}">${g.status==='ready'?'Ready':g.status==='out_for_delivery'?'Picked Up':g.status==='completed'?'Delivered':'Preparing'}</span>
       </div>`).join('');
     let action = '';
@@ -303,6 +320,7 @@ function renderDeliveries(rows){
       </div>
       ${pickups}
       <div class="order-meta">Customer: ${first.customer_name||'—'} · ${first.customer_phone||''}</div>
+      ${paymentLine(group)}
       <div class="order-actions">${mapsLink}${action}</div>
     </div>`;
   }).join('');

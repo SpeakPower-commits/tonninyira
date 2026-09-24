@@ -2342,16 +2342,10 @@ async function completeOrder(method){
    take effect, that override is almost certainly why -- check
    secureFinishOrder() in enhancements.js first. */
 async function finishOrder(method, custId){
-  if(!SAMPLE_RIDERS.length){
-    closeCart();
-    alert("No delivery riders are registered yet, so orders can't be placed right now. Check back once a rider signs up from the Profile tab.");
-    return;
-  }
   const orderId = 'TN-' + Math.random().toString(36).substr(2,7).toUpperCase();
   const subtotal = cartSubtotal();
   const deliveryFee = computeDeliveryFee(); // the real fee -- sent regardless of redemption, so the DB trigger has an honest fallback if it has to refuse the redemption
   const wantsRedeem = AppState.redeemDelivery && AppState.loyaltyPoints !== null && AppState.loyaltyPoints >= FREE_DELIVERY_POINTS_COST;
-  const rider = SAMPLE_RIDERS[Math.floor(Math.random()*SAMPLE_RIDERS.length)];
   const area = document.getElementById('areaSelect').value;
 
   /* One checkout can span several stalls (a real mixed market basket), but a
@@ -2379,7 +2373,9 @@ async function finishOrder(method, custId){
   const rows = Object.entries(byVendor).map(([vendorId, group])=>({
     order_id: orderId, user_id: tnUserId, vendor_id: vendorId, vendor_name: group.vendorName,
     items: group.items, item_subtotal: group.items.reduce((s,i)=>s+i.price*i.qty,0),
-    delivery_fee: deliveryFee, payment_method: method, customer_area: area, rider_tid: rider.tid,
+    delivery_fee: deliveryFee, payment_method: method, customer_area: area,
+    /* No rider_tid here -- left for the database's nearby-dispatch trigger
+       (or its timed fallback) to fill in, not pre-picked at random. */
     customer_name: custId.name, customer_phone: custId.phone,
     customer_lat: AppState.customerLocation ? AppState.customerLocation.lat : null,
     customer_lng: AppState.customerLocation ? AppState.customerLocation.lng : null,
@@ -2426,12 +2422,10 @@ async function finishOrder(method, custId){
 
   document.getElementById('confirmRider').innerHTML = `
     <div class="rider-card">
-      <div class="avatar" style="background:${avatarColor(rider.name)}; width:44px;height:44px;font-size:0.85rem;">${initials(rider.name)}</div>
       <div style="flex:1;">
-        <div style="font-weight:800;">${rider.name} <span class="verify-check">${ICONS.check}</span></div>
-        <div style="font-size:0.78rem; color:var(--muted);">${rider.vehicle} · ${rider.tid}</div>
+        <div style="font-weight:800;">Finding you a nearby rider…</div>
+        <div style="font-size:0.78rem; color:var(--muted);">You'll see their details here once one accepts your delivery.</div>
       </div>
-      <div style="text-align:right; color:var(--gold); font-weight:800;">★ ${rider.rating}</div>
     </div>`;
 
   document.getElementById('confirmOverlay').classList.remove('hidden');

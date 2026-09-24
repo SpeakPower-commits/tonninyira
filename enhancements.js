@@ -216,9 +216,10 @@
       summary.innerHTML = `<div class="summary-box" style="text-align:left;">${s.cart.map(c => `<div class="summary-row"><span>${String(c.name).replace(/[&<>\"']/g,'')} ×${c.qty}</span><span>UGX ${(c.price*c.qty).toLocaleString()}</span></div>`).join('')}<div class="summary-row"><span>Delivery</span><span>UGX ${Number(deliveryFee).toLocaleString()}</span></div><div class="summary-row total"><span>Payment</span><span>${String(method)}</span></div><div class="summary-row total"><span>Total</span><span>UGX ${(Number(subtotal)+Number(deliveryFee)).toLocaleString()}</span></div></div>${note}`;
     }
     const riderEl = document.getElementById('confirmRider');
-    if (riderEl && rider) {
-      const safeName = String(rider.name || 'Tonninyira Rider').replace(/[&<>\"']/g,'');
-      riderEl.innerHTML = `<div class="rider-card"><div class="avatar" style="background:${typeof avatarColor==='function'?avatarColor(safeName):'var(--gold)'};width:44px;height:44px;font-size:.85rem;">${typeof initials==='function'?initials(safeName):'TR'}</div><div style="flex:1;"><div style="font-weight:800;">${safeName} <span class="verify-check">${icons().check||''}</span></div><div style="font-size:.78rem;color:var(--muted);">${String(rider.vehicle||'Boda-boda')}</div></div><div style="text-align:right;color:var(--gold);font-weight:800;">★ ${Number(rider.rating||0).toFixed(1)}</div></div>`;
+    if (riderEl) {
+      riderEl.innerHTML = rider
+        ? `<div class="rider-card"><div class="avatar" style="background:${typeof avatarColor==='function'?avatarColor(rider.name||''):'var(--gold)'};width:44px;height:44px;font-size:.85rem;">${typeof initials==='function'?initials(rider.name||''):'TR'}</div><div style="flex:1;"><div style="font-weight:800;">${String(rider.name||'Tonninyira Rider').replace(/[&<>\"']/g,'')} <span class="verify-check">${icons().check||''}</span></div><div style="font-size:.78rem;color:var(--muted);">${String(rider.vehicle||'Boda-boda')}</div></div><div style="text-align:right;color:var(--gold);font-weight:800;">★ ${Number(rider.rating||0).toFixed(1)}</div></div>`
+        : `<div class="rider-card"><div style="flex:1;"><div style="font-weight:800;">Finding you a nearby rider…</div><div style="font-size:.78rem;color:var(--muted);">You'll see their details here once one accepts your delivery.</div></div></div>`;
     }
     document.getElementById('confirmOverlay')?.classList.remove('hidden');
     document.getElementById('confirmSheet')?.classList.remove('hidden');
@@ -230,10 +231,6 @@
     const client = db();
     if (!s || !c || !client || !session) return false;
     if (!Array.isArray(s.cart) || !s.cart.length) return false;
-    if (typeof SAMPLE_RIDERS === 'undefined' || !SAMPLE_RIDERS.length) {
-      alert("No delivery riders are registered yet, so orders can't be placed right now. Check back once a rider signs up from the Profile tab.");
-      return false;
-    }
 
     const orderId = 'TN-' + Math.random().toString(36).slice(2, 9).toUpperCase();
     const subtotal = typeof cartSubtotal === 'function' ? cartSubtotal() : s.cart.reduce((sum, x) => sum + Number(x.price||0)*Number(x.qty||0), 0);
@@ -246,7 +243,6 @@
     const wantsRedeem = typeof AppState !== 'undefined' && AppState.redeemDelivery
       && AppState.loyaltyPoints !== null && typeof FREE_DELIVERY_POINTS_COST !== 'undefined'
       && AppState.loyaltyPoints >= FREE_DELIVERY_POINTS_COST;
-    const rider = SAMPLE_RIDERS[Math.floor(Math.random() * SAMPLE_RIDERS.length)];
     const area = document.getElementById('areaSelect')?.value || '';
 
     /* item_subtotal must be set on every row: award_order_loyalty() computes
@@ -275,7 +271,10 @@
       delivery_option: 'standard',
       delivery_fee: Number(deliveryFee),
       payment_method: method,
-      rider_tid: rider.tid,
+      /* No rider_tid here -- it's left for the database's own nearby-dispatch
+         trigger to fill in (or, failing that, its timed fallback), instead
+         of being pre-picked at random client-side regardless of where the
+         customer or any rider actually is. */
       customer_lat: s.customerLocation ? s.customerLocation.lat : null,
       customer_lng: s.customerLocation ? s.customerLocation.lng : null,
       status: 'new',
@@ -297,7 +296,7 @@
     if (typeof AppState !== 'undefined') AppState.redeemDelivery = false;
     if (typeof tnRefreshLoyaltyPoints === 'function') tnRefreshLoyaltyPoints();
 
-    writeOrderConfirmation(orderId, method, subtotal, actualFee, rider, { wantsRedeem, actuallyRedeemed });
+    writeOrderConfirmation(orderId, method, subtotal, actualFee, null, { wantsRedeem, actuallyRedeemed });
     s.cart = [];
     persistCart();
     if (typeof window.updateCartUI === 'function') window.updateCartUI();
