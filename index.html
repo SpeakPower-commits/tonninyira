@@ -685,6 +685,7 @@ window.TN_I18N = (function(){
       "partner.riderNoteLabel": "Your rider profile",
       "partner.rejectedNote": "Your {noun} application was not approved. Reply to the email we sent you if you would like it looked at again.",
       "partner.pendingNote": "Your {noun} application is with our team for review. We will email you as soon as it is decided.",
+      "partner.suspendedNote": "Your {noun} is paused by Tonninyira for now. Please contact support through the Something wrong? chat.",
       "partner.nounStall": "stall",
       "partner.nounRiderProfile": "rider profile",
       "cart.redeemLabel": "Use {cost} points for free delivery (you have {points})",
@@ -783,6 +784,7 @@ window.TN_I18N = (function(){
       "partner.riderNoteLabel": "Wasifu wako wa rider",
       "partner.rejectedNote": "Ombi lako la {noun} halikuidhinishwa. Jibu barua pepe tuliyokutumia kama unataka litazamwe tena.",
       "partner.pendingNote": "Ombi lako la {noun} liko kwa timu yetu kwa ukaguzi. Tutakutumia barua pepe mara tu litakapoamuliwa.",
+      "partner.suspendedNote": "{noun} yako imesimamishwa na Tonninyira kwa sasa. Tafadhali wasiliana na huduma kupitia mazungumzo ya Something wrong?.",
       "partner.nounStall": "duka",
       "partner.nounRiderProfile": "wasifu wa rider",
       "cart.redeemLabel": "Tumia pointi {cost} kupata usafirishaji bure (una pointi {points})",
@@ -881,6 +883,7 @@ window.TN_I18N = (function(){
       "partner.riderNoteLabel": "Ebikukwatako ng'omuleese",
       "partner.rejectedNote": "Okusaba kwo okw'{noun} tekukkirizibbwa. Ddamu ku email gye twakuweereza singa oyagala kudinnye nate.",
       "partner.pendingNote": "Okusaba kwo okw'{noun} kuli n'ekibinja kyaffe okulikebera. Tujja kukuweereza email nga bakimazeewo.",
+      "partner.suspendedNote": "{noun} yo eyimiriziddwa Tonninyira okumala akaseera. Tukiise ku support mu chat ya Something wrong?.",
       "partner.nounStall": "eddaala",
       "partner.nounRiderProfile": "ebikukwatako ng'omuleese",
       "cart.redeemLabel": "Kozesa poyinti {cost} ofune okuleeta obwereere (olina poyinti {points})",
@@ -979,6 +982,7 @@ window.TN_I18N = (function(){
       "partner.riderNoteLabel": "Kom ni macalo lakelo",
       "partner.rejectedNote": "Kwayo mo pi {noun} pe oye. Dwok lok i imeel ma wacwalo ka imito ni ki nen doki.",
       "partner.pendingNote": "Kwayo mo pi {noun} tye ki jo mwaka pi neno. Wabicwali imeel ma dong okeco.",
+      "partner.suspendedNote": "Tonninyira ocungo {noun} mamegi pi kare manok. Tim ber iwac bot jo kony i chat me Something wrong?.",
       "partner.nounStall": "cuk",
       "partner.nounRiderProfile": "kom macalo lakelo",
       "cart.redeemLabel": "Ti ki poi {cost} me nongo kelo abongo cul (itye ki poi {points})",
@@ -1077,6 +1081,7 @@ window.TN_I18N = (function(){
       "partner.riderNoteLabel": "Ebikwatako iwe nga omuletsi",
       "partner.rejectedNote": "Okhusaba khwo okhwe {noun} sikhwikirisibwa. Kalukha khu imeeli yetumire nga oyenya khudibonwa khindi.",
       "partner.pendingNote": "Okhusaba khwo okhwe {noun} khuli ne ekibiina kiefwe khukebwa. Nikhukhuweereza imeeli nga bakhimalile.",
+      "partner.suspendedNote": "{noun} yo yiimilisiibwe Tonninyira okhumala akaseera. Khubila support khu chat ye Something wrong?.",
       "partner.nounStall": "iduuka",
       "partner.nounRiderProfile": "ebikwatako nga omuletsi",
       "cart.redeemLabel": "Kozesa ba point {cost} khunyoola khuleeta khutakhola sente (oli ne ba point {points})",
@@ -1175,6 +1180,7 @@ window.TN_I18N = (function(){
       "partner.riderNoteLabel": "Ebikukwatako nk'omuleeta",
       "partner.rejectedNote": "Okusaba kwawe kwa {noun} tikwikirizibwe. Garuka aha imeeri twakutumire kakuba noyenda kugarurirwamu.",
       "partner.pendingNote": "Okusaba kwawe kwa {noun} kuriho n'ekibiina kyaitu kukebwa. Turaakutumira imeeri baaba bamazeho kucweka.",
+      "partner.suspendedNote": "{noun} yaawe eyemerirwe Tonninyira kumara akanya. Twakushaba otukaatirire omu chat ya Something wrong?.",
       "partner.nounStall": "eduuka",
       "partner.nounRiderProfile": "ebikukwatako nk'omuleeta",
       "cart.redeemLabel": "Koresa points {cost} kutunga kutwarwa kwa buseere (oine points {points})",
@@ -1869,6 +1875,9 @@ function tnPartnerBlock(kind, status){
   }
   if(status === 'rejected')
     return note(TN_I18N.t('partner.rejectedNote', {noun}));
+  if(status === 'suspended')
+    return note(TN_I18N.t('partner.suspendedNote', {noun}));
+  if(status === 'removed') return tnPartnerBlock(kind, null);
   return note(TN_I18N.t('partner.pendingNote', {noun}));
 }
 

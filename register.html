@@ -498,7 +498,9 @@ async function submitVendorForm(e){
     const { error } = await supabaseClient.from('vendors').insert(record);
     if(error) throw error;
   }catch(err){
-    saveError = err.message || String(err);
+    saveError = err?.code === '23505'
+      ? 'this phone number or account already has a stall on Tonninyira. Contact support if you need it changed.'
+      : (err.message || String(err));
     console.log('Vendor row not saved:', saveError);
   }
   if(saveError){
@@ -567,7 +569,9 @@ async function submitRiderForm(e){
     const { error } = await supabaseClient.from('riders').insert(record);
     if(error) throw error;
   }catch(err){
-    saveError = err.message || String(err);
+    saveError = err?.code === '23505'
+      ? 'this phone number or account already has a rider account on Tonninyira. Contact support if you need it changed.'
+      : (err.message || String(err));
     console.log('Rider row not saved:', saveError);
   }
   if(saveError){

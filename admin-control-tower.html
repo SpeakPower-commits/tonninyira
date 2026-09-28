@@ -9,6 +9,7 @@
 <style>
 :root{--ink:#1c1410;--card:#2a1f19;--card2:#33261c;--red:#e23f25;--gold:#f5b400;--green:#4c9a5b;--sand:#f3e8d8;--muted:#9c897a;--line:rgba(243,232,216,.1)}
 *{box-sizing:border-box}body{margin:0;background:var(--ink);color:var(--sand);font:14px/1.6 'Work Sans',sans-serif}.display{font-family:'Alfa Slab One',serif;font-weight:400;font-synthesis:none}.top{position:sticky;top:0;z-index:20;background:rgba(28,20,16,.98);border-bottom:1px solid var(--line)}.top-in{max-width:1450px;margin:auto;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:14px}.brand{display:flex;gap:10px;align-items:center}.brand img{width:42px;height:42px}.eyebrow{font-size:9px;letter-spacing:1.5px;color:var(--gold);font-weight:900}.brand h1{margin:2px 0 0;font-size:18px}.session{display:flex;gap:10px;align-items:center}.who{font-size:11px;color:#9de1a8;font-weight:800}.top-link,.signout,.refresh,.nav{font:800 11px 'Work Sans',sans-serif;cursor:pointer}.top-link,.signout{padding:7px 10px;border-radius:8px;text-decoration:none}.top-link{border:1px solid var(--line);color:var(--gold);background:transparent}.signout{border:1px solid rgba(226,63,37,.45);color:#ffb0a5;background:transparent}.layout{max-width:1450px;margin:auto;display:grid;grid-template-columns:270px minmax(0,1fr);gap:16px;padding:14px}.rail{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:12px;height:calc(100vh - 104px);min-height:620px;position:sticky;top:90px;overflow:auto;box-shadow:0 12px 30px rgba(0,0,0,.12)}.rail-title{padding:8px 10px 9px;color:var(--gold);font-size:9px;letter-spacing:1.3px;font-weight:900}.nav{width:100%;display:flex;align-items:center;gap:11px;text-align:left;border:0;background:transparent;color:var(--muted);padding:12px 12px;border-radius:10px;min-height:44px;transition:background .15s ease,color .15s ease,transform .15s ease}.nav:hover,.nav.active{background:var(--card2);color:var(--sand)}.nav.active{box-shadow:inset 3px 0 0 var(--gold)}.nav:hover{transform:translateX(2px)}.nav-icon{width:22px;height:22px;display:grid;place-items:center;flex:0 0 22px;color:currentColor}.nav-icon svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.nav-label{flex:1}.divider{height:1px;background:var(--line);margin:8px 4px}.main{min-width:0}.head{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-bottom:12px}.head h2{margin:0;font-size:24px}.head p{margin:4px 0 0;color:var(--muted);font-size:12px}.refresh{padding:8px 11px;border:1px solid rgba(245,180,0,.25);background:rgba(245,180,0,.08);color:var(--gold);border-radius:8px}.status{margin-bottom:12px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--muted);font-size:11px}.status.error{border-color:rgba(226,63,37,.3);background:rgba(226,63,37,.08);color:#ffb0a5}.cards{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.metric{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}.metric small{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.7px;font-weight:900}.metric strong{display:block;margin-top:4px;font-size:20px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px;overflow:auto}.panel h3{margin:0 0 8px;font-size:13px}table{width:100%;border-collapse:collapse;min-width:680px}th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left;font-size:11px;vertical-align:top}th{background:var(--card2);color:var(--gold);font-size:9px;text-transform:uppercase}.pill{display:inline-block;padding:3px 7px;border-radius:99px;background:var(--card2);color:var(--muted);font-size:9px;font-weight:900;text-transform:uppercase}.ok{background:rgba(76,154,91,.14);color:#9de1a8}.warn{background:rgba(245,180,0,.12);color:#ffd86d}.bad{background:rgba(226,63,37,.12);color:#ff9d8e}.empty{padding:30px;text-align:center;color:var(--muted)}.error-box{padding:15px;border-radius:12px;border:1px solid rgba(226,63,37,.25);background:rgba(226,63,37,.08);color:#ffb0a5}.mobile-nav{display:none}
+.muted{color:var(--muted)}.tbl-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 8px}.tbl-search{flex:1 1 180px;min-width:0;padding:8px 10px;border-radius:9px;border:1px solid var(--line);background:var(--ink);color:var(--sand);font:inherit;font-size:12px}.tbl-status{padding:8px;border-radius:9px;border:1px solid var(--line);background:var(--ink);color:var(--sand);font:inherit;font-size:12px}.tbl-csv{padding:8px 11px;border-radius:9px;border:1px solid rgba(245,180,0,.3);background:rgba(245,180,0,.08);color:var(--gold);font:800 11px 'Work Sans',sans-serif;cursor:pointer}.tbl-count{font-size:10px;color:var(--muted)}.tbl-wrap{overflow:auto}.acts{display:flex;flex-wrap:wrap;gap:5px}.act{border:1px solid var(--line);border-radius:8px;padding:6px 9px;font:800 10.5px 'Work Sans',sans-serif;cursor:pointer;background:var(--card2);color:var(--sand);white-space:nowrap}.act.go{background:#4C9A5B;border-color:#4C9A5B;color:#fff}.act.warn{background:rgba(245,180,0,.14);border-color:rgba(245,180,0,.4);color:#ffd86d}.act.stop{background:rgba(226,63,37,.14);border-color:rgba(226,63,37,.45);color:#ffb0a5}.act:disabled{opacity:.5;cursor:wait}.dlg-back{position:fixed;inset:0;z-index:10050;background:rgba(0,0,0,.72);display:grid;place-items:center;padding:16px}.dlg{background:var(--card);color:var(--sand);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:20px;width:min(480px,100%)}.dlg h3{margin:0 0 6px;font-size:1.05rem}.dlg p{margin:0 0 12px;font-size:.82rem;color:var(--muted);line-height:1.5}.dlg-l{display:block;font-size:11px;font-weight:800;margin:10px 0 5px}.dlg-in{width:100%;padding:10px;border-radius:9px;background:var(--ink);color:var(--sand);border:1px solid rgba(255,255,255,.2);font:inherit;font-size:13px}.dlg-err{min-height:18px;color:#ffb0a5;font-size:11px;margin-top:6px}.dlg-row{display:flex;gap:8px;margin-top:8px}.dlg-row button{flex:1;border-radius:9px;padding:10px;font-weight:800;cursor:pointer;font-family:inherit}.dlg-no{border:1px solid rgba(255,255,255,.2);background:transparent;color:inherit}.dlg-ok{border:0;background:#4C9A5B;color:#fff}.dlg-ok.danger{background:var(--red)}
 @media(max-width:1050px){.layout{grid-template-columns:1fr}.rail{position:static;height:auto;min-height:0;display:flex;flex-wrap:wrap;gap:4px}.rail-title,.divider{display:none}.nav{width:auto;white-space:nowrap}.nav-icon{width:20px;flex-basis:20px}.cards{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:650px){.top-in{padding:10px}.session .who{display:none}.layout{padding:9px}.mobile-nav{display:block}.cards{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.head{align-items:flex-start}.rail{border-radius:12px;padding:8px}.nav{padding:10px 9px;min-height:42px;gap:8px}.nav-label{font-size:10px}}
 </style>
@@ -52,20 +53,125 @@
   const client=()=>window.tnAdminClient?.();
   const esc=v=>String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
   const money=v=>new Intl.NumberFormat('en-UG').format(Math.round(Number(v||0)))+' UGX';
-  const pill=v=>{const s=String(v??'—'),k=s.toLowerCase();let c='';if(['approved','paid','completed','success','ready'].includes(k))c='ok';else if(['pending','requested','processing','accepted','new','preparing'].includes(k))c='warn';else if(['failed','cancelled','rejected'].includes(k))c='bad';return '<span class="pill '+c+'">'+esc(s)+'</span>'};
+  const when=v=>v?String(v).replace('T',' ').slice(0,16):'—';
+  const pill=v=>{const s=String(v??'—'),k=s.toLowerCase();let c='';if(['approved','paid','completed','success','successful','ready','active'].includes(k))c='ok';else if(['pending','requested','processing','accepted','new','preparing','awaiting payment'].includes(k))c='warn';else if(['failed','cancelled','rejected','suspended','removed','declined'].includes(k))c='bad';return '<span class="pill '+c+'">'+esc(s)+'</span>'};
+  const phoneKey=p=>String(p||'').replace(/\D/g,'').slice(-9);
   const app=document.getElementById('app'),title=document.getElementById('title'),subtitle=document.getElementById('subtitle'),status=document.getElementById('status'),who=document.getElementById('who');
   let current=new URLSearchParams(location.search).get('view')||'overview';
   const nav=document.getElementById('nav');
   nav.innerHTML='<div class="rail-title">WORKSPACE</div>'+NAV.map(([label,key,icon])=>'<button type="button" class="nav '+(key===current?'active':'')+'" data-view="'+key+'" aria-label="'+esc(label)+'"><span class="nav-icon" aria-hidden="true">'+ICONS[icon]+'</span><span class="nav-label">'+esc(label)+'</span></button>').join('');
   nav.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{current=b.dataset.view;history.replaceState(null,'','?view='+encodeURIComponent(current));nav.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x===b));load(current)}));
   function setHead(t,s){title.textContent=t;subtitle.textContent=s}
-  function table(rows,cols){if(!rows.length)return '<div class="empty">No records found.</div>';return '<table><thead><tr>'+cols.map(c=>'<th>'+c.label+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+cols.map(c=>'<td>'+ (c.render?c.render(r):esc(r[c.key])) +'</td>').join('')+'</tr>').join('')+'</tbody></table>'}
-  async function rows(tableName,columns='*',limit=500){const r=await client().from(tableName).select(columns).limit(limit);if(r.error)throw r.error;return r.data||[]}
-  async function overview(){setHead('Overview','Live marketplace operating picture.');const [o,p,v,r,pay,po,e]=await Promise.all([rows('orders'),rows('profiles','id,role,created_at'),rows('vendors'),rows('riders'),rows('payment_transactions'),rows('partner_payouts'),rows('market_events')]);const gmv=o.reduce((a,x)=>a+Number(x.total||0),0),fees=o.reduce((a,x)=>a+Number(x.platform_fee||0)+Number(x.rider_platform_fee||0),0),done=o.filter(x=>String(x.status).toLowerCase()==='completed').length,openPay=pay.filter(x=>['pending','failed'].includes(String(x.status).toLowerCase())).length,pending=v.filter(x=>x.approval_status==='pending').length+r.filter(x=>x.approval_status==='pending').length,requested=po.filter(x=>x.status==='requested').length;app.innerHTML='<div class="cards">'+[['GMV',money(gmv)],['Platform fees',money(fees)],['Orders',o.length],['Completed',done],['Customers',p.filter(x=>x.role==='customer').length],['Attention',pending+requested+openPay]].map(x=>'<div class="metric"><small>'+x[0]+'</small><strong>'+x[1]+'</strong></div>').join('')+'</div><div class="grid"><div class="panel"><h3>Operational queues</h3>'+table([{m:'Pending partner approvals',n:pending},{m:'Payment exceptions',n:openPay},{m:'Payout requests',n:requested}],[{label:'Queue',key:'m'},{label:'Count',key:'n'}])+'</div><div class="panel"><h3>Recent marketplace events</h3>'+table(e.slice(0,100),[{label:'Type',key:'event_type'},{label:'Status',key:'status'},{label:'Reference',key:'reference'},{label:'Created',key:'created_at'}])+'</div></div>'}
-  async function operations(){setHead('Operations','Orders, fulfilment, payment state and rider assignment.');const o=await rows('orders');app.innerHTML='<div class="panel">'+table(o,[{label:'Order',key:'order_id'},{label:'Customer',key:'customer_name'},{label:'Vendor',key:'vendor_name'},{label:'Area',render:r=>esc(r.customer_area||r.delivery_area)},{label:'Total',render:r=>money(r.total)},{label:'Payment',render:r=>pill(r.payment_status)},{label:'Status',render:r=>pill(r.status)},{label:'Rider',key:'rider_tid'},{label:'Created',key:'created_at'}])+'</div>'}
-  async function customers(){setHead('Customers','Customer activity, orders, saved intent and loyalty.');const [p,o,w,l]=await Promise.all([rows('profiles','id,role,display_name,phone,created_at'),rows('orders','user_id,total,created_at'),rows('wishlists'),rows('loyalty_accounts')]);const count={};o.forEach(x=>{if(x.user_id)count[x.user_id]=(count[x.user_id]||0)+1});const wl={};w.forEach(x=>{if(x.user_id)wl[x.user_id]=(wl[x.user_id]||0)+1});const pts={};l.forEach(x=>{if(x.user_id)pts[x.user_id]=x.points||0});app.innerHTML='<div class="panel">'+table(p.filter(x=>x.role==='customer'),[{label:'Name',key:'display_name'},{label:'Phone',key:'phone'},{label:'Orders',render:r=>count[r.id]||0},{label:'Wishlist',render:r=>wl[r.id]||0},{label:'Points',render:r=>pts[r.id]||0},{label:'Joined',key:'created_at'}])+'</div>'}
-  async function partners(){setHead('Vendors & riders','Partner onboarding, approval and payout queues.');const [v,r,p]=await Promise.all([rows('vendors'),rows('riders'),rows('partner_payouts')]);app.innerHTML='<div class="panel"><h3>Vendors</h3>'+table(v,[{label:'Business',key:'business_name'},{label:'TID',key:'tonninyira_id'},{label:'Location',key:'location'},{label:'Category',key:'category'},{label:'Approval',render:r=>pill(r.approval_status)},{label:'Owner',key:'owner_name'},{label:'Phone',key:'phone'}])+'</div><div class="panel" style="margin-top:10px"><h3>Riders</h3>'+table(r,[{label:'Name',key:'full_name'},{label:'TID',key:'tonninyira_id'},{label:'Vehicle',key:'vehicle_type'},{label:'Plate',key:'plate_number'},{label:'Approval',render:r=>pill(r.approval_status)}])+'</div><div class="panel" style="margin-top:10px"><h3>Payout queue</h3>'+table(p,[{label:'Type',key:'partner_type'},{label:'Amount',render:r=>money(r.amount)},{label:'Method',key:'method'},{label:'Status',render:r=>pill(r.status)},{label:'Reference',key:'reference'}])+'</div>'}
-  async function finance(){setHead('Payments & payouts','Payment reconciliation, settlement and partner cash-out.');const [p,s]=await Promise.all([rows('payment_transactions'),rows('platform_settlements')]);app.innerHTML='<div class="panel"><h3>Payment transactions</h3>'+table(p,[{label:'Order',key:'order_id'},{label:'Provider',key:'provider'},{label:'Network',key:'network'},{label:'Amount',render:r=>money(r.amount)},{label:'Status',render:r=>pill(r.status)},{label:'TX ref',key:'tx_ref'},{label:'Verified',key:'verified_at'}])+'</div><div class="panel" style="margin-top:10px"><h3>Platform settlements</h3>'+table(s,[{label:'Vendor',key:'vendor_id'},{label:'Rider',key:'rider_tid'},{label:'Gross',render:r=>money(r.gross_amount)},{label:'Platform fee',render:r=>money(r.platform_fee)},{label:'Vendor net',render:r=>money(r.vendor_amount)},{label:'Rider net',render:r=>money(r.rider_amount)},{label:'Status',render:r=>pill(r.status)}])+'</div>'}
+  function note(msg,isError){status.className='status'+(isError?' error':'');status.textContent=msg}
+
+  /* Every table is searchable, filterable by status and exportable. Rows and
+     column definitions are kept per table so filtering re-renders only the body. */
+  const TABLES={};let tableSeq=0;
+  function cellText(c,r){if(c.csv)return String(c.csv(r)??'');if(c.key)return String(r[c.key]??'');const d=document.createElement('div');d.innerHTML=c.render?c.render(r):'';return d.textContent.trim()}
+  function bodyRows(t){
+    const q=t.q.trim().toLowerCase();
+    const rows=t.rows.filter(r=>(!t.statusVal||String(t.statusOf(r)).toLowerCase()===t.statusVal)&&(!q||t.cols.some(c=>!c.noSearch&&cellText(c,r).toLowerCase().includes(q))));
+    t.visible=rows;
+    return rows.length?rows.map(r=>'<tr>'+t.cols.map(c=>'<td>'+(c.render?c.render(r):esc(r[c.key]))+'</td>').join('')+'</tr>').join(''):'<tr><td colspan="'+t.cols.length+'" class="empty">No matching records.</td></tr>';
+  }
+  function table(rows,cols,opts={}){
+    if(!rows.length)return '<div class="empty">No records found.</div>';
+    const ai=cols.findIndex(c=>c.label==='Actions'||c.label==='Decision');
+    if(ai>1&&innerWidth<650){cols=cols.slice();cols.splice(1,0,cols.splice(ai,1)[0])}
+    const id='t'+(++tableSeq);
+    const statusOf=opts.status||null;
+    TABLES[id]={rows,cols,q:'',statusVal:'',statusOf,name:opts.name||'records',visible:rows};
+    const statuses=statusOf?[...new Set(rows.map(r=>String(statusOf(r)||'—').toLowerCase()))].sort():[];
+    return '<div class="tbl-tools" data-tid="'+id+'"><input class="tbl-search" type="search" placeholder="Search…" aria-label="Search this table">'
+      +(statusOf?'<select class="tbl-status" aria-label="Filter by status"><option value="">All statuses</option>'+statuses.map(s=>'<option value="'+esc(s)+'">'+esc(s)+'</option>').join('')+'</select>':'')
+      +'<button type="button" class="tbl-csv">Export CSV</button><span class="tbl-count">'+rows.length+' rows</span></div>'
+      +'<div class="tbl-wrap"><table><thead><tr>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('')+'</tr></thead><tbody id="'+id+'">'+bodyRows(TABLES[id])+'</tbody></table></div>';
+  }
+  function refreshTable(id){const t=TABLES[id];const tb=document.getElementById(id);if(!t||!tb)return;tb.innerHTML=bodyRows(t);const cnt=app.querySelector('.tbl-tools[data-tid="'+id+'"] .tbl-count');if(cnt)cnt.textContent=t.visible.length+' of '+t.rows.length+' rows'}
+  app.addEventListener('input',e=>{const box=e.target.closest('.tbl-tools');if(!box)return;const t=TABLES[box.dataset.tid];if(!t)return;if(e.target.classList.contains('tbl-search'))t.q=e.target.value;refreshTable(box.dataset.tid)});
+  app.addEventListener('change',e=>{const box=e.target.closest('.tbl-tools');if(!box||!e.target.classList.contains('tbl-status'))return;const t=TABLES[box.dataset.tid];t.statusVal=e.target.value;refreshTable(box.dataset.tid)});
+  app.addEventListener('click',e=>{
+    const b=e.target.closest('.tbl-csv');if(!b)return;const t=TABLES[b.closest('.tbl-tools').dataset.tid];if(!t)return;
+    const cols=t.cols.filter(c=>!c.noCsv);
+    const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+    const csv=[cols.map(c=>q(c.label)).join(',')].concat(t.visible.map(r=>cols.map(c=>q(cellText(c,r))).join(','))).join('\r\n');
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}));a.download='tonninyira-'+t.name+'-'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
+  });
+
+  async function rows(tableName,columns='*',limit=1000){const r=await client().from(tableName).select(columns).limit(limit);if(r.error)throw r.error;return r.data||[]}
+
+  /* A confirmation step for every action, with the reason (and any extra
+     detail) captured so it lands in the audit log. */
+  function ask({title:t,message,fields=[],confirm='Confirm',danger=false}){
+    return new Promise(resolve=>{
+      const m=document.createElement('div');m.className='dlg-back';
+      m.innerHTML='<div class="dlg" role="dialog" aria-modal="true" aria-label="'+esc(t)+'"><h3>'+esc(t)+'</h3>'+(message?'<p>'+esc(message)+'</p>':'')
+        +fields.map((f,i)=>'<label class="dlg-l" for="dlgf'+i+'">'+esc(f.label)+(f.required?' *':'')+'</label>'
+          +(f.type==='select'?'<select id="dlgf'+i+'" class="dlg-in">'+f.options.map(o=>'<option value="'+esc(o.value)+'">'+esc(o.label)+'</option>').join('')+'</select>'
+           :f.type==='textarea'?'<textarea id="dlgf'+i+'" class="dlg-in" rows="3" maxlength="500"></textarea>'
+           :'<input id="dlgf'+i+'" class="dlg-in" maxlength="200">')).join('')
+        +'<div class="dlg-err" id="dlgErr"></div><div class="dlg-row"><button type="button" class="dlg-no">Cancel</button><button type="button" class="dlg-ok'+(danger?' danger':'')+'">'+esc(confirm)+'</button></div></div>';
+      document.body.appendChild(m);
+      const done=v=>{m.remove();resolve(v)};
+      m.querySelector('.dlg-no').onclick=()=>done(null);
+      m.onclick=e=>{if(e.target===m)done(null)};
+      m.querySelector('.dlg-ok').onclick=()=>{
+        const vals={};
+        for(let i=0;i<fields.length;i++){const v=m.querySelector('#dlgf'+i).value.trim();if(fields[i].required&&!v){m.querySelector('#dlgErr').textContent=fields[i].label+' is required.';return}vals[fields[i].name]=v}
+        done(vals);
+      };
+      m.querySelector('.dlg-in')?.focus();
+    });
+  }
+  const reasonField={name:'reason',label:'Reason (kept in the audit log)',type:'textarea',required:true};
+  async function rpc(fn,args){const r=await client().rpc(fn,args);if(r.error)throw r.error;return r.data}
+
+  const btn=(act,label,data,kind)=>'<button type="button" class="act'+(kind?' '+kind:'')+'" data-act="'+act+'" '+Object.entries(data).map(([k,v])=>'data-'+k+'="'+esc(v)+'"').join(' ')+'>'+esc(label)+'</button>';
+
+  function partnerActions(kind,row){
+    const s=String(row.approval_status||'pending').toLowerCase(),d={kind,id:row.tonninyira_id};
+    if(s==='removed')return '<span class="muted">Removed</span>';
+    let h='';
+    if(['pending','rejected','suspended'].includes(s))h+=btn('p-approve',s==='suspended'?'Reactivate':'Approve',d,'go');
+    if(s==='pending')h+=btn('p-reject','Reject',d,'stop');
+    if(s==='approved')h+=btn('p-suspend','Suspend',d,'warn');
+    h+=btn('p-link',row.auth_user_id?'Relink':'Link account',d,'');
+    h+=btn('p-remove','Remove',d,'stop');
+    return '<div class="acts">'+h+'</div>';
+  }
+  function duplicateFlags(list,keys){
+    const counts={};const live=list.filter(r=>!['removed','rejected'].includes(String(r.approval_status).toLowerCase()));
+    live.forEach(r=>keys.forEach(k=>{const v=k(r);if(v)counts[v]=(counts[v]||0)+1}));
+    return r=>!['removed','rejected'].includes(String(r.approval_status).toLowerCase())&&keys.some(k=>{const v=k(r);return v&&counts[v]>1});
+  }
+  const vendorKeys=[r=>phoneKey(r.phone)&&'p'+phoneKey(r.phone),r=>r.business_name&&'n'+String(r.business_name).trim().toLowerCase()];
+  const riderKeys=[r=>phoneKey(r.phone)&&'p'+phoneKey(r.phone),r=>r.plate_number&&'l'+String(r.plate_number).replace(/\s/g,'').toLowerCase()];
+
+  async function overview(){setHead('Overview','Live marketplace operating picture.');const [o,p,v,r,pay,po,e]=await Promise.all([rows('orders'),rows('profiles','id,role,created_at,suspended_at'),rows('vendors'),rows('riders'),rows('payment_transactions'),rows('partner_payouts'),rows('market_events')]);
+    const paid=o.filter(x=>x.payment_status==='paid'),gmv=paid.reduce((a,x)=>a+Number(x.total||0),0),fees=paid.reduce((a,x)=>a+Number(x.platform_fee||0)+Number(x.rider_platform_fee||0),0),done=o.filter(x=>String(x.status).toLowerCase()==='completed').length,openPay=pay.filter(x=>['pending','failed'].includes(String(x.status).toLowerCase())).length,pending=v.filter(x=>x.approval_status==='pending').length+r.filter(x=>x.approval_status==='pending').length,requested=po.filter(x=>['requested','approved','processing'].includes(x.status)).length,unassigned=new Set(o.filter(x=>x.payment_status==='paid'&&!x.rider_tid&&['pending','new'].includes(x.status)).map(x=>x.order_id)).size;
+    const dupV=duplicateFlags(v,vendorKeys),dupR=duplicateFlags(r,riderKeys),dups=v.filter(dupV).length+r.filter(dupR).length;
+    app.innerHTML='<div class="cards">'+[['Paid sales',money(gmv)],['Platform fees',money(fees)],['Orders',new Set(o.map(x=>x.order_id)).size],['Completed',done],['Customers',p.filter(x=>x.role==='customer').length],['Attention',pending+requested+openPay+unassigned+dups]].map(x=>'<div class="metric"><small>'+x[0]+'</small><strong>'+x[1]+'</strong></div>').join('')+'</div><div class="grid"><div class="panel"><h3>Operational queues</h3>'+table([{m:'Pending partner approvals',n:pending,go:'trust'},{m:'Possible duplicate partners',n:dups,go:'partners'},{m:'Paid orders waiting for a rider',n:unassigned,go:'operations'},{m:'Payment exceptions',n:openPay,go:'finance'},{m:'Payouts to process',n:requested,go:'partners'}],[{label:'Queue',key:'m'},{label:'Count',key:'n'},{label:'',noCsv:true,noSearch:true,render:x=>'<button type="button" class="act" data-act="goto" data-view="'+x.go+'">Open</button>'}],{name:'queues'})+'</div><div class="panel"><h3>Recent marketplace events</h3>'+table(e.slice(-100).reverse(),[{label:'Type',key:'event_type'},{label:'Status',key:'status'},{label:'Reference',key:'reference'},{label:'Created',render:x=>esc(when(x.created_at)),csv:x=>x.created_at}],{name:'events'})+'</div></div>'}
+
+  async function operations(){
+    setHead('Operations','Orders, fulfilment, payment state and rider assignment.');
+    const o=await rows('orders');
+    const groups={};o.forEach(x=>{(groups[x.order_id]||=[]).push(x)});
+    const list=Object.entries(groups).map(([id,g])=>{const f=g[0];const st=g.every(x=>x.status==='completed')?'completed':g.some(x=>x.status==='cancelled')?'cancelled':g.some(x=>x.status==='declined')?'declined':(g.find(x=>!['pending','new'].includes(x.status))?.status||'new');
+      return {order_id:id,customer:f.customer_name,phone:f.customer_phone,vendors:[...new Set(g.map(x=>x.vendor_name))].join(', '),area:f.customer_area||f.delivery_area,total:g.reduce((a,x)=>a+Number(x.item_subtotal||0),0)+Math.max(...g.map(x=>Number(x.delivery_fee||0))),pay:f.payment_status==='paid'?'paid':'awaiting payment',status:st==='pending'?'new':st,rider:g.find(x=>x.rider_tid)?.rider_tid||'',created:f.created_at}}).sort((a,b)=>String(b.created).localeCompare(String(a.created)));
+    app.innerHTML='<div class="panel">'+table(list,[{label:'Order',key:'order_id'},{label:'Customer',render:r=>esc(r.customer)+'<br><span class="muted">'+esc(r.phone)+'</span>',csv:r=>r.customer+' '+r.phone},{label:'Vendor(s)',key:'vendors'},{label:'Area',key:'area'},{label:'Total',render:r=>money(r.total),csv:r=>r.total},{label:'Payment',render:r=>pill(r.pay),csv:r=>r.pay},{label:'Status',render:r=>pill(r.status),csv:r=>r.status},{label:'Rider',render:r=>esc(r.rider||'—'),csv:r=>r.rider},{label:'Created',render:r=>esc(when(r.created)),csv:r=>r.created},{label:'Actions',noCsv:true,noSearch:true,render:r=>{if(['completed','cancelled','declined'].includes(r.status))return '<span class="muted">Closed</span>';let h='';if(r.pay==='paid'){h+=btn('o-assign','Assign rider',{id:r.order_id},'');h+=btn('o-redispatch','Re-dispatch',{id:r.order_id},'')}h+=btn('o-cancel','Cancel',{id:r.order_id,paid:r.pay==='paid'?'1':''},'stop');return '<div class="acts">'+h+'</div>'}}],{name:'orders',status:r=>r.status})+'</div>';
+  }
+
+  async function customers(){setHead('Customers','Customer activity, orders, saved intent and loyalty.');const [p,o,w,l]=await Promise.all([rows('profiles','id,role,display_name,phone,created_at,suspended_at'),rows('orders','user_id,order_id,payment_status'),rows('wishlists'),rows('loyalty_accounts')]);const count={};o.forEach(x=>{if(x.user_id&&x.payment_status==='paid')(count[x.user_id]||=new Set()).add(x.order_id)});const wl={};w.forEach(x=>{if(x.user_id)wl[x.user_id]=(wl[x.user_id]||0)+1});const pts={};l.forEach(x=>{if(x.user_id)pts[x.user_id]=x.points||0});
+    app.innerHTML='<div class="panel">'+table(p.filter(x=>x.role==='customer'),[{label:'Name',key:'display_name'},{label:'Phone',key:'phone'},{label:'Paid orders',render:r=>count[r.id]?.size||0,csv:r=>count[r.id]?.size||0},{label:'Wishlist',render:r=>wl[r.id]||0},{label:'Points',render:r=>pts[r.id]||0},{label:'Joined',render:r=>esc(when(r.created_at)),csv:r=>r.created_at},{label:'Account',render:r=>pill(r.suspended_at?'suspended':'active'),csv:r=>r.suspended_at?'suspended':'active'},{label:'Actions',noCsv:true,noSearch:true,render:r=>'<div class="acts">'+(r.suspended_at?btn('c-reactivate','Reactivate',{id:r.id,name:r.display_name||r.phone||'this customer'},'go'):btn('c-suspend','Suspend',{id:r.id,name:r.display_name||r.phone||'this customer'},'warn'))+'</div>'}],{name:'customers',status:r=>r.suspended_at?'suspended':'active'})+'</div>'}
+
+  async function partners(){setHead('Vendors & riders','Partner onboarding, standing, duplicates and payouts.');const [v,r,p]=await Promise.all([rows('vendors'),rows('riders'),rows('partner_payouts')]);
+    const dupV=duplicateFlags(v,vendorKeys),dupR=duplicateFlags(r,riderKeys);const dupBadge=d=>d?' <span class="pill bad">possible duplicate</span>':'';
+    app.innerHTML='<div class="panel"><h3>Vendors</h3>'+table(v,[{label:'Business',render:x=>esc(x.business_name)+dupBadge(dupV(x)),csv:x=>x.business_name},{label:'TID',key:'tonninyira_id'},{label:'Owner',key:'owner_name'},{label:'Phone',key:'phone'},{label:'Location',key:'location'},{label:'Login',render:x=>x.auth_user_id?'Linked':'<span class="muted">None</span>',csv:x=>x.auth_user_id?'linked':'none'},{label:'Standing',render:x=>pill(x.approval_status),csv:x=>x.approval_status},{label:'Actions',noCsv:true,noSearch:true,render:x=>partnerActions('vendor',x)}],{name:'vendors',status:x=>x.approval_status})+'</div>'
+      +'<div class="panel" style="margin-top:10px"><h3>Riders</h3>'+table(r,[{label:'Name',render:x=>esc(x.full_name)+dupBadge(dupR(x)),csv:x=>x.full_name},{label:'TID',key:'tonninyira_id'},{label:'Phone',key:'phone'},{label:'Vehicle',key:'vehicle_type'},{label:'Plate',key:'plate_number'},{label:'Login',render:x=>x.auth_user_id?'Linked':'<span class="muted">None</span>',csv:x=>x.auth_user_id?'linked':'none'},{label:'Standing',render:x=>pill(x.approval_status),csv:x=>x.approval_status},{label:'Actions',noCsv:true,noSearch:true,render:x=>partnerActions('rider',x)}],{name:'riders',status:x=>x.approval_status})+'</div>'
+      +'<div class="panel" style="margin-top:10px"><h3>Payout queue</h3>'+table(p.slice().sort((a,b)=>String(b.requested_at).localeCompare(String(a.requested_at))),[{label:'Type',key:'partner_type'},{label:'Amount',render:x=>money(x.amount),csv:x=>x.amount},{label:'Method',key:'method'},{label:'To',render:x=>esc([x.account_name,x.account_number,x.bank_name].filter(Boolean).join(' · ')),csv:x=>[x.account_name,x.account_number,x.bank_name].filter(Boolean).join(' ')},{label:'Status',render:x=>pill(x.status),csv:x=>x.status},{label:'Reference',key:'reference'},{label:'Requested',render:x=>esc(when(x.requested_at)),csv:x=>x.requested_at},{label:'Actions',noCsv:true,noSearch:true,render:x=>['requested','approved','processing','failed'].includes(x.status)?'<div class="acts">'+btn('po-paid','Mark paid',{id:x.id},'go')+(x.status!=='failed'?btn('po-failed','Mark failed',{id:x.id},'stop'):'')+'</div>':'<span class="muted">—</span>'}],{name:'payouts',status:x=>x.status})+'</div>'}
+
+  async function finance(){setHead('Payments & payouts','Payment reconciliation, settlement and partner cash-out.');const [p,s]=await Promise.all([rows('payment_transactions'),rows('platform_settlements')]);app.innerHTML='<div class="panel"><h3>Payment transactions</h3>'+table(p,[{label:'Order',render:x=>esc(x.metadata?.order_group_id||x.order_id),csv:x=>x.metadata?.order_group_id||x.order_id},{label:'Provider',key:'provider'},{label:'Network',key:'network'},{label:'Amount',render:x=>money(x.amount),csv:x=>x.amount},{label:'Status',render:x=>pill(x.status),csv:x=>x.status},{label:'Reference',key:'provider_reference'},{label:'Verified',render:x=>esc(when(x.verified_at)),csv:x=>x.verified_at}],{name:'payments',status:x=>x.status})+'</div><div class="panel" style="margin-top:10px"><h3>Platform settlements</h3>'+table(s,[{label:'Vendor',key:'vendor_id'},{label:'Rider',key:'rider_tid'},{label:'Gross',render:x=>money(x.gross_amount),csv:x=>x.gross_amount},{label:'Platform fee',render:x=>money(x.platform_fee),csv:x=>x.platform_fee},{label:'Vendor net',render:x=>money(x.vendor_amount),csv:x=>x.vendor_amount},{label:'Rider net',render:x=>money(x.rider_amount),csv:x=>x.rider_amount},{label:'Status',render:x=>pill(x.status),csv:x=>x.status}],{name:'settlements',status:x=>x.status})+'</div>'}
+
   /* Reading messages is not support. Without a way to answer, every customer who
      writes in is met with silence -- so each conversation carries a reply box.
      support_messages_insert already permits staff to post into an open one. */
@@ -76,120 +182,85 @@
     for(const msg of m){ (byConvo[msg.conversation_id]=byConvo[msg.conversation_id]||[]).push(msg); }
     const open=c.filter(x=>String(x.status||'').toLowerCase()==='open');
     const rest=c.filter(x=>String(x.status||'').toLowerCase()!=='open');
-
     const thread=conv=>{
       const msgs=(byConvo[conv.id]||[]).sort((a,b)=>String(a.created_at).localeCompare(String(b.created_at)));
       const last=msgs.slice(-8).map(x=>
         '<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)"><span class="muted" style="font-size:11px">'
-        +esc(String(x.created_at||'').replace('T',' ').slice(0,16))+'</span><br>'+esc(x.body||'')+'</div>').join('')
+        +esc(when(x.created_at))+'</span><br>'+esc(x.body||'')+'</div>').join('')
         || '<div class="muted" style="padding:6px 0">No messages yet.</div>';
       return '<div class="panel" style="margin-top:10px"><h3 style="margin:0 0 2px">'+esc(conv.customer_id||'Unknown customer')+'</h3>'
-        +'<div class="muted" style="font-size:11px;margin-bottom:8px">'+pill(conv.status)+' &middot; '+esc(String(conv.updated_at||conv.created_at||'').slice(0,16))+'</div>'
+        +'<div class="muted" style="font-size:11px;margin-bottom:8px">'+pill(conv.status)+' &middot; '+esc(when(conv.updated_at||conv.created_at))+'</div>'
         +'<div style="max-height:220px;overflow:auto">'+last+'</div>'
         +'<div style="display:flex;gap:8px;margin-top:10px">'
         +'<input class="tn-reply-input" data-convo="'+esc(conv.id)+'" placeholder="Reply to this customer…" maxlength="1000" '
-        +'style="flex:1;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,.2);background:#1f1712;color:inherit;font:inherit">'
+        +'style="flex:1;min-width:0;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,.2);background:#1f1712;color:inherit;font:inherit">'
         +'<button type="button" class="tn-reply-send" data-convo="'+esc(conv.id)+'" '
         +'style="border:0;border-radius:9px;padding:10px 16px;font-weight:800;cursor:pointer;background:#4C9A5B;color:#fff">Send</button>'
         +'</div></div>';
     };
-
     app.innerHTML='<div class="panel"><h3>Open conversations ('+open.length+')</h3>'
       +(open.length?'':'<div class="muted">Nothing waiting on a reply.</div>')+'</div>'
       +open.map(thread).join('')
       +(rest.length?'<div class="panel" style="margin-top:10px"><h3>Closed</h3>'
-        +table(rest,[{label:'Customer',key:'customer_id'},{label:'Status',render:r=>pill(r.status)},
-                     {label:'Updated',render:r=>r.updated_at||r.created_at||'—'}])+'</div>':'');
+        +table(rest,[{label:'Customer',key:'customer_id'},{label:'Status',render:r=>pill(r.status),csv:r=>r.status},
+                     {label:'Updated',render:r=>esc(when(r.updated_at||r.created_at)),csv:r=>r.updated_at||r.created_at}],{name:'support'})+'</div>':'');
   }
 
-  async function trust(){setHead('Approvals & trust','Identity, partner approvals and trust signals.');const [v,r,rev]=await Promise.all([rows('vendors'),rows('riders'),rows('reviews')]);app.innerHTML='<div class="grid"><div class="panel"><h3>Vendor approvals</h3>'+table(v,[{label:'Business',key:'business_name'},{label:'TID',key:'tonninyira_id'},{label:'Approval',render:x=>pill(x.approval_status)},{label:'Decision',render:x=>approvalActions('vendor',x)}])+'</div><div class="panel"><h3>Rider approvals</h3>'+table(r,[{label:'Name',key:'full_name'},{label:'TID',key:'tonninyira_id'},{label:'Approval',render:x=>pill(x.approval_status)},{label:'Decision',render:x=>approvalActions('rider',x)}])+'</div></div><div class="panel" style="margin-top:10px"><h3>Reviews</h3>'+table(rev.slice(-250).reverse(),[{label:'Rating',key:'rating'},{label:'Comment',key:'comment'},{label:'Created',key:'created_at'}])+'</div>'}
-  async function growth(){setHead('Growth & analytics','Demand, customer activity and marketplace movement.');const [o,p,e]=await Promise.all([rows('orders'),rows('profiles','id,role,created_at'),rows('market_events')]);const days={};o.forEach(x=>{const d=String(x.created_at||'').slice(0,10)||'Unknown';days[d]=(days[d]||0)+1});const series=Object.entries(days).sort((a,b)=>a[0].localeCompare(b[0])).slice(-14);app.innerHTML='<div class="grid"><div class="panel"><h3>Orders by day</h3>'+table(series.map(x=>({day:x[0],orders:x[1]})),[{label:'Date',key:'day'},{label:'Orders',key:'orders'}])+'</div><div class="panel"><h3>Audience & activity</h3>'+table([{m:'Customers',n:p.filter(x=>x.role==='customer').length},{m:'Total orders',n:o.length},{m:'Completed orders',n:o.filter(x=>String(x.status).toLowerCase()==='completed').length},{m:'Marketplace events',n:e.length}],[{label:'Metric',key:'m'},{label:'Value',key:'n'}])+'</div></div>'}
-  async function system(){setHead('System data','Operational records and configuration signals.');const [events,admins,guides]=await Promise.all([rows('market_events'),rows('admin_users'),rows('admin_guides','slug,title,updated_at')]);app.innerHTML='<div class="grid"><div class="panel"><h3>Recent events</h3>'+table(events.slice(-200).reverse(),[{label:'Type',key:'event_type'},{label:'Status',key:'status'},{label:'Reference',key:'reference'},{label:'Created',key:'created_at'}])+'</div><div class="panel"><h3>Admin access registry</h3>'+table(admins,[{label:'User ID',key:'user_id'},{label:'Role',key:'role'},{label:'Active',key:'is_active'}])+'</div></div><div class="panel" style="margin-top:10px"><h3>Protected guides</h3>'+table(guides,[{label:'Slug',key:'slug'},{label:'Title',key:'title'},{label:'Updated',key:'updated_at'}])+'</div>'}
   /* Approval is the control that publishes a partner: vendors_public and
      riders_public both serve approval_status='approved' only, so nothing
-     reaches the storefront until someone acts here. These tables were
-     render-only before, which left the queue visible but inert.
-     Note the two tables key differently -- vendors on tonninyira_id (text),
-     riders on id (bigint) -- so the key column travels with the config. */
-  const APPROVALS={vendor:{table:'vendors',key:'tonninyira_id'},rider:{table:'riders',key:'id'}};
-  function approvalActions(kind,row){
-    const cfg=APPROVALS[kind],id=row[cfg.key],state=String(row.approval_status??'').toLowerCase();
-    if(id===null||id===undefined||id==='')return '<span class="muted">—</span>';
-    const btn=(to,bg,fg,text)=>'<button type="button" class="tn-approve" data-kind="'+esc(kind)+'" data-id="'+esc(id)+'" data-to="'+esc(to)+'" style="border:0;border-radius:8px;padding:6px 10px;margin-right:6px;font-size:.72rem;font-weight:800;cursor:pointer;background:'+bg+';color:'+fg+'">'+text+'</button>';
-    const link='<button type="button" class="tn-link-acct" data-kind="'+esc(kind)+'" data-id="'+esc(id)+'" style="border:0;border-radius:8px;padding:6px 10px;margin:2px;font-weight:800;cursor:pointer;background:#8a6100;color:#FFFFFF">'+(row.auth_user_id?'Relink':'Link account')+'</button>';
-    return (state==='approved'?'':btn('approved','#4C9A5B','#FFFFFF','Approve'))+(state==='rejected'?'':btn('rejected','#E23F25','#FFFFFF','Reject'))+link;
-  }
-  async function decideApproval(kind,id,to){
-    const cfg=APPROVALS[kind];
-    if(!cfg)throw Error('Unknown approval type.');
-    if(!['approved','rejected'].includes(to))throw Error('Unknown approval state.');
-    const r=await client().from(cfg.table).update({approval_status:to}).eq(cfg.key,id);
-    if(r.error)throw r.error;
-  }
+     reaches the storefront until someone acts here. */
+  async function trust(){setHead('Approvals & trust','Identity, partner approvals and trust signals.');const [v,r,rev]=await Promise.all([rows('vendors'),rows('riders'),rows('reviews')]);
+    const open=x=>String(x.approval_status).toLowerCase()!=='removed';
+    app.innerHTML='<div class="grid"><div class="panel"><h3>Vendor approvals</h3>'+table(v.filter(open),[{label:'Business',key:'business_name'},{label:'TID',key:'tonninyira_id'},{label:'Standing',render:x=>pill(x.approval_status),csv:x=>x.approval_status},{label:'Decision',noCsv:true,noSearch:true,render:x=>partnerActions('vendor',x)}],{name:'vendor-approvals',status:x=>x.approval_status})+'</div><div class="panel"><h3>Rider approvals</h3>'+table(r.filter(open),[{label:'Name',key:'full_name'},{label:'TID',key:'tonninyira_id'},{label:'Standing',render:x=>pill(x.approval_status),csv:x=>x.approval_status},{label:'Decision',noCsv:true,noSearch:true,render:x=>partnerActions('rider',x)}],{name:'rider-approvals',status:x=>x.approval_status})+'</div></div><div class="panel" style="margin-top:10px"><h3>Reviews</h3>'+table(rev.slice(-250).reverse(),[{label:'Rating',key:'rating'},{label:'Comment',key:'comment'},{label:'Created',render:x=>esc(when(x.created_at)),csv:x=>x.created_at}],{name:'reviews'})+'</div>'}
+
+  async function growth(){setHead('Growth & analytics','Demand, customer activity and marketplace movement.');const [o,p,e]=await Promise.all([rows('orders'),rows('profiles','id,role,created_at'),rows('market_events')]);const paid=o.filter(x=>x.payment_status==='paid');const days={};paid.forEach(x=>{const d=String(x.created_at||'').slice(0,10)||'Unknown';(days[d]||=new Set()).add(x.order_id)});const series=Object.entries(days).sort((a,b)=>a[0].localeCompare(b[0])).slice(-14);app.innerHTML='<div class="grid"><div class="panel"><h3>Paid orders by day</h3>'+table(series.map(x=>({day:x[0],orders:x[1].size})),[{label:'Date',key:'day'},{label:'Paid orders',key:'orders'}],{name:'orders-by-day'})+'</div><div class="panel"><h3>Audience & activity</h3>'+table([{m:'Customers',n:p.filter(x=>x.role==='customer').length},{m:'Paid orders',n:new Set(paid.map(x=>x.order_id)).size},{m:'Completed orders',n:new Set(o.filter(x=>String(x.status).toLowerCase()==='completed').map(x=>x.order_id)).size},{m:'Marketplace events',n:e.length}],[{label:'Metric',key:'m'},{label:'Value',key:'n'}],{name:'activity'})+'</div></div>'}
+
+  async function system(){setHead('System data','Audit log, operational records and configuration.');const [audit,events,guides]=await Promise.all([client().from('admin_actions').select('*').order('created_at',{ascending:false}).limit(1000).then(r=>{if(r.error)throw r.error;return r.data||[]}),rows('market_events'),rows('admin_guides','slug,title,updated_at')]);
+    const label=a=>String(a||'').replace(/_/g,' ');
+    app.innerHTML='<div class="panel"><h3>Audit log — every admin action</h3>'+table(audit,[{label:'When',render:x=>esc(when(x.created_at)),csv:x=>x.created_at},{label:'Action',render:x=>esc(label(x.action)),csv:x=>x.action},{label:'Target',render:x=>esc(x.target_type+' '+x.target_id),csv:x=>x.target_type+' '+x.target_id},{label:'Reason',key:'reason'},{label:'Admin',render:x=>'<span class="muted">'+esc(String(x.admin_user_id||'').slice(0,8))+'</span>',csv:x=>x.admin_user_id},{label:'Detail',render:x=>x.after?'<span class="muted">'+esc(JSON.stringify(x.after).slice(0,90))+'</span>':'—',csv:x=>JSON.stringify({before:x.before,after:x.after})}],{name:'audit-log',status:x=>label(x.action)})+'</div><div class="grid"><div class="panel"><h3>Recent events</h3>'+table(events.slice(-200).reverse(),[{label:'Type',key:'event_type'},{label:'Status',key:'status'},{label:'Reference',key:'reference'},{label:'Created',render:x=>esc(when(x.created_at)),csv:x=>x.created_at}],{name:'events'})+'</div><div class="panel"><h3>Protected guides</h3>'+table(guides,[{label:'Slug',key:'slug'},{label:'Title',key:'title'},{label:'Updated',render:x=>esc(when(x.updated_at)),csv:x=>x.updated_at}],{name:'guides'})+'</div></div>'}
+
   /* The August partner rows carry only a phone number, and no account shares
      it, so nothing can match them automatically. An admin picks the owner.
      Setting auth_user_id also stamps the row's email, via a database trigger. */
   async function linkAccount(kind,id){
-    const cfg=APPROVALS[kind];
-    if(!cfg)throw Error('Unknown partner type.');
     const r=await client().rpc('admin_list_accounts');
     if(r.error)throw r.error;
     const accts=r.data||[];
     if(!accts.length)throw Error('No accounts available to link.');
-    const pick=await chooseAccount(accts,kind,id);
+    const pick=await ask({title:'Link '+kind+' '+id,message:'Choose the Tonninyira account that owns this '+kind+'. They will sign in with its email and password.',fields:[{name:'user',label:'Account',type:'select',options:accts.map(a=>({value:a.user_id,label:(a.email||a.user_id)+(a.display_name?' — '+a.display_name:'')+' ('+a.role+')'}))}],confirm:'Link'});
     if(!pick)return false;
-    const u=await client().from(cfg.table).update({auth_user_id:pick}).eq(cfg.key,id);
+    const u=await client().from(kind==='vendor'?'vendors':'riders').update({auth_user_id:pick.user}).eq('tonninyira_id',id);
     if(u.error)throw u.error;
     return true;
   }
-  function chooseAccount(accts,kind,id){
-    return new Promise(resolve=>{
-      const m=document.createElement('div');
-      m.style.cssText='position:fixed;inset:0;z-index:10050;background:rgba(0,0,0,.72);display:grid;place-items:center;padding:20px';
-      m.innerHTML='<div style="background:#2a1f19;color:#f3e8d8;border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:20px;width:min(460px,100%)">'
-        +'<h3 style="margin:0 0 4px;font-size:1.05rem">Link '+esc(kind)+' '+esc(id)+'</h3>'
-        +'<p style="margin:0 0 14px;font-size:.8rem;opacity:.75">Choose the Tonninyira account that owns this '+esc(kind)+'. They will sign in with its email and password.</p>'
-        +'<select id="tnAcctPick" style="width:100%;padding:10px;border-radius:9px;background:#1f1712;color:#f3e8d8;border:1px solid rgba(255,255,255,.2)">'
-        +accts.map(a=>'<option value="'+esc(a.user_id)+'">'+esc(a.email||a.user_id)+(a.display_name?' — '+esc(a.display_name):'')+' ('+esc(a.role)+')</option>').join('')
-        +'</select>'
-        +'<div style="display:flex;gap:8px;margin-top:16px"><button id="tnAcctOk" style="flex:1;border:0;border-radius:9px;padding:10px;font-weight:800;cursor:pointer;background:#4C9A5B;color:#fff">Link</button>'
-        +'<button id="tnAcctNo" style="flex:1;border:1px solid rgba(255,255,255,.2);border-radius:9px;padding:10px;font-weight:800;cursor:pointer;background:transparent;color:inherit">Cancel</button></div></div>';
-      document.body.appendChild(m);
-      const done=v=>{m.remove();resolve(v)};
-      m.querySelector('#tnAcctOk').onclick=()=>done(m.querySelector('#tnAcctPick').value);
-      m.querySelector('#tnAcctNo').onclick=()=>done(null);
-      m.onclick=e=>{if(e.target===m)done(null)};
-    });
-  }
-  app.addEventListener('click',async e=>{
-    const b=e.target.closest('.tn-link-acct');
-    if(!b)return;
-    const restore=b.innerHTML;
-    b.disabled=true;b.textContent='Linking…';
-    try{
-      const changed=await linkAccount(b.dataset.kind,b.dataset.id);
-      if(changed){await load(current)}else{b.disabled=false;b.innerHTML=restore}
-    }catch(err){
-      b.disabled=false;b.innerHTML=restore;
-      status.className='status error';
-      status.textContent='Could not link account: '+String(err?.message||err);
-    }
-  });
 
+  async function approvedRiders(){const r=await client().from('riders').select('tonninyira_id,full_name,vehicle_type').eq('approval_status','approved').order('full_name');if(r.error)throw r.error;return r.data||[]}
+
+  const ACTIONS={
+    'goto':async b=>{nav.querySelector('[data-view="'+b.dataset.view+'"]')?.click();return false},
+    'p-approve':async b=>{const v=await ask({title:(b.textContent==='Reactivate'?'Reactivate ':'Approve ')+b.dataset.kind+' '+b.dataset.id,message:'They will appear to customers'+(b.dataset.kind==='rider'?' and receive delivery offers':'')+' straight away.',fields:[{name:'reason',label:'Note (optional)',type:'textarea'}],confirm:b.textContent});if(!v)return false;await rpc('admin_set_partner_status',{p_kind:b.dataset.kind,p_id:b.dataset.id,p_status:'approved',p_reason:v.reason||null});return b.dataset.kind+' '+b.dataset.id+' is approved.'},
+    'p-reject':async b=>{const v=await ask({title:'Reject '+b.dataset.kind+' '+b.dataset.id,fields:[reasonField],confirm:'Reject',danger:true});if(!v)return false;await rpc('admin_set_partner_status',{p_kind:b.dataset.kind,p_id:b.dataset.id,p_status:'rejected',p_reason:v.reason});return b.dataset.id+' was rejected.'},
+    'p-suspend':async b=>{const v=await ask({title:'Suspend '+b.dataset.kind+' '+b.dataset.id,message:'They disappear from the storefront'+(b.dataset.kind==='rider'?' and stop receiving delivery offers':'')+' until you reactivate them. Nothing is deleted.',fields:[reasonField],confirm:'Suspend',danger:true});if(!v)return false;await rpc('admin_set_partner_status',{p_kind:b.dataset.kind,p_id:b.dataset.id,p_status:'suspended',p_reason:v.reason});return b.dataset.id+' is suspended.'},
+    'p-remove':async b=>{const v=await ask({title:'Remove '+b.dataset.kind+' '+b.dataset.id,message:'If they have no orders or payments they are deleted. Otherwise they are archived: hidden everywhere and unlinked from their login, with their history kept.',fields:[reasonField],confirm:'Remove',danger:true});if(!v)return false;const r=await rpc('admin_remove_partner',{p_kind:b.dataset.kind,p_id:b.dataset.id,p_reason:v.reason});return b.dataset.id+(r?.outcome==='deleted'?' was deleted.':' was archived ('+r?.history_records+' history records kept).')},
+    'p-link':async b=>{const ok=await linkAccount(b.dataset.kind,b.dataset.id);return ok?b.dataset.id+' is linked.':false},
+    'o-cancel':async b=>{const v=await ask({title:'Cancel order '+b.dataset.id,message:b.dataset.paid?'This order is PAID. Cancelling does not refund the customer automatically — the audit log will mark it "refund due" so you can refund them by Mobile Money.':'The order is unpaid, so no refund is needed.',fields:[reasonField],confirm:'Cancel order',danger:true});if(!v)return false;const r=await rpc('admin_cancel_order',{p_order_id:b.dataset.id,p_reason:v.reason});return 'Order '+b.dataset.id+' cancelled.'+(r?.refund_due?' Refund due to the customer.':'')},
+    'o-assign':async b=>{const riders=await approvedRiders();if(!riders.length)throw Error('There are no approved riders to assign.');const v=await ask({title:'Assign a rider to '+b.dataset.id,fields:[{name:'rider',label:'Rider',type:'select',options:riders.map(x=>({value:x.tonninyira_id,label:x.full_name+' · '+x.tonninyira_id+(x.vehicle_type?' · '+x.vehicle_type:'')}))},reasonField],confirm:'Assign'});if(!v)return false;await rpc('admin_reassign_rider',{p_order_id:b.dataset.id,p_rider_tid:v.rider,p_reason:v.reason});return v.rider+' is now delivering '+b.dataset.id+'. They have been alerted.'},
+    'o-redispatch':async b=>{const v=await ask({title:'Re-dispatch '+b.dataset.id,message:'Clears the current rider and offers the delivery to approved riders within 20 km. If nobody accepts, a rider is assigned automatically.',fields:[reasonField],confirm:'Re-dispatch'});if(!v)return false;await rpc('admin_reassign_rider',{p_order_id:b.dataset.id,p_rider_tid:null,p_reason:v.reason});return b.dataset.id+' was re-offered to nearby riders.'},
+    'po-paid':async b=>{const v=await ask({title:'Mark payout paid',message:'Only do this after the money has actually been sent.',fields:[{name:'ref',label:'Payment reference (MoMo or bank transaction ID)',required:true},{name:'reason',label:'Note (optional)',type:'textarea'}],confirm:'Mark paid'});if(!v)return false;await rpc('admin_set_payout_status',{p_payout_id:Number(b.dataset.id),p_status:'paid',p_reference:v.ref,p_reason:v.reason||null});return 'Payout marked paid.'},
+    'po-failed':async b=>{const v=await ask({title:'Mark payout failed',message:'The amount goes back into the partner’s available balance.',fields:[reasonField],confirm:'Mark failed',danger:true});if(!v)return false;await rpc('admin_set_payout_status',{p_payout_id:Number(b.dataset.id),p_status:'failed',p_reference:null,p_reason:v.reason});return 'Payout marked failed.'},
+    'c-suspend':async b=>{const v=await ask({title:'Suspend '+b.dataset.name,message:'They can still sign in and see past orders, but cannot place new orders until reactivated.',fields:[reasonField],confirm:'Suspend',danger:true});if(!v)return false;await rpc('admin_set_customer_suspended',{p_user_id:b.dataset.id,p_suspended:true,p_reason:v.reason});return b.dataset.name+' is suspended.'},
+    'c-reactivate':async b=>{const v=await ask({title:'Reactivate '+b.dataset.name,fields:[reasonField],confirm:'Reactivate'});if(!v)return false;await rpc('admin_set_customer_suspended',{p_user_id:b.dataset.id,p_suspended:false,p_reason:v.reason});return b.dataset.name+' can order again.'}
+  };
   /* Delegated, because every view rewrites app.innerHTML wholesale. */
   app.addEventListener('click',async e=>{
-    const b=e.target.closest('.tn-approve');
-    if(!b)return;
-    const restore=b.innerHTML;
-    b.disabled=true;b.textContent='Saving…';
+    const b=e.target.closest('[data-act]');if(!b||!ACTIONS[b.dataset.act])return;
+    const restore=b.textContent;b.disabled=true;
     try{
-      await decideApproval(b.dataset.kind,b.dataset.id,b.dataset.to);
+      const msg=await ACTIONS[b.dataset.act](b);
+      if(msg===false){b.disabled=false;return}
       await load(current);
-    }catch(err){
-      b.disabled=false;b.innerHTML=restore;
-      status.className='status error';
-      status.textContent='Could not update approval: '+String(err?.message||err);
-    }
+      note(msg);
+    }catch(err){b.disabled=false;b.textContent=restore;note('Could not complete that: '+String(err?.message||err),true)}
   });
 
   app.addEventListener('click',async e=>{
@@ -199,17 +270,17 @@
     const body=(input?.value||'').trim();
     if(!body)return;
     const me=(await client().auth.getUser())?.data?.user;
-    if(!me){status.className='status error';status.textContent='Your admin session has expired. Sign in again.';return}
+    if(!me){note('Your admin session has expired. Sign in again.',true);return}
     b.disabled=true;b.textContent='Sending…';
     const r=await client().from('support_messages').insert({conversation_id:b.dataset.convo,sender_user_id:me.id,body});
     b.disabled=false;b.textContent='Send';
-    if(r.error){status.className='status error';status.textContent='Could not send: '+r.error.message;return}
+    if(r.error){note('Could not send: '+r.error.message,true);return}
     if(input)input.value='';
     await load(current);
   });
 
   const V={overview,operations,customers,partners,finance,support,trust,growth,system};
-  async function load(view){status.className='status';status.textContent='Loading '+view+'…';app.innerHTML='<div class="empty">Loading…</div>';try{const s=await window.tnAdminState();if(!s.ok)throw Error(s.error||'Administrator access could not be verified');who.textContent=(s.display_name||s.user.email||'Admin')+' · '+s.role;await V[view]();status.textContent='Live data loaded.'}catch(e){status.className='status error';status.textContent='This workspace remains open. '+String(e?.message||'Unable to load this view.');app.innerHTML='<div class="error-box"><strong>'+esc(view)+'</strong><p>'+esc(e?.message||'Unable to load this view.')+'</p><p>Use Refresh after resolving the underlying data or permission issue.</p></div>'}}
+  async function load(view){note('Loading '+view+'…');for(const k in TABLES)delete TABLES[k];app.innerHTML='<div class="empty">Loading…</div>';try{const s=await window.tnAdminState();if(!s.ok)throw Error(s.error||'Administrator access could not be verified');who.textContent=(s.display_name||s.user.email||'Admin')+' · '+s.role;await V[view]();note('Live data loaded.')}catch(e){note('This workspace remains open. '+String(e?.message||'Unable to load this view.'),true);app.innerHTML='<div class="error-box"><strong>'+esc(view)+'</strong><p>'+esc(e?.message||'Unable to load this view.')+'</p><p>Use Refresh after resolving the underlying data or permission issue.</p></div>'}}
   document.getElementById('refresh').addEventListener('click',()=>load(current));
   document.getElementById('signout').addEventListener('click',()=>window.tnAdminLogout?.());
   load(current);
