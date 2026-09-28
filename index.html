@@ -54,7 +54,7 @@
 
   header{
     background:var(--ink);
-    position:sticky; top:0; z-index:40;
+    position:relative; z-index:40;
     border-bottom:1px solid rgba(243,232,216,0.08);
     padding:14px 16px 12px;
   }
@@ -66,9 +66,17 @@
   .brand-tag{font-size:0.62rem; letter-spacing:1.5px; color:var(--gold); font-weight:700; margin-top:6px; background:var(--card); padding:3px 9px; border-radius:6px; display:inline-block;}
   .brand-lockup{min-width:0; flex:1 1 auto;}
   .brand-text{min-width:0;}
-  .brand-tag{max-width:100%; overflow-wrap:anywhere;}
-  .brand-row > .icon-btn, .brand-row > .tn-acct-btn{flex-shrink:0; white-space:nowrap;}
-  @media (max-width:380px){ .brand-row{gap:8px;} .brand-lockup{gap:8px;} .brand-badge{width:48px;height:48px;} }
+  .brand-tag{max-width:100%;}
+  .brand-row > .icon-btn{flex-shrink:0;}
+  .brand-row > .tn-acct-btn{flex-shrink:0; white-space:nowrap; max-width:32vw; overflow:hidden; text-overflow:ellipsis; display:block;}
+  @media (max-width:380px){ .brand-row{gap:8px;} .brand-lockup{gap:8px;} .brand-badge{width:48px;height:48px;} .brand-tag{display:none;} }
+  body.tn-has-install-banner{padding-bottom:190px;}
+  .brand-lockup{overflow:hidden;}
+  #gpsBtn{flex-shrink:1; min-width:0; max-width:58%; overflow:hidden; text-overflow:ellipsis;}
+  .location-row input{min-width:64px;}
+  .nav-btn{min-width:0;}
+  .nav-btn span{max-width:100%; text-align:center; line-height:1.15; overflow-wrap:break-word;}
+  @media (max-width:380px){ .tn-gi-sub{display:none!important;} }
   .icon-btn{
     position:relative; width:44px; height:44px; border-radius:12px;
     background:var(--card); border:none; color:var(--sand);
@@ -504,9 +512,25 @@ function matchWordmarkWidth(){
   const wordStyle = getComputedStyle(word);
   const wordPad = parseFloat(wordStyle.paddingLeft) + parseFloat(wordStyle.paddingRight);
   const tagBoxWidth = tag.getBoundingClientRect().width;
+  if(tagBoxWidth <= 0){
+    /* Narrow phones hide the tagline; shrink the wordmark to the space left
+       beside the logo instead, and drop it (the logo carries the name) if even
+       half size cannot fit. */
+    word.style.fontSize = ''; word.style.display = '';
+    const lockup = word.closest('.brand-lockup'), badge = document.getElementById('brandBadge');
+    if(!lockup) return;
+    const gap = parseFloat(getComputedStyle(lockup).columnGap) || 8;
+    const room = lockup.getBoundingClientRect().width - (badge ? badge.getBoundingClientRect().width : 0) - gap;
+    const need = word.getBoundingClientRect().width;
+    if(need <= room) return;
+    const scale = (room - wordPad) / (need - wordPad);
+    if(scale < 0.5){ word.style.display = 'none'; return; }
+    word.style.fontSize = (parseFloat(wordStyle.fontSize) * scale).toFixed(2) + 'px';
+    return;
+  }
   const wordBoxWidth = word.getBoundingClientRect().width;
   const wordTextWidth = wordBoxWidth - wordPad;
-  if(wordTextWidth <= 0 || tagBoxWidth <= 0) return;
+  if(wordTextWidth <= 0) return;
   const currentSize = parseFloat(wordStyle.fontSize);
   const targetTextWidth = tagBoxWidth - wordPad;
   const scale = Math.min(3, Math.max(0.5, targetTextWidth / wordTextWidth));
@@ -514,6 +538,10 @@ function matchWordmarkWidth(){
 }
 if(document.fonts && document.fonts.ready) document.fonts.ready.then(matchWordmarkWidth);
 else window.addEventListener('load', matchWordmarkWidth);
+/* The Account button's label arrives later and narrows the tagline, and the
+   tagline changes with language, so re-fit the wordmark whenever it resizes. */
+if(window.ResizeObserver){ const tnTag = document.querySelector('.brand-tag'), tnLock = document.querySelector('.brand-lockup'); const ro = new ResizeObserver(()=>requestAnimationFrame(matchWordmarkWidth)); if(tnTag) ro.observe(tnTag); if(tnLock) ro.observe(tnLock); }
+window.addEventListener('resize', matchWordmarkWidth);
 
 /* Favicon needs the same robustness as the header logo -- a <link> tag has
    no fallback of its own, so if the file isn't at exactly the path guessed,
@@ -1970,13 +1998,14 @@ function tnDismissGlobalInstall(){
 function tnRenderGlobalInstall(){
   const el = document.getElementById('tnGlobalInstall');
   if(!el) return;
-  if(!tnShowInstallCard() || tnGlobalInstallDismissed()){ el.classList.add('hidden'); el.innerHTML=''; return; }
+  if(!tnShowInstallCard() || tnGlobalInstallDismissed()){ el.classList.add('hidden'); el.innerHTML=''; document.body.classList.remove('tn-has-install-banner'); return; }
   el.classList.remove('hidden');
+  document.body.classList.add('tn-has-install-banner');
   el.innerHTML = `<div style="background:#1B2140;border:1px solid #2C3566;border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(0,0,0,.35)">
     <span aria-hidden="true" style="width:38px;height:38px;border-radius:12px;background:#4FB477;display:flex;align-items:center;justify-content:center;flex-shrink:0">${TN_ICON.download}</span>
     <span style="flex-grow:1;min-width:0" onclick="tnTriggerInstall()" role="button">
       <span class="tn-dsp" style="font-size:.95rem;color:#fff;display:block">${TN_I18N.t('install.cardTitle')}</span>
-      <span style="font-size:.7rem;font-weight:500;color:#AEB6E8">${tnInstallPrompt ? TN_I18N.t('install.cardSub') : TN_I18N.t('install.iosHint')}</span>
+      <span class="tn-gi-sub" style="font-size:.7rem;font-weight:500;color:#AEB6E8">${tnInstallPrompt ? TN_I18N.t('install.cardSub') : TN_I18N.t('install.iosHint')}</span>
     </span>
     <button type="button" aria-label="Dismiss" onclick="tnDismissGlobalInstall()" style="background:none;border:0;color:#AEB6E8;font-size:1.1rem;line-height:1;padding:4px;cursor:pointer;flex-shrink:0">&times;</button>
   </div>`;
