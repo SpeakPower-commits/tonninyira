@@ -1796,22 +1796,19 @@ function updateCartUI(){
       <div class="summary-row"><span>Delivery</span><span>UGX ${fmt(deliveryFee)}</span></div>
       <div class="summary-row total"><span>Total</span><span>UGX ${fmt(cartSubtotal()+deliveryFee)}</span></div>
     </div>
-    <button class="btn-primary" onclick="completeOrder('Cash on Delivery')">Place Order — Pay Cash on Delivery</button>
-    <button class="btn-link-alt" onclick="toggleAltPay()">Prefer Mobile Money instead?</button>
-    <div id="altPayBox" class="hidden" style="margin-top:6px;">
-      <button class="pay-option" onclick="completeOrder('MTN MoMo')">
-        <div class="pay-icon" style="background:var(--gold); color:var(--ink);">${ICONS.phone}</div>
-        <div><div class="pay-name">MTN MoMo</div><div class="pay-sub">Pay from your MTN mobile money</div></div>
-      </button>
-      <button class="pay-option" onclick="completeOrder('Airtel Money')">
-        <div class="pay-icon" style="background:var(--red); color:var(--sand);">${ICONS.phone}</div>
-        <div><div class="pay-name">Airtel Money</div><div class="pay-sub">Pay from your Airtel mobile money</div></div>
-      </button>
-    </div>
+    <div style="font-size:.72rem;font-weight:800;letter-spacing:1.5px;color:var(--gold);margin:4px 0 8px">PAY NOW TO PLACE YOUR ORDER</div>
+    <button class="pay-option" onclick="completeOrder('MTN MoMo')">
+      <div class="pay-icon" style="background:var(--gold); color:var(--ink);">${ICONS.phone}</div>
+      <div><div class="pay-name">MTN MoMo</div><div class="pay-sub">Pay from your MTN mobile money</div></div>
+    </button>
+    <button class="pay-option" onclick="completeOrder('Airtel Money')">
+      <div class="pay-icon" style="background:var(--red); color:var(--sand);">${ICONS.phone}</div>
+      <div><div class="pay-name">Airtel Money</div><div class="pay-sub">Pay from your Airtel mobile money</div></div>
+    </button>
+    <p style="font-size:.76rem;color:var(--muted);line-height:1.5;margin:4px 0 10px">Your order goes to the vendor as soon as your payment is confirmed. Tonninyira does not take cash on delivery.</p>
     <button class="btn-secondary" onclick="closeCart()">Keep Browsing</button>
   `;
 }
-function toggleAltPay(){ document.getElementById('altPayBox').classList.toggle('hidden'); }
 
 function openCart(){ document.getElementById('cartOverlay').classList.remove('hidden'); document.getElementById('cartSheet').classList.remove('hidden'); tnRefreshLoyaltyPoints(); }
 function closeCart(){ document.getElementById('cartOverlay').classList.add('hidden'); document.getElementById('cartSheet').classList.add('hidden'); }
@@ -2318,121 +2315,26 @@ function confirmIdentityAndContinue(){
   const id = saveCustomerIdentity(name, phone);
   document.getElementById('identityOverlay').classList.add('hidden');
   document.getElementById('identitySheet').classList.add('hidden');
-  if(pendingCheckoutMethod){ const m = pendingCheckoutMethod; pendingCheckoutMethod = null; finishOrder(m, id); }
+  if(pendingCheckoutMethod){ const m = pendingCheckoutMethod; pendingCheckoutMethod = null; completeOrder(m); }
   else if(AppState.view==='orders'){ renderMyOrders(); }
 }
 
+/* Every order is paid before anything else happens: the only way to place
+   one is to start a Flutterwave payment. There is no cash-on-delivery path. */
 async function completeOrder(method){
   if(AppState.cart.length===0) return;
-  const id = getCustomerIdentity();
-  if(!id || !id.name || !id.phone){
-    pendingCheckoutMethod = method;
-    document.getElementById('identityOverlay').classList.remove('hidden');
-    document.getElementById('identitySheet').classList.remove('hidden');
-    return;
-  }
-  finishOrder(method, id);
-}
-
-/* enhancements.js's enhancedFinishOrder() unconditionally replaces
-   window.finishOrder on load -- this function only actually runs if that
-   override is somehow absent (a failed/blocked script load), so it stays
-   redemption-aware and correct as a fallback rather than being deleted. If
-   you're chasing a checkout bug and this function's edits don't seem to
-   take effect, that override is almost certainly why -- check
-   secureFinishOrder() in enhancements.js first. */
-async function finishOrder(method, custId){
-  const orderId = 'TN-' + Math.random().toString(36).substr(2,7).toUpperCase();
-  const subtotal = cartSubtotal();
-  const deliveryFee = computeDeliveryFee(); // the real fee -- sent regardless of redemption, so the DB trigger has an honest fallback if it has to refuse the redemption
-  const wantsRedeem = AppState.redeemDelivery && AppState.loyaltyPoints !== null && AppState.loyaltyPoints >= FREE_DELIVERY_POINTS_COST;
-  const area = document.getElementById('areaSelect').value;
-
-  /* One checkout can span several stalls (a real mixed market basket), but a
-     vendor should only ever see their own items to fulfil -- not the whole
-     order. So one checkout becomes one 'orders' row per vendor, all sharing
-     this same order_id as the group reference the customer sees. Vendors
-     query their own rows by vendor_id from vendor-dashboard.html. */
-  const byVendor = {};
-  AppState.cart.forEach(c=>{
-    if(!byVendor[c.vendorId]) byVendor[c.vendorId] = {vendorName: c.vendorName, items: []};
-    byVendor[c.vendorId].items.push(c);
-  });
-  /* orders_customer_insert is `user_id = auth.uid()`, so an order without the
-     account attached is refused outright -- and award_order_loyalty() needs
-     the same field to award points. This was missing, which is why every
-     order on record is a guest order worth nothing to its customer. */
-  let tnUserId = null;
-  try{ tnUserId = (await supabaseClient.auth.getSession())?.data?.session?.user?.id || null; }catch(_){}
-  if(!tnUserId){
+  let signedIn = false;
+  try{ signedIn = !!(await supabaseClient.auth.getSession())?.data?.session; }catch(_){}
+  if(!signedIn){
     if(typeof window.authStart === 'function'){ window.authStart(); return; }
     alert('Please sign in to place your order.');
     return;
   }
-
-  const rows = Object.entries(byVendor).map(([vendorId, group])=>({
-    order_id: orderId, user_id: tnUserId, vendor_id: vendorId, vendor_name: group.vendorName,
-    items: group.items, item_subtotal: group.items.reduce((s,i)=>s+i.price*i.qty,0),
-    delivery_fee: deliveryFee, payment_method: method, customer_area: area,
-    /* No rider_tid here -- left for the database's nearby-dispatch trigger
-       (or its timed fallback) to fill in, not pre-picked at random. */
-    customer_name: custId.name, customer_phone: custId.phone,
-    customer_lat: AppState.customerLocation ? AppState.customerLocation.lat : null,
-    customer_lng: AppState.customerLocation ? AppState.customerLocation.lng : null,
-    status: 'new', created_at: new Date().toISOString(),
-    redeemed_free_delivery: wantsRedeem,
-  }));
-
-  /* Save FIRST, confirm it actually landed, THEN show success -- never the
-     other way around. A customer should never see "order confirmed" for an
-     order that was never recorded. If the save fails, the basket is kept
-     untouched so nothing is lost and they can just try again.
-     redeem_free_delivery_points() (a DB trigger) is the real word on whether
-     the redemption held -- it can refuse a stale balance the client hasn't
-     seen yet, so the confirmation below reads its answer back rather than
-     assuming the request it sent was honoured. */
-  let saveError = null, savedRows = null;
-  try{
-    const { data, error } = await supabaseClient.from('orders').insert(rows).select('delivery_fee,redeemed_free_delivery');
-    if(error) throw error;
-    savedRows = data;
-  }catch(e){
-    saveError = e.message || String(e);
-    console.log('Order not saved:', saveError);
-  }
-  if(saveError){
-    alert(`Your order could not be placed — ${saveError}. Your basket has been kept — please try again.`);
+  if(typeof window.tnStartMobileMoney !== 'function'){
+    alert('Secure payment is still loading. Please try again in a moment.');
     return;
   }
-
-  const actualFee = Number(savedRows?.[0]?.delivery_fee ?? deliveryFee);
-  const actuallyRedeemed = !!savedRows?.[0]?.redeemed_free_delivery;
-  AppState.redeemDelivery = false;
-  tnRefreshLoyaltyPoints();
-
-  closeCart();
-  document.getElementById('confirmOrderId').textContent = orderId;
-  document.getElementById('confirmSummary').innerHTML = `
-    <div class="summary-box" style="text-align:left;">
-      ${AppState.cart.map(c=>`<div class="summary-row"><span>${esc(c.name)} ×${esc(c.qty)}</span><span>UGX ${fmt(c.price*c.qty)}</span></div>`).join('')}
-      <div class="summary-row"><span>Delivery</span><span>UGX ${fmt(actualFee)}</span></div>
-      <div class="summary-row total"><span>Paid via ${method}</span><span>UGX ${fmt(subtotal+actualFee)}</span></div>
-    </div>
-    ${actuallyRedeemed ? `<p class="tn-sub" style="color:var(--gold);margin-top:8px">${esc(TN_I18N.t('cart.redeemedNote'))}</p>` : (wantsRedeem ? `<p class="tn-sub" style="margin-top:8px">${esc(TN_I18N.t('cart.redeemFailedNote'))}</p>` : '')}`;
-
-  document.getElementById('confirmRider').innerHTML = `
-    <div class="rider-card">
-      <div style="flex:1;">
-        <div style="font-weight:800;">Finding you a nearby rider…</div>
-        <div style="font-size:0.78rem; color:var(--muted);">You'll see their details here once one accepts your delivery.</div>
-      </div>
-    </div>`;
-
-  document.getElementById('confirmOverlay').classList.remove('hidden');
-  document.getElementById('confirmSheet').classList.remove('hidden');
-
-  AppState.cart = [];
-  updateCartUI();
+  return window.tnStartMobileMoney(method === 'Airtel Money' ? 'AIRTEL' : 'MTN');
 }
 
 function goView(view){

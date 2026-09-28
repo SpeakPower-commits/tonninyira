@@ -270,7 +270,7 @@ async function loadOrders(){
   if(!currentVendor) return;
   try{
     const { data, error } = await supabaseClient.from('orders').select('*')
-      .eq('vendor_id', currentVendor.tonninyira_id).order('created_at', {ascending:false});
+      .eq('vendor_id', currentVendor.tonninyira_id).eq('payment_status', 'paid').order('created_at', {ascending:false});
     if(error) throw error;
     renderOrders(data||[]);
   }catch(e){

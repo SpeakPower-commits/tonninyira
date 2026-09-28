@@ -280,10 +280,7 @@ function itemsLine(items){
 }
 function paymentLine(group){
   const first = group[0];
-  const paidAlready = String(first.payment_status||'').toLowerCase()==='paid' || String(first.payment_method||'').toLowerCase()!=='cash on delivery';
-  if(paidAlready) return `<div class="order-meta" style="color:var(--green)">Paid by ${escHtml(first.payment_method||'Mobile Money')} · nothing to collect</div>`;
-  const total = group.reduce((s,g)=>s+Number(g.item_subtotal||0),0) + Number(first.delivery_fee||0);
-  return `<div class="order-meta" style="color:var(--gold);font-weight:700">Cash on Delivery · Collect UGX ${Math.round(total).toLocaleString()} (incl. UGX ${Math.round(Number(first.delivery_fee||0)).toLocaleString()} delivery fee)</div>`;
+  return `<div class="order-meta" style="color:var(--green)">Paid by ${escHtml(first.payment_method||'Mobile Money')} · nothing to collect</div>`;
 }
 
 function renderDeliveries(rows){

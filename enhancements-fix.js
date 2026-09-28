@@ -2,17 +2,6 @@
 (function(){
   'use strict';
 
-  function enhancedFinish(method){
-    if(typeof window.finishOrder === 'function') return window.finishOrder(method);
-    if(typeof window.completeOrder === 'function') return window.completeOrder(method);
-  }
-
-  /* The original checkout button calls completeOrder() from inline HTML.
-     Redirect that single entry point to the security-aware enhancement. */
-  if(typeof window.finishOrder === 'function'){
-    window.completeOrder = enhancedFinish;
-  }
-
   /* The original search listener calls its lexical renderMain(). Attach a
      second listener so the enhanced search renderer gets the final say. */
   const search = document.getElementById('searchInput');
