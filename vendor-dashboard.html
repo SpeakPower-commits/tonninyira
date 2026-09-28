@@ -268,10 +268,12 @@ function timeAgo(iso){
 
 async function loadOrders(){
   if(!currentVendor) return;
+  const forVendor = currentVendor.tonninyira_id;
   try{
     const { data, error } = await supabaseClient.from('orders').select('*')
-      .eq('vendor_id', currentVendor.tonninyira_id).eq('payment_status', 'paid').order('created_at', {ascending:false});
+      .eq('vendor_id', forVendor).eq('payment_status', 'paid').order('created_at', {ascending:false});
     if(error) throw error;
+    if(!currentVendor || currentVendor.tonninyira_id !== forVendor) return;
     renderOrders(data||[]);
   }catch(e){
     document.getElementById('ordersList').innerHTML = `<div class="placeholder"><p>Couldn't load orders (${e.message||e}).</p></div>`;

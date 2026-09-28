@@ -156,9 +156,11 @@
     beginLocation();
   }
 
+  let started=false;
   function boot(){
-    if(!document.getElementById('dashView')) return;
-    start().catch(e=>console.log('[Tonninyira] nearby dispatch boot failed:',e));
+    if(started||!document.getElementById('dashView')) return;
+    started=true;
+    start().catch(e=>{started=false;console.log('[Tonninyira] nearby dispatch boot failed:',e)});
   }
   document.addEventListener('DOMContentLoaded',boot);
   setTimeout(boot,1200);

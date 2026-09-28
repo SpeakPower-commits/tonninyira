@@ -255,10 +255,12 @@ function timeAgo(iso){
    vendor line. */
 async function loadDeliveries(){
   if(!currentRider) return;
+  const forRider = currentRider.tonninyira_id;
   try{
     const { data, error } = await supabaseClient.from('orders').select('*')
-      .eq('rider_tid', currentRider.tonninyira_id).order('created_at', {ascending:false});
+      .eq('rider_tid', forRider).order('created_at', {ascending:false});
     if(error) throw error;
+    if(!currentRider || currentRider.tonninyira_id !== forRider) return;
     renderDeliveries(data||[]);
   }catch(e){
     document.getElementById('deliveriesList').innerHTML = `<div class="placeholder"><p>Couldn't load deliveries (${e.message||e}).</p></div>`;
@@ -286,7 +288,8 @@ function paymentLine(group){
 function renderDeliveries(rows){
   const el = document.getElementById('deliveriesList');
   if(!rows.length){
-    el.innerHTML = `<div class="placeholder"><h3>No deliveries yet</h3><p>New deliveries assigned to you will show up here automatically.</p></div>`;
+    el.innerHTML = `<div class="placeholder"><h3>No deliveries yet</h3><p>When a customer near you pays for an order, a delivery offer pops up here. After you accept it, the delivery card appears with the customer, location and items.</p>
+      <button class="btn-secondary" type="button" onclick="showExampleDelivery()">Show an example delivery</button></div>`;
     return;
   }
   const groups = {};
@@ -321,6 +324,29 @@ function renderDeliveries(rows){
       <div class="order-actions">${mapsLink}${action}</div>
     </div>`;
   }).join('');
+}
+
+/* A preview for demonstrating the flow when there are no real orders.
+   Clearly labelled, buttons inert, nothing is read from or written to the database. */
+function showExampleDelivery(){
+  const el = document.getElementById('deliveriesList');
+  const sample = [{ order_id:'EXAMPLE', vendor_name:'Mama Rita Kitchen', status:'ready',
+    items:[{name:'Rolex',qty:2},{name:'Chapati',qty:1}], payment_method:'MTN Mobile Money', payment_status:'paid',
+    customer_name:'Grace N', customer_phone:'0772 000 000', customer_area:'Kansanga',
+    customer_lat:0.294, customer_lng:32.605, created_at:new Date().toISOString() }];
+  renderDeliveries(sample);
+  const card = el.innerHTML;
+  el.innerHTML = `<div class="placeholder" style="border:1px dashed var(--gold);padding:12px;margin-top:12px">
+      <strong style="color:var(--gold)">EXAMPLE — not a real order.</strong> This is what a rider sees. Buttons are switched off.</div>
+    <div class="tn-offer" style="margin-top:12px">
+      <div class="tn-offer-top"><div class="tn-offer-title">🚴 Nearby delivery offer</div><div class="tn-offer-distance">1.4 km away</div></div>
+      <div class="tn-offer-body">Order <strong>EXAMPLE</strong> is available for pickup and delivery.</div>
+      <div class="tn-offer-meta">Step 1: a paid order nearby pops up like this. The rider taps Accept.</div>
+      <div class="tn-offer-actions"><button class="tn-offer-btn tn-offer-accept" type="button" disabled>Accept delivery</button><button class="tn-offer-btn tn-offer-dismiss" type="button" disabled>Not now</button></div>
+    </div>
+    <p class="helper" style="margin-top:14px">Step 2: after accepting, the delivery card below appears.</p>
+    <div style="pointer-events:none">${card}</div>
+    <button class="btn-secondary" type="button" onclick="loadDeliveries()">Hide example</button>`;
 }
 
 async function advanceGroup(orderId, status){
