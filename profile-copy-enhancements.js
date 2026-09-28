@@ -22,7 +22,7 @@
       .tn-copy-note{font-size:.78rem;line-height:1.45;color:var(--muted);margin:3px 0 0}
       .tn-profile-intro{margin:0 16px 12px;background:var(--card);border:1px solid rgba(243,232,216,.08);border-radius:16px;padding:15px}
       .tn-profile-kicker{font-size:.66rem;font-weight:800;letter-spacing:1.4px;color:var(--gold);margin-bottom:5px}
-      .tn-profile-title{font-family:'Alfa Slab One',cursive;font-size:1.15rem;color:var(--sand);margin:0}
+      .tn-profile-title{font-family:'Alfa Slab One',cursive;font-weight:400;font-synthesis:none;font-size:1.15rem;color:var(--sand);margin:0}
       .tn-section-label{margin:16px 16px 7px;font-size:.68rem;font-weight:800;letter-spacing:1.4px;color:var(--gold)}
       .tn-action-card{background:var(--card);border:1px solid rgba(243,232,216,.07);border-radius:14px;padding:12px;margin:8px 16px}
       .tn-action-title{font-weight:800;color:var(--sand);font-size:.9rem}
