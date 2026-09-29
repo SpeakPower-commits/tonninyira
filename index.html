@@ -184,9 +184,16 @@
 
   .gallery-strip{display:flex; gap:8px; overflow-x:auto; padding:2px 16px 14px; scrollbar-width:none;}
   .gallery-strip::-webkit-scrollbar{display:none;}
-  .gallery-item{flex-shrink:0; width:118px;}
-  .gallery-item img, .gallery-item video{width:118px; height:88px; object-fit:cover; border-radius:10px; display:block; background:var(--card2);}
-  .gallery-caption{font-size:0.66rem; color:var(--muted); margin-top:4px; line-height:1.25;}
+  .gallery-item{flex-shrink:0; width:156px; padding:0; border:0; background:none; color:inherit; font:inherit; text-align:left; cursor:pointer;}
+  .gallery-item img, .gallery-item video, .gallery-video{width:156px; height:116px; object-fit:cover; border-radius:12px; display:block; background:var(--card2);}
+  .gallery-video{position:relative; overflow:hidden;}
+  .gallery-video img{position:absolute; inset:0;}
+  .gallery-play{position:absolute; left:50%; top:50%; width:44px; height:44px; margin:-22px 0 0 -22px; border-radius:50%; background:var(--gold); color:var(--ink); display:flex; align-items:center; justify-content:center; font-size:16px;}
+  .gallery-dur{position:absolute; right:6px; bottom:6px; padding:2px 6px; border-radius:6px; background:rgba(20,14,11,.85); color:var(--sand); font-size:.68rem; font-weight:700;}
+  .gallery-caption{display:block; font-size:0.66rem; color:var(--muted); margin-top:4px; line-height:1.25; overflow-wrap:break-word;}
+  .item-photo{position:relative; flex-shrink:0; width:64px; height:64px; padding:0; border:0; border-radius:12px; overflow:hidden; background:var(--card2); cursor:pointer;}
+  .item-photo img{width:100%; height:100%; object-fit:cover; display:block;}
+  .item-photo span{position:absolute; right:4px; bottom:4px; min-width:18px; padding:1px 5px; border-radius:99px; background:rgba(20,14,11,.85); color:var(--sand); font-size:.62rem; font-weight:800;}
 
   .item-row{
     display:flex; justify-content:space-between; align-items:center; gap:10px;
@@ -458,6 +465,7 @@
 
 <script>
 const ICONS = {
+  play: `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>`,
   heart: `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>`,
   search: `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
   cart: `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>`,
@@ -1725,15 +1733,18 @@ function vendorCardHTML(v){
   const avatarOrLogo = logoSrc
     ? fallbackAvatar('display:none;') + `<img src="${logoSrc}" class="avatar" onerror="this.previousElementSibling.style.display='';this.remove()">`
     : fallbackAvatar();
+  /* Tiles open the full-screen viewer (stall-viewer.js). Videos show their
+     cover picture and length; the video itself only downloads when played,
+     which protects the free plan's small monthly viewing allowance. */
   const galleryHTML = (v.gallery && v.gallery.length) ? `
     <div class="gallery-strip">
-      ${v.gallery.map(g=>`
-        <div class="gallery-item">
+      ${v.gallery.map((g,gi)=>`
+        <button type="button" class="gallery-item" onclick="tnOpenViewer('${safeId(v.id)}','g',${gi})" aria-label="${g.type==='video'?'Play video':'View photo'} ${gi+1}">
           ${g.type==='video'
-            ? `<video src="${safeUrl(g.url)}" muted loop playsinline onmouseover="this.play()" onmouseout="this.pause()"></video>`
-            : `<img src="${safeUrl(g.url)}" loading="lazy">`}
-          ${g.caption ? `<div class="gallery-caption">${esc(g.caption)}</div>` : ''}
-        </div>`).join('')}
+            ? `<span class="gallery-video">${g.poster?`<img src="${safeUrl(g.poster)}" alt="" loading="lazy">`:''}<span class="gallery-play">${ICONS.play}</span>${g.duration?`<span class="gallery-dur">${Math.floor(g.duration/60)}:${String(Math.round(g.duration%60)).padStart(2,'0')}</span>`:''}</span>`
+            : `<img src="${safeUrl(g.url)}" alt="${esc(g.caption||'Stall photo')}" loading="lazy">`}
+          ${g.caption ? `<span class="gallery-caption">${esc(g.caption)}</span>` : ''}
+        </button>`).join('')}
     </div>` : '';
 
   return `
@@ -1757,9 +1768,10 @@ function vendorCardHTML(v){
       ${galleryHTML}
       ${v.items.map(item=>`
         <div class="item-row">
-          <div>
+          ${(item.photos&&item.photos.length) ? `<button type="button" class="item-photo" onclick="tnOpenViewer('${safeId(v.id)}','i','${safeId(item.id)}')" aria-label="See photos of ${esc(item.name)}"><img src="${safeUrl(item.photos[0])}" alt="" loading="lazy">${item.photos.length>1?`<span>${item.photos.length}</span>`:''}</button>` : ''}
+          <div style="flex:1;min-width:0">
             <div class="item-name">${esc(item.name)}</div>
-            <div class="item-desc">${item.desc}</div>
+            <div class="item-desc">${esc(item.desc)}</div>
           </div>
           <div class="item-action">
             <span class="price-tag">${fmt(item.price)}</span>
@@ -2520,5 +2532,6 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>{
 <script src="partner-wallet-payouts.js"></script>
 <script src="signout-visible.js"></script>
 <script src="performance-optimizations.js"></script>
+<script src="stall-viewer.js"></script>
 </body>
 </html>

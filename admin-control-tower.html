@@ -135,6 +135,7 @@
     if(['pending','rejected','suspended'].includes(s))h+=btn('p-approve',s==='suspended'?'Reactivate':'Approve',d,'go');
     if(s==='pending')h+=btn('p-reject','Reject',d,'stop');
     if(s==='approved')h+=btn('p-suspend','Suspend',d,'warn');
+    if(kind==='vendor')h+=btn('p-media','Media',d,'');
     h+=btn('p-link',row.auth_user_id?'Relink':'Link account',d,'');
     h+=btn('p-remove','Remove',d,'stop');
     return '<div class="acts">'+h+'</div>';
@@ -215,9 +216,11 @@
 
   async function growth(){setHead('Growth & analytics','Demand, customer activity and marketplace movement.');const [o,p,e]=await Promise.all([rows('orders'),rows('profiles','id,role,created_at'),rows('market_events')]);const paid=o.filter(x=>x.payment_status==='paid');const days={};paid.forEach(x=>{const d=String(x.created_at||'').slice(0,10)||'Unknown';(days[d]||=new Set()).add(x.order_id)});const series=Object.entries(days).sort((a,b)=>a[0].localeCompare(b[0])).slice(-14);app.innerHTML='<div class="grid"><div class="panel"><h3>Paid orders by day</h3>'+table(series.map(x=>({day:x[0],orders:x[1].size})),[{label:'Date',key:'day'},{label:'Paid orders',key:'orders'}],{name:'orders-by-day'})+'</div><div class="panel"><h3>Audience & activity</h3>'+table([{m:'Customers',n:p.filter(x=>x.role==='customer').length},{m:'Paid orders',n:new Set(paid.map(x=>x.order_id)).size},{m:'Completed orders',n:new Set(o.filter(x=>String(x.status).toLowerCase()==='completed').map(x=>x.order_id)).size},{m:'Marketplace events',n:e.length}],[{label:'Metric',key:'m'},{label:'Value',key:'n'}],{name:'activity'})+'</div></div>'}
 
-  async function system(){setHead('System data','Audit log, operational records and configuration.');const [audit,events,guides]=await Promise.all([client().from('admin_actions').select('*').order('created_at',{ascending:false}).limit(1000).then(r=>{if(r.error)throw r.error;return r.data||[]}),rows('market_events'),rows('admin_guides','slug,title,updated_at')]);
+  async function system(){setHead('System data','Audit log, operational records and configuration.');const [usage,audit,events,guides]=await Promise.all([rpc('admin_media_usage',{}).catch(()=>null),client().from('admin_actions').select('*').order('created_at',{ascending:false}).limit(1000).then(r=>{if(r.error)throw r.error;return r.data||[]}),rows('market_events'),rows('admin_guides','slug,title,updated_at')]);
     const label=a=>String(a||'').replace(/_/g,' ');
-    app.innerHTML='<div class="panel"><h3>Audit log — every admin action</h3>'+table(audit,[{label:'When',render:x=>esc(when(x.created_at)),csv:x=>x.created_at},{label:'Action',render:x=>esc(label(x.action)),csv:x=>x.action},{label:'Target',render:x=>esc(x.target_type+' '+x.target_id),csv:x=>x.target_type+' '+x.target_id},{label:'Reason',key:'reason'},{label:'Admin',render:x=>'<span class="muted">'+esc(String(x.admin_user_id||'').slice(0,8))+'</span>',csv:x=>x.admin_user_id},{label:'Detail',render:x=>x.after?'<span class="muted">'+esc(JSON.stringify(x.after).slice(0,90))+'</span>':'—',csv:x=>JSON.stringify({before:x.before,after:x.after})}],{name:'audit-log',status:x=>label(x.action)})+'</div><div class="grid"><div class="panel"><h3>Recent events</h3>'+table(events.slice(-200).reverse(),[{label:'Type',key:'event_type'},{label:'Status',key:'status'},{label:'Reference',key:'reference'},{label:'Created',render:x=>esc(when(x.created_at)),csv:x=>x.created_at}],{name:'events'})+'</div><div class="panel"><h3>Protected guides</h3>'+table(guides,[{label:'Slug',key:'slug'},{label:'Title',key:'title'},{label:'Updated',render:x=>esc(when(x.updated_at)),csv:x=>x.updated_at}],{name:'guides'})+'</div></div>'}
+    const mb=n=>(Number(n||0)/1048576).toFixed(1)+' MB',pct=usage?Math.min(100,Math.round(usage.used_bytes/usage.limit_bytes*100)):0;
+    const meterHTML=usage?'<div class="panel" style="margin-bottom:10px"><h3>Photo & video storage (free plan)</h3><div style="height:12px;border-radius:99px;background:var(--card2);overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+(pct>=80?'var(--red)':'var(--gold)')+'"></div></div><p style="margin:8px 0;font-size:12px">'+mb(usage.used_bytes)+' of 1 GB used ('+pct+'%) · '+usage.files+' files · '+usage.videos+' videos'+(pct>=80?' — <b>nearly full: time to move videos to paid hosting</b>':'')+'</p>'+(usage.by_user&&usage.by_user.length?'<p class="muted" style="margin:0;font-size:11px">Largest: '+usage.by_user.map(u=>esc(u.stall||('account '+String(u.user_id).slice(0,8)))+' '+mb(u.bytes)).join(' · ')+'</p>':'')+'<p class="muted" style="margin:6px 0 0;font-size:11px">Viewing is also limited on the free plan (about 5 GB a month). Supabase dashboard → Usage shows it.</p></div>':'';
+    app.innerHTML=meterHTML+'<div class="panel"><h3>Audit log — every admin action</h3>'+table(audit,[{label:'When',render:x=>esc(when(x.created_at)),csv:x=>x.created_at},{label:'Action',render:x=>esc(label(x.action)),csv:x=>x.action},{label:'Target',render:x=>esc(x.target_type+' '+x.target_id),csv:x=>x.target_type+' '+x.target_id},{label:'Reason',key:'reason'},{label:'Admin',render:x=>'<span class="muted">'+esc(String(x.admin_user_id||'').slice(0,8))+'</span>',csv:x=>x.admin_user_id},{label:'Detail',render:x=>x.after?'<span class="muted">'+esc(JSON.stringify(x.after).slice(0,90))+'</span>':'—',csv:x=>JSON.stringify({before:x.before,after:x.after})}],{name:'audit-log',status:x=>label(x.action)})+'</div><div class="grid"><div class="panel"><h3>Recent events</h3>'+table(events.slice(-200).reverse(),[{label:'Type',key:'event_type'},{label:'Status',key:'status'},{label:'Reference',key:'reference'},{label:'Created',render:x=>esc(when(x.created_at)),csv:x=>x.created_at}],{name:'events'})+'</div><div class="panel"><h3>Protected guides</h3>'+table(guides,[{label:'Slug',key:'slug'},{label:'Title',key:'title'},{label:'Updated',render:x=>esc(when(x.updated_at)),csv:x=>x.updated_at}],{name:'guides'})+'</div></div>'}
 
   /* The August partner rows carry only a phone number, and no account shares
      it, so nothing can match them automatically. An admin picks the owner.
@@ -234,6 +237,42 @@
     return true;
   }
 
+
+  /* Review a stall's logo, photos, videos and product photos; remove any of
+     them (admin_remove_vendor_media, audited). The file itself is deleted
+     from storage too, so it stops counting against the 1 GB free plan. */
+  const MEDIA_PREFIX='https://alxzmjgepftohwpqibmn.supabase.co/storage/v1/object/public/tonninyira-media/';
+  async function mediaDialog(id){
+    const r=await client().from('vendors').select('tonninyira_id,business_name,logo_url,gallery,items').eq('tonninyira_id',id).maybeSingle();
+    if(r.error)throw r.error;if(!r.data)throw Error('Stall not found.');
+    const v=r.data,list=[];
+    if(v.logo_url)list.push({url:v.logo_url,thumb:v.logo_url,label:'Logo'});
+    (v.gallery||[]).forEach((g,i)=>list.push({url:g.url,thumb:g.type==='video'?(g.poster||''):g.url,label:g.type==='video'?'Video'+(g.duration?' · '+Math.floor(g.duration/60)+':'+String(g.duration%60).padStart(2,'0'):''):'Stall photo '+(i+1)}));
+    (v.items||[]).forEach(it=>(it.photos||[]).forEach((u,i)=>list.push({url:u,thumb:u,label:it.name+' · photo '+(i+1)})));
+    const m=document.createElement('div');m.className='dlg-back';
+    m.innerHTML='<div class="dlg" role="dialog" aria-modal="true" aria-label="Media of '+esc(v.business_name)+'" style="max-width:760px;width:calc(100% - 24px)"><h3>'+esc(v.business_name)+' — photos and videos</h3>'
+      +(list.length?'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;max-height:60vh;overflow:auto">'+list.map((x,i)=>'<div style="background:var(--card2);border-radius:12px;overflow:hidden"><a href="'+esc(x.url)+'" target="_blank" rel="noopener" style="display:block;aspect-ratio:4/3;background:#3A2C22 center/cover no-repeat;background-image:url(\''+esc(x.thumb)+'\')" aria-label="Open '+esc(x.label)+'"></a><div style="padding:8px;font-size:11px"><div style="overflow-wrap:anywhere">'+esc(x.label)+'</div><button type="button" class="act stop" data-mi="'+i+'" style="margin-top:6px">Remove</button></div></div>').join('')+'</div>':'<p>No photos or videos yet.</p>')
+      +'<div class="dlg-row"><button type="button" class="dlg-no">Close</button></div></div>';
+    document.body.appendChild(m);
+    return new Promise(resolve=>{
+      const done=v=>{m.remove();resolve(v)};
+      m.querySelector('.dlg-no').onclick=()=>done(false);
+      m.onclick=async e=>{
+        if(e.target===m)return done(false);
+        const b=e.target.closest('[data-mi]');if(!b)return;
+        const x=list[Number(b.dataset.mi)];
+        m.style.display='none';
+        const a=await ask({title:'Remove '+x.label,message:'It disappears from the stall straight away and the file is deleted.',fields:[reasonField],confirm:'Remove',danger:true});
+        if(!a){m.style.display='';return}
+        try{
+          const res=await rpc('admin_remove_vendor_media',{p_vendor:id,p_url:x.url,p_reason:a.reason});
+          const paths=[x.url,res?.poster].filter(u=>u&&u.startsWith(MEDIA_PREFIX)).map(u=>u.slice(MEDIA_PREFIX.length));
+          if(paths.length)await client().storage.from('tonninyira-media').remove(paths);
+          done(x.label+' removed from '+v.business_name+'.');
+        }catch(err){m.style.display='';note('Could not remove: '+String(err?.message||err),true)}
+      };
+    });
+  }
   async function approvedRiders(){const r=await client().from('riders').select('tonninyira_id,full_name,vehicle_type').eq('approval_status','approved').order('full_name');if(r.error)throw r.error;return r.data||[]}
 
   const ACTIONS={
@@ -242,6 +281,7 @@
     'p-reject':async b=>{const v=await ask({title:'Reject '+b.dataset.kind+' '+b.dataset.id,fields:[reasonField],confirm:'Reject',danger:true});if(!v)return false;await rpc('admin_set_partner_status',{p_kind:b.dataset.kind,p_id:b.dataset.id,p_status:'rejected',p_reason:v.reason});return b.dataset.id+' was rejected.'},
     'p-suspend':async b=>{const v=await ask({title:'Suspend '+b.dataset.kind+' '+b.dataset.id,message:'They disappear from the storefront'+(b.dataset.kind==='rider'?' and stop receiving delivery offers':'')+' until you reactivate them. Nothing is deleted.',fields:[reasonField],confirm:'Suspend',danger:true});if(!v)return false;await rpc('admin_set_partner_status',{p_kind:b.dataset.kind,p_id:b.dataset.id,p_status:'suspended',p_reason:v.reason});return b.dataset.id+' is suspended.'},
     'p-remove':async b=>{const v=await ask({title:'Remove '+b.dataset.kind+' '+b.dataset.id,message:'If they have no orders or payments they are deleted. Otherwise they are archived: hidden everywhere and unlinked from their login, with their history kept.',fields:[reasonField],confirm:'Remove',danger:true});if(!v)return false;const r=await rpc('admin_remove_partner',{p_kind:b.dataset.kind,p_id:b.dataset.id,p_reason:v.reason});return b.dataset.id+(r?.outcome==='deleted'?' was deleted.':' was archived ('+r?.history_records+' history records kept).')},
+    'p-media':async b=>mediaDialog(b.dataset.id),
     'p-link':async b=>{const ok=await linkAccount(b.dataset.kind,b.dataset.id);return ok?b.dataset.id+' is linked.':false},
     'o-cancel':async b=>{const v=await ask({title:'Cancel order '+b.dataset.id,message:b.dataset.paid?'This order is PAID. Cancelling does not refund the customer automatically — the audit log will mark it "refund due" so you can refund them by Mobile Money.':'The order is unpaid, so no refund is needed.',fields:[reasonField],confirm:'Cancel order',danger:true});if(!v)return false;const r=await rpc('admin_cancel_order',{p_order_id:b.dataset.id,p_reason:v.reason});return 'Order '+b.dataset.id+' cancelled.'+(r?.refund_due?' Refund due to the customer.':'')},
     'o-assign':async b=>{const riders=await approvedRiders();if(!riders.length)throw Error('There are no approved riders to assign.');const v=await ask({title:'Assign a rider to '+b.dataset.id,fields:[{name:'rider',label:'Rider',type:'select',options:riders.map(x=>({value:x.tonninyira_id,label:x.full_name+' · '+x.tonninyira_id+(x.vehicle_type?' · '+x.vehicle_type:'')}))},reasonField],confirm:'Assign'});if(!v)return false;await rpc('admin_reassign_rider',{p_order_id:b.dataset.id,p_rider_tid:v.rider,p_reason:v.reason});return v.rider+' is now delivering '+b.dataset.id+'. They have been alerted.'},

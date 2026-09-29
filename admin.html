@@ -251,14 +251,21 @@ function showToast(msg){
   setTimeout(()=>t.classList.add('hidden'), 3500);
 }
 
-async function uploadToStorage(file, path){
+/* Resize/shrink on the device and store under the admin's own media/<user id>/
+   folder (media-uploader.js); storage refuses every other path. Returns a
+   gallery entry, or null (with a toast) if the file could not be uploaded. */
+async function uploadToStorage(file){
   try{
-    const {error} = await supabaseClient.storage.from('tonninyira-media').upload(path, file, {upsert:true});
-    if(error) throw error;
-    return supabaseClient.storage.from('tonninyira-media').getPublicUrl(path).data.publicUrl;
+    if(file.type.startsWith('video/')){
+      const v = await TNMedia.prepareVideo(file, p=>showToast(`Preparing video ${Math.round(p*100)}%`));
+      const poster = v.poster ? await TNMedia.upload(v.poster, {kind:'poster', ext:'jpg'}) : null;
+      return {url: await TNMedia.upload(v.blob, {kind:'video', ext:v.ext}), type:'video', poster, duration:Math.round(v.duration)};
+    }
+    const img = await TNMedia.prepareImage(file);
+    return {url: await TNMedia.upload(img.blob, {kind:'photo', ext:img.ext}), type:'image'};
   }catch(e){
-    console.log('Storage upload skipped (bucket not configured yet):', e.message||e);
-    return URL.createObjectURL(file); // local-only fallback so the preview still works this session
+    showToast(`${file.name} was not uploaded: ${e.message||e}`);
+    return null;
   }
 }
 
@@ -281,14 +288,14 @@ async function submitVendorForm(e){
 
   let logoUrl = null;
   const logoFile = f.logoFile.files[0];
-  if(logoFile) logoUrl = await uploadToStorage(logoFile, `vendors/${tid}/logo-${logoFile.name}`);
+  if(logoFile) logoUrl = (await uploadToStorage(logoFile))?.url || null;
 
   const gallery = [];
   for(let i=1;i<=4;i++){
     const file = document.getElementById('galFile'+i).files[0];
     if(!file) continue;
-    const url = await uploadToStorage(file, `vendors/${tid}/gallery-${i}-${file.name}`);
-    gallery.push({url, caption: document.getElementById('galCap'+i).value.trim(), type: file.type.startsWith('video/')?'video':'image'});
+    const entry = await uploadToStorage(file);
+    if(entry) gallery.push({...entry, caption: document.getElementById('galCap'+i).value.trim()});
   }
 
   const record = {
@@ -332,7 +339,7 @@ async function submitRiderForm(e){
 
   let photoUrl = null;
   const photoFile = f.riderPhoto.files[0];
-  if(photoFile) photoUrl = await uploadToStorage(photoFile, `riders/${tid}/${photoFile.name}`);
+  if(photoFile) photoUrl = (await uploadToStorage(photoFile))?.url || null;
 
   const record = {
     tonninyira_id: tid, full_name: f.riderName.value.trim(), phone: f.riderPhone.value.trim(),
@@ -372,5 +379,6 @@ catch(e){
   supabaseClient = { auth:{getSession:dead}, from:dead, storage:{from:dead} };
 }
 </script>
+<script src="media-uploader.js"></script>
 </body>
 </html>
