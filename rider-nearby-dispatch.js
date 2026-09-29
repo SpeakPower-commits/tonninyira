@@ -7,6 +7,11 @@
   'use strict';
   if (!location.pathname.toLowerCase().includes('rider-dashboard')) return;
   if (typeof supabaseClient === 'undefined' || !supabaseClient?.auth) return;
+  /* Two loaders (partner-dashboard-auth-earnings.js and rider-realtime-alerts.js)
+     each add this file; a second copy would show every offer twice and send
+     GPS twice. Only the first copy runs. */
+  if (window.__tnDispatchLoaded) return;
+  window.__tnDispatchLoaded = true;
 
   let watchId = null;
   let rider = null;
@@ -32,6 +37,10 @@
       .tn-offer-accept{background:var(--green);color:var(--sand)}
       .tn-offer-dismiss{background:var(--card);color:var(--muted);border:1px solid rgba(243,232,216,.1)}
       .tn-offer-note{font-size:.7rem;color:var(--muted);margin-top:8px}
+      .tn-offer-route{display:grid;gap:10px;margin-top:10px;padding-left:14px;border-left:2px dashed #4A3B30}
+      .tn-offer-route span{display:block;font-size:.7rem;color:var(--muted)}
+      .tn-offer-route b{display:block;font-size:.95rem;overflow-wrap:break-word}
+      .tn-offer-route i{display:block;font-style:normal;font-size:.74rem;color:var(--muted)}
     `;
     document.head.appendChild(s);
   }
@@ -72,21 +81,25 @@
 
   function renderOffer(offer){
     const ui=ensureUI();
-    if(!ui||!offer?.id||seenOffers.has(offer.id)||offer.status!=='offered') return;
+    if(!ui||!offer?.id||seenOffers.has(offer.id)||(offer.status&&offer.status!=='offered')) return;
     seenOffers.add(offer.id);
     const card=document.createElement('div');
     card.className='tn-offer';
     card.dataset.offerId=String(offer.id);
+    const route=offer.pickup
+      ? `<div class="tn-offer-route"><div><span>Pick up from</span><b>${esc(offer.pickup)}</b>${offer.pickup_area?`<i>${esc(offer.pickup_area)}</i>`:''}</div><div><span>Deliver to</span><b>${esc(offer.drop_area||'the customer')}</b></div></div>`
+      : `<div class="tn-offer-body">${esc(offer.body||('Order '+offer.order_id+' is available for pickup and delivery.'))}</div>`;
     card.innerHTML=`
-      <div class="tn-offer-top"><div class="tn-offer-title">🚴 ${offer.distance_km==null?'New delivery request':'Nearby delivery offer'}</div><div class="tn-offer-distance">${esc(distanceLabel(offer.distance_km))}</div></div>
-      <div class="tn-offer-body">Order <strong>${esc(offer.order_id)}</strong> is available for pickup and delivery.</div>
-      <div class="tn-offer-meta">Offer expires if another rider accepts it first.</div>
-      <div class="tn-offer-actions"><button class="tn-offer-btn tn-offer-accept" type="button">Accept delivery</button><button class="tn-offer-btn tn-offer-dismiss" type="button">Not now</button></div>`;
+      <div class="tn-offer-top"><div class="tn-offer-title">${offer.distance_km==null?'New delivery request':'Nearby delivery request'}</div><div class="tn-offer-distance">${esc(distanceLabel(offer.distance_km))}</div></div>
+      ${route}
+      <div class="tn-offer-meta">Order ${esc(offer.order_id)} · already paid, nothing to collect${offer.earn?` · <b>you earn UGX ${Math.round(offer.earn).toLocaleString('en-US')}</b>`:''}</div>
+      <div class="tn-offer-actions"><button class="tn-offer-btn tn-offer-accept" type="button">Accept delivery</button><button class="tn-offer-btn tn-offer-dismiss" type="button">Not now</button></div>
+      <div class="tn-offer-note">First rider to accept gets it.</div>`;
     const accept=card.querySelector('.tn-offer-accept');
     const dismiss=card.querySelector('.tn-offer-dismiss');
     accept.onclick=async()=>{
       accept.disabled=true; dismiss.disabled=true; accept.textContent='Accepting…';
-      const {data,error}=await supabaseClient.rpc('accept_delivery_offer',{p_offer_id:offer.id});
+      const {error}=await supabaseClient.rpc('accept_delivery_offer',{p_offer_id:offer.id});
       if(error){
         accept.disabled=false; dismiss.disabled=false; accept.textContent='Accept delivery';
         alert(error.message||'This delivery is no longer available.');
@@ -95,7 +108,7 @@
       }
       card.remove();
       status('Delivery accepted. It has been added to your deliveries.',true);
-      try{ window.loadDeliveries?.(); }catch(_){ }
+      try{ window.loadDeliveries?.(); window.tnRiderHome?.refresh?.(); }catch(_){ }
     };
     dismiss.onclick=async()=>{
       dismiss.disabled=true;
@@ -105,10 +118,16 @@
     ui.offers.prepend(card);
   }
 
+  /* rider_inbox() carries pickup, drop-off and earnings, which riders cannot
+     read from unassigned orders directly. Polled as well as pushed, because
+     the realtime channel is not guaranteed on every network. Cards for
+     offers that were taken by someone else are removed. */
   async function loadOffers(){
-    const {data,error}=await supabaseClient.from('delivery_offers').select('id,order_id,rider_tid,distance_km,status,created_at').eq('rider_auth_user_id',rider.auth_user_id).eq('status','offered').order('created_at',{ascending:false}).limit(10);
-    if(error) return;
-    (data||[]).reverse().forEach(renderOffer);
+    const {data,error}=await supabaseClient.rpc('rider_inbox');
+    if(error||!data?.rider) return;
+    const open=new Set((data.offers||[]).map(o=>o.id));
+    document.querySelectorAll('#tnNearbyOffers .tn-offer[data-offer-id]').forEach(c=>{ if(!open.has(Number(c.dataset.offerId))){ c.remove(); seenOffers.delete(Number(c.dataset.offerId)); } });
+    (data.offers||[]).slice().reverse().forEach(o=>renderOffer({...o,status:'offered'}));
   }
 
   async function startRealtime(){
@@ -127,7 +146,14 @@
       });
   }
 
+  const ONLINE_KEY='tn_rider_online';
+  function isOnline(){ try{ return localStorage.getItem(ONLINE_KEY)!=='0'; }catch(_){ return true; } }
+  function stopLocation(){
+    if(watchId!=null){ try{ navigator.geolocation.clearWatch(watchId); }catch(_){ } watchId=null; }
+    status('You are offline. Your location is not being shared. Requests open to all riders still appear.',false);
+  }
   function beginLocation(){
+    if(watchId!=null) return;
     if(!navigator.geolocation){ status('Your browser does not support location tracking.',false); return; }
     status('Requesting location permission…',false);
     watchId=navigator.geolocation.watchPosition(async pos=>{
@@ -143,6 +169,13 @@
       else status('Could not read your current location. Keeping dispatch ready to retry.',false);
     },{enableHighAccuracy:true,maximumAge:15000,timeout:15000});
   }
+  /* The Online switch on the rider home screen (rider-home.js). */
+  function setOnline(on){
+    try{ localStorage.setItem(ONLINE_KEY,on?'1':'0'); }catch(_){ }
+    if(!rider) return;
+    on?beginLocation():stopLocation();
+  }
+  window.tnDispatch={ setOnline, isOnline, refresh:()=>rider&&loadOffers() };
 
   async function start(){
     styles();
@@ -154,7 +187,8 @@
     rider=data;
     await loadOffers();
     await startRealtime();
-    beginLocation();
+    setInterval(()=>{ if(!document.hidden) loadOffers(); },20000);
+    isOnline()?beginLocation():stopLocation();
   }
 
   let started=false;
