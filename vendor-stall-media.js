@@ -1,14 +1,14 @@
 /* Tonninyira vendor "My stall": the vendor manages what customers see.
  * Adds an Orders | My stall switch to vendor-dashboard.html. My stall lets the
  * vendor change the logo, add up to 2 videos (max 5 min each) and 12 stall
- * photos, and add, edit or remove products with up to 4 photos each. Every
+ * photos, and add, edit or remove products with up to 8 photos each. Every
  * change saves straight to the vendor's own row (vendors_self_update); the
  * guard_vendor_media trigger enforces the same limits server-side.
  * Media goes through window.TNMedia (media-uploader.js).
  */
 (function(){
   'use strict';
-  const MAX = { photos: 12, videos: 2, productPhotos: 4, products: 40 };
+  const MAX = { photos: 12, videos: 2, productPhotos: 8, products: 40 };
   const c = () => { try{ if(typeof supabaseClient!=='undefined'&&supabaseClient) return supabaseClient }catch(_){} return window.supabaseClient; };
   const esc = v => String(v??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
   const ugx = n => 'UGX ' + Math.round(Number(n||0)).toLocaleString('en-US');

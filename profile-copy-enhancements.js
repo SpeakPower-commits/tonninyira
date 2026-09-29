@@ -29,7 +29,7 @@
       .tn-action-sub{font-size:.76rem;color:var(--muted);line-height:1.4;margin-top:3px}
       .tn-profile-list{margin-top:4px}
       .tn-support-modal{position:fixed;inset:0;z-index:10050;background:rgba(0,0,0,.72);display:grid;place-items:end center;padding:0}
-      .tn-support-sheet{width:min(520px,100%);max-height:82vh;background:var(--card);border-radius:20px 20px 0 0;border:1px solid rgba(243,232,216,.1);overflow:hidden;display:flex;flex-direction:column}
+      .tn-support-sheet{width:min(520px,100%);max-height:82vh;background:var(--card);border-radius:20px 20px 0 0;border:1px solid rgba(243,232,216,.1);overflow:auto;display:flex;flex-direction:column}
       .tn-support-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(243,232,216,.08)}
       .tn-support-messages{padding:14px 16px;overflow:auto;min-height:140px;max-height:48vh}
       .tn-msg{margin-bottom:9px;display:flex}
@@ -226,7 +226,9 @@
        is what cost a day here. Every failure below names itself. */
     let convo=null, why='';
     try{
-      const found=await client.from('support_conversations').select('id,status').eq('customer_id',session.user.id).eq('status','open').order('updated_at',{ascending:false}).limit(1).maybeSingle();
+      /* Order complaints are cases of their own (order-help.js); this is the
+         general chat, so skip conversations tied to an order. */
+      const found=await client.from('support_conversations').select('id,status').eq('customer_id',session.user.id).is('order_id',null).in('status',['open','investigating','awaiting_customer']).order('updated_at',{ascending:false}).limit(1).maybeSingle();
       if(found.error) why=found.error.message;
       convo=found.data;
       if(!convo){
@@ -255,6 +257,21 @@
     modal.querySelector('#tnSupportClose').onclick=()=>modal.remove();
     modal.addEventListener('click',e=>{ if(e.target===modal) modal.remove(); });
     const messages=modal.querySelector('#tnSupportMessages');
+    /* With case-thread.js loaded, the chat shows photos and gets a photo
+       button (proof of a problem); otherwise it falls back to text only. */
+    if(window.TNCase && window.TNMedia){
+      const refresh=()=>TNCase.thread(messages,convo.id,{viewerRole:'customer'});
+      const compose=modal.querySelector('.tn-support-compose');
+      compose.className='tn-support-compose-photo'; compose.style.cssText='padding:0 14px 14px';
+      TNCase.composer(compose,convo.id,{onSent:refresh,placeholder:'Type your message…'});
+      await refresh();
+      if(client.channel){
+        const channel=client.channel(`support:${convo.id}`);
+        channel.on('postgres_changes',{event:'INSERT',schema:'public',table:'support_messages',filter:`conversation_id=eq.${convo.id}`},refresh).subscribe();
+        modal.addEventListener('remove',()=>client.removeChannel(channel),{once:true});
+      }
+      return;
+    }
     await loadSupportMessages(convo.id,session,messages);
 
     const send=async()=>{

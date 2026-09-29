@@ -140,7 +140,7 @@
   }
 
   /* ---------- layout ---------- */
-  const PLACE = { tnDispatchStatus:'home-status', tnNearbyOffers:'home-offers', tnRiderAlerts:'deliv-alerts', deliveriesList:'deliv-list',
+  const PLACE = { tnDispatchStatus:'home-status', tnNearbyOffers:'home-offers', tnRiderAlerts:'deliv-alerts', tnPartnerCases:'deliv-cases', deliveriesList:'deliv-list',
                   ptaEarnings:'earn-summary', 'tn-wallet-card':'earn-wallet', ptaAccount:'me-account' };
   function place(){
     for(const [id, slot] of Object.entries(PLACE)){
@@ -164,7 +164,7 @@
         <div class="rh-card rh-assist" id="rhAssist"></div>
         <div id="rhLines"></div>
       </section>
-      <section data-pane="deliv" aria-label="Deliveries"><div><div class="rh-eye">Deliveries</div><div class="rh-h2">Your deliveries</div></div><div data-slot="deliv-alerts"></div><div data-slot="deliv-list"></div></section>
+      <section data-pane="deliv" aria-label="Deliveries"><div><div class="rh-eye">Deliveries</div><div class="rh-h2">Your deliveries</div></div><div data-slot="deliv-alerts"></div><div data-slot="deliv-cases"></div><div data-slot="deliv-list"></div></section>
       <section data-pane="earn" aria-label="Earnings"><div><div class="rh-eye">Earnings</div><div class="rh-h2">What you've earned</div></div><div data-slot="earn-summary"></div><div data-slot="earn-wallet"></div></section>
       <section data-pane="me" aria-label="Me"><div class="rh-card" id="rhMe"></div><div data-slot="me-account"></div>
         <a class="rh-btn map" href="index.html" style="min-height:50px">Back to the Tonninyira market</a>

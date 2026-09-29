@@ -14,6 +14,8 @@
 @media(max-width:650px){.top-in{padding:10px}.session .who{display:none}.layout{padding:9px}.mobile-nav{display:block}.cards{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.head{align-items:flex-start}.rail{border-radius:12px;padding:8px}.nav{padding:10px 9px;min-height:42px;gap:8px}.nav-label{font-size:10px}}
 </style>
 <script src="admin-session-fix.js"></script>
+<script src="media-uploader.js"></script>
+<script src="case-thread.js"></script>
 </head>
 <body>
 <header class="top"><div class="top-in"><div class="brand"><img src="assets/tonninyira-mark.svg" alt="Tonninyira"><div><div class="eyebrow">ADMIN CONTROL TOWER</div><h1 class="display">TONNINYIRA COMMAND CENTRE</h1></div></div><div class="session"><span class="who" id="who">Checking access…</span><a class="top-link" href="admin-user-guide.html">User Guide</a><button class="signout" id="signout" type="button">Sign out</button></div></div></header>
@@ -176,36 +178,81 @@
   /* Reading messages is not support. Without a way to answer, every customer who
      writes in is met with silence -- so each conversation carries a reply box.
      support_messages_insert already permits staff to post into an open one. */
+  /* Support = cases. An order complaint (case_ref, category, photos) or a
+     general chat. Support can reply with photos, add support-only notes, and
+     move a case through open -> investigating -> waiting for customer ->
+     resolved -> closed via admin_set_case_status (audited). The conversation
+     UI and private evidence photos come from case-thread.js / media-uploader.js. */
+  let caseOpen=null, caseFilter='active';
+  const CASE_ACTIVE=['open','investigating','awaiting_customer'];
+  const hoursSince=v=>v?Math.floor((Date.now()-new Date(v).getTime())/3600000):0;
   async function support(){
-    setHead('Support','Customer service conversations and recent messages.');
-    const [c,m]=await Promise.all([rows('support_conversations'),rows('support_messages')]);
-    const byConvo={};
-    for(const msg of m){ (byConvo[msg.conversation_id]=byConvo[msg.conversation_id]||[]).push(msg); }
-    const open=c.filter(x=>String(x.status||'').toLowerCase()==='open');
-    const rest=c.filter(x=>String(x.status||'').toLowerCase()!=='open');
-    const thread=conv=>{
-      const msgs=(byConvo[conv.id]||[]).sort((a,b)=>String(a.created_at).localeCompare(String(b.created_at)));
-      const last=msgs.slice(-8).map(x=>
-        '<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)"><span class="muted" style="font-size:11px">'
-        +esc(when(x.created_at))+'</span><br>'+esc(x.body||'')+'</div>').join('')
-        || '<div class="muted" style="padding:6px 0">No messages yet.</div>';
-      return '<div class="panel" style="margin-top:10px"><h3 style="margin:0 0 2px">'+esc(conv.customer_id||'Unknown customer')+'</h3>'
-        +'<div class="muted" style="font-size:11px;margin-bottom:8px">'+pill(conv.status)+' &middot; '+esc(when(conv.updated_at||conv.created_at))+'</div>'
-        +'<div style="max-height:220px;overflow:auto">'+last+'</div>'
-        +'<div style="display:flex;gap:8px;margin-top:10px">'
-        +'<input class="tn-reply-input" data-convo="'+esc(conv.id)+'" placeholder="Reply to this customer…" maxlength="1000" '
-        +'style="flex:1;min-width:0;padding:10px;border-radius:9px;border:1px solid rgba(255,255,255,.2);background:#1f1712;color:inherit;font:inherit">'
-        +'<button type="button" class="tn-reply-send" data-convo="'+esc(conv.id)+'" '
-        +'style="border:0;border-radius:9px;padding:10px 16px;font-weight:800;cursor:pointer;background:#4C9A5B;color:#fff">Send</button>'
-        +'</div></div>';
-    };
-    app.innerHTML='<div class="panel"><h3>Open conversations ('+open.length+')</h3>'
-      +(open.length?'':'<div class="muted">Nothing waiting on a reply.</div>')+'</div>'
-      +open.map(thread).join('')
-      +(rest.length?'<div class="panel" style="margin-top:10px"><h3>Closed</h3>'
-        +table(rest,[{label:'Customer',key:'customer_id'},{label:'Status',render:r=>pill(r.status),csv:r=>r.status},
-                     {label:'Updated',render:r=>esc(when(r.updated_at||r.created_at)),csv:r=>r.updated_at||r.created_at}],{name:'support'})+'</div>':'');
+    window.supabaseClient=window.supabaseClient||client();
+    if(caseOpen) return caseDetail(caseOpen);
+    setHead('Support cases','Complaints with photo proof, follow-up and investigation. General chats are listed too.');
+    const c=await client().from('support_conversations').select('*').order('last_message_at',{ascending:false,nullsFirst:false}).limit(500).then(r=>{if(r.error)throw r.error;return r.data||[]});
+    const profs=await client().from('profiles').select('id,display_name,phone').in('id',[...new Set(c.map(x=>x.customer_id))]).then(r=>r.data||[]);
+    const who=id=>{const p=profs.find(x=>x.id===id);return p?(p.display_name||p.phone||'Customer'):'Customer'};
+    const waiting=x=>CASE_ACTIVE.includes(x.status)&&x.last_sender_role!=='support';
+    const groups={active:c.filter(x=>CASE_ACTIVE.includes(x.status)),done:c.filter(x=>['resolved','closed'].includes(x.status))};
+    const list=groups[caseFilter]||groups.active;
+    const tab=(k,l,n)=>'<button type="button" class="act'+(caseFilter===k?' go':'')+'" data-case-filter="'+k+'">'+l+' ('+n+')</button>';
+    const cats={not_delivered:'Not delivered',damaged:'Arrived damaged',wrong_item:'Wrong item',missing_item:'Something missing',late:'Very late',rider_conduct:'Rider behaviour',stall_conduct:'Stall behaviour',other:'Something else'};
+    app.innerHTML='<div class="panel"><div class="acts" style="margin-bottom:10px">'+tab('active','Needs attention',groups.active.length)+tab('done','Resolved & closed',groups.done.length)+'</div>'
+      +(list.length?list.map(x=>{const h=hoursSince(x.last_message_at||x.created_at),late=waiting(x)&&h>=24;
+        return '<button type="button" data-case-open="'+esc(x.id)+'" style="display:flex;gap:12px;width:100%;text-align:left;padding:12px;margin-top:8px;border-radius:12px;cursor:pointer;font:inherit;color:inherit;background:var(--card2);border:1px solid '+(late?'rgba(226,63,37,.6)':'var(--line)')+'">'
+          +'<span style="flex:1;min-width:0"><b>'+esc(x.case_ref||'General chat')+'</b> · '+esc(x.order_id?cats[x.category]||'Complaint':'Chat')+(x.order_id?' · '+esc(x.order_id):'')
+          +'<br><span class="muted" style="font-size:11px">'+esc(who(x.customer_id))+' · last message '+esc(when(x.last_message_at||x.created_at))
+          +(waiting(x)?' · <b style="color:'+(late?'#ff9d8e':'#ffd86d')+'">waiting on support '+h+' h</b>':'')+(x.refund_due?' · <b style="color:#ffd86d">refund due</b>':'')+'</span></span>'
+          +pill(x.status)+'</button>'}).join(''):'<div class="muted">Nothing here.</div>')+'</div>';
   }
+  async function caseDetail(id){
+    const cs=await client().from('support_conversations').select('*').eq('id',id).maybeSingle().then(r=>{if(r.error)throw r.error;return r.data});
+    if(!cs){caseOpen=null;return support()}
+    setHead(cs.case_ref||'General chat',cs.order_id?'Complaint on order '+cs.order_id:'Customer chat');
+    const [prof,orders]=await Promise.all([
+      client().from('profiles').select('display_name,phone').eq('id',cs.customer_id).maybeSingle().then(r=>r.data),
+      cs.order_id?client().from('orders').select('*').eq('order_id',cs.order_id).then(r=>r.data||[]):[]]);
+    const ev=orders.length?await client().from('order_events').select('event_type,created_at,order_id').in('order_id',orders.map(o=>String(o.id))).order('created_at').then(r=>r.data||[]):[];
+    const total=orders.reduce((s,o)=>s+Number(o.item_subtotal||0),0)+Math.max(0,...orders.map(o=>Number(o.delivery_fee||0)));
+    const tried={yes:'Yes, they already talked to the rider/stall',no:'No, they came straight to support',unreachable:'They could not reach the rider/stall'}[cs.tried_contact]||'—';
+    app.innerHTML='<div class="acts" style="margin-bottom:10px"><button type="button" class="act" data-case-back>← All cases</button></div>'
+      +'<div class="grid"><div class="panel"><h3>Case</h3>'
+        +'<p style="margin:4px 0">'+pill(cs.status)+(cs.refund_due?' <span class="pill warn">refund due</span>':'')+'</p>'
+        +'<p style="margin:4px 0"><b>Customer:</b> '+esc(prof?.display_name||'—')+(prof?.phone?' · '+esc(prof.phone):'')+'</p>'
+        +(cs.order_id?'<p style="margin:4px 0"><b>Tried rider/stall first:</b> '+esc(tried)+'</p>':'')
+        +(cs.resolution?'<p style="margin:4px 0"><b>Decision:</b> '+esc(cs.resolution)+'</p>':'')
+        +'<div class="acts" style="margin-top:10px">'
+          +(cs.status!=='investigating'?'<button type="button" class="act warn" data-case-status="investigating">Investigating</button>':'')
+          +(cs.status!=='awaiting_customer'?'<button type="button" class="act" data-case-status="awaiting_customer">Ask customer</button>':'')
+          +(!['resolved','closed'].includes(cs.status)?'<button type="button" class="act go" data-case-status="resolved">Resolve</button>':'')
+          +(cs.status!=='closed'?'<button type="button" class="act stop" data-case-status="closed">Close</button>':'<button type="button" class="act" data-case-status="open">Reopen</button>')
+        +'</div></div>'
+      +(cs.order_id?'<div class="panel"><h3>Order '+esc(cs.order_id)+'</h3>'
+        +orders.map(o=>'<p style="margin:4px 0"><b>'+esc(o.vendor_name)+'</b> · '+esc((o.items||[]).map(i=>i.name+' ×'+i.qty).join(', '))+' '+pill(o.status)+'</p>').join('')
+        +'<p style="margin:4px 0"><b>Paid:</b> '+money(total)+' · '+pill(orders[0]?.payment_status||'—')+'</p>'
+        +'<p style="margin:4px 0"><b>Rider:</b> '+esc(orders[0]?.rider_tid||'none')+' · <b>Area:</b> '+esc(orders[0]?.customer_area||'—')+'</p>'
+        +'<p class="muted" style="margin:8px 0 0;font-size:11px">'+(ev.length?ev.map(e=>esc(when(e.created_at))+' '+esc(String(e.event_type).replace(/_/g,' '))).join('<br>'):'No order events recorded.')+'</p></div>':'')
+      +'</div><div class="panel" style="margin-top:10px"><h3>Conversation</h3><div id="caseThread" style="max-height:55vh;overflow:auto"></div><div id="caseComp"></div></div>';
+    const refresh=()=>window.TNCase?.thread(document.getElementById('caseThread'),cs.id,{viewerRole:'support'});
+    if(window.TNCase){await refresh();if(cs.status!=='closed')TNCase.composer(document.getElementById('caseComp'),cs.id,{onSent:refresh,allowInternal:true,placeholder:'Reply to the customer (and the stall/rider on this order)…'});}
+    else document.getElementById('caseThread').innerHTML='<div class="error-box">The case module did not load. Refresh the page.</div>';
+  }
+  app.addEventListener('click',async e=>{
+    const f=e.target.closest('[data-case-filter]');if(f){caseFilter=f.dataset.caseFilter;return load('support')}
+    const o=e.target.closest('[data-case-open]');if(o){caseOpen=o.dataset.caseOpen;return load('support')}
+    if(e.target.closest('[data-case-back]')){caseOpen=null;return load('support')}
+    const s=e.target.closest('[data-case-status]');if(!s||!caseOpen)return;
+    const st=s.dataset.caseStatus,final=['resolved','closed'].includes(st);
+    const v=await ask({title:{investigating:'Mark as investigating',awaiting_customer:'Ask the customer for more information',resolved:'Resolve this case',closed:'Close this case',open:'Reopen this case'}[st],
+      message:final?'The customer, stall and rider will see your decision. Mark a refund as due if the customer should get money back.':'The customer is notified of the change.',
+      fields:(final?[{name:'resolution',label:'Decision (shown to the customer)',type:'textarea',required:true},{name:'refund',label:'Refund due?',type:'select',options:[{value:'no',label:'No refund'},{value:'yes',label:'Yes — refund the customer'}]}]:
+        st==='awaiting_customer'?[{name:'resolution',label:'What do you need from them? (shown to the customer)',type:'textarea',required:true}]:[]).concat([{name:'reason',label:'Internal reason (audit log)',type:'textarea',required:true}]),
+      confirm:'Save',danger:st==='closed'});
+    if(!v)return;
+    try{await rpc('admin_set_case_status',{p_conversation:caseOpen,p_status:st,p_resolution:v.resolution||null,p_refund_due:final?v.refund==='yes':null,p_reason:v.reason});note('Case updated.');load('support')}
+    catch(err){note('Could not update the case: '+String(err?.message||err),true)}
+  });
 
   /* Approval is the control that publishes a partner: vendors_public and
      riders_public both serve approval_status='approved' only, so nothing
