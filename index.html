@@ -195,6 +195,29 @@
   .item-photo img{width:100%; height:100%; object-fit:cover; display:block;}
   .item-photo span{position:absolute; right:4px; bottom:4px; min-width:18px; padding:1px 5px; border-radius:99px; background:rgba(20,14,11,.85); color:var(--sand); font-size:.62rem; font-weight:800;}
 
+  .stall-cover{display:block; width:100%; height:170px; padding:0; border:0; background:var(--card2); cursor:pointer; overflow:hidden;}
+  .stall-cover img{width:100%; height:100%; object-fit:cover; display:block;}
+  .stall-card.has-cover .stall-header{margin-top:-30px; position:relative;}
+  .stall-card.has-cover .stall-header .avatar{width:64px; height:64px; border:4px solid var(--card); box-sizing:content-box; font-size:1.25rem;}
+  .stall-card.has-cover .stall-header > div{padding-top:32px;}
+  .stall-sec{display:flex; justify-content:space-between; align-items:baseline; gap:8px; padding:6px 16px 8px;}
+  .stall-sec span{font-size:0.66rem; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; color:var(--gold);}
+  .stall-sec small{font-size:0.7rem; color:var(--muted);}
+  .prod-grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; padding:0 12px 14px;}
+  .prod-card{background:var(--card2); border-radius:16px; overflow:hidden; display:flex; flex-direction:column; min-width:0;}
+  .prod-img{position:relative; display:block; width:100%; aspect-ratio:1/1; padding:0; border:0; background:#3A2C22; cursor:pointer; overflow:hidden;}
+  .prod-img img{width:100%; height:100%; object-fit:cover; display:block;}
+  .prod-count{position:absolute; right:6px; bottom:6px; padding:2px 7px; border-radius:99px; background:rgba(20,14,11,.85); color:var(--sand); font-size:.62rem; font-weight:800;}
+  .prod-ph{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; cursor:default; background:#3A2C22;}
+  .prod-ph b{font-family:'Alfa Slab One'; font-weight:400; font-synthesis:none; font-size:2.2rem; line-height:1; opacity:.85;}
+  .prod-ph small{font-size:.62rem; font-weight:700; color:var(--muted);}
+  .prod-body{padding:10px 10px 8px; flex:1; min-width:0;}
+  .prod-name{font-weight:800; font-size:0.88rem; color:var(--sand); line-height:1.25; overflow-wrap:break-word;}
+  .prod-desc{font-size:0.72rem; color:var(--muted); margin-top:2px; line-height:1.3; overflow-wrap:break-word; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
+  .prod-price{font-family:'Alfa Slab One'; font-weight:400; font-synthesis:none; color:var(--gold); font-size:1rem; margin-top:6px;}
+  .prod-add{min-height:44px; margin:0 8px 8px; border:0; border-radius:12px; background:var(--gold); color:var(--ink); font:inherit; font-weight:800; font-size:0.82rem; cursor:pointer;}
+  .prod-add:active{background:var(--gold-dark);}
+  .prod-add.is-added{background:var(--green); color:var(--sand);}
   .item-row{
     display:flex; justify-content:space-between; align-items:center; gap:10px;
     padding:12px 16px; border-top:1px solid rgba(243,232,216,0.06);
@@ -1747,13 +1770,34 @@ function vendorCardHTML(v){
         </button>`).join('')}
     </div>` : '';
 
+  /* Stall page, as in the approved sample: a cover photo (the stall's first
+     picture) with the logo over it, the stall's photos and videos, then the
+     products as photo cards with a clear Add to basket. A product without a
+     photo gets a named placeholder so the grid still reads as a shop. */
+  const gal = v.gallery || [];
+  const coverIdx = gal.findIndex(g=>g && (g.type!=='video' ? g.url : g.poster));
+  const cover = coverIdx < 0 ? null : (gal[coverIdx].type==='video' ? gal[coverIdx].poster : gal[coverIdx].url);
+  const coverHTML = cover
+    ? `<button type="button" class="stall-cover" onclick="tnOpenViewer('${safeId(v.id)}','g',${coverIdx})" aria-label="View photos of ${esc(v.name)}"><img src="${safeUrl(cover)}" alt="" loading="lazy"></button>`
+    : '';
+  const productHTML = v.items.map(item=>{
+    const ph = item.photos || [];
+    const img = ph.length
+      ? `<button type="button" class="prod-img" onclick="tnOpenViewer('${safeId(v.id)}','i','${safeId(item.id)}')" aria-label="See photos of ${esc(item.name)}"><img src="${safeUrl(ph[0])}" alt="" loading="lazy">${ph.length>1?`<span class="prod-count">${ph.length} photos</span>`:''}</button>`
+      : `<div class="prod-img prod-ph" style="color:${avatarColor(item.name)}" aria-hidden="true"><b>${esc(String(item.name||'?').trim().charAt(0).toUpperCase())}</b><small>Photo coming soon</small></div>`;
+    return `<div class="prod-card">${img}
+      <div class="prod-body"><div class="prod-name">${esc(item.name)}</div>${item.desc?`<div class="prod-desc">${esc(item.desc)}</div>`:''}<div class="prod-price">UGX ${fmt(item.price)}</div></div>
+      <button type="button" class="prod-add" onclick="tnAddFromCard(this,'${safeId(v.id)}','${safeId(item.id)}')">Add to basket</button></div>`;
+  }).join('');
+
   return `
-    <div class="stall-card" id="vendor-${safeId(v.id)}">
+    <div class="stall-card${cover?' has-cover':''}" id="vendor-${safeId(v.id)}">
       <div class="stall-roof"></div>
       <button class="fav-btn ${isFavorite(v.id)?'active':''}" id="fav-${safeId(v.id)}" onclick="toggleFavorite('${safeId(v.id)}')" aria-label="Save stall">${ICONS.heart}</button>
+      ${coverHTML}
       <div class="stall-header">
         ${avatarOrLogo}
-        <div>
+        <div style="min-width:0">
           <div class="stall-eyebrow">STALL NO. ${stallNo}</div>
           <div class="stall-name">${esc(v.name)}</div>
           <div class="stall-meta">
@@ -1765,20 +1809,17 @@ function vendorCardHTML(v){
           </div>
         </div>
       </div>
-      ${galleryHTML}
-      ${v.items.map(item=>`
-        <div class="item-row">
-          ${(item.photos&&item.photos.length) ? `<button type="button" class="item-photo" onclick="tnOpenViewer('${safeId(v.id)}','i','${safeId(item.id)}')" aria-label="See photos of ${esc(item.name)}"><img src="${safeUrl(item.photos[0])}" alt="" loading="lazy">${item.photos.length>1?`<span>${item.photos.length}</span>`:''}</button>` : ''}
-          <div style="flex:1;min-width:0">
-            <div class="item-name">${esc(item.name)}</div>
-            <div class="item-desc">${esc(item.desc)}</div>
-          </div>
-          <div class="item-action">
-            <span class="price-tag">${fmt(item.price)}</span>
-            <button class="add-btn" onclick="addToCart('${safeId(v.id)}','${safeId(item.id)}')">+</button>
-          </div>
-        </div>`).join('')}
+      ${galleryHTML ? `<div class="stall-sec"><span>See the stall</span><small>Tap to view full screen</small></div>${galleryHTML}` : ''}
+      <div class="stall-sec"><span>Products</span><small>${v.items.length} item${v.items.length===1?'':'s'}</small></div>
+      <div class="prod-grid">${productHTML}</div>
     </div>`;
+}
+
+/* Product card button: add, then say so on the button itself. */
+function tnAddFromCard(btn, vendorId, itemId){
+  addToCart(vendorId, itemId);
+  btn.textContent = 'Added ✓'; btn.classList.add('is-added');
+  clearTimeout(btn._t); btn._t = setTimeout(()=>{ btn.textContent = 'Add to basket'; btn.classList.remove('is-added'); }, 1400);
 }
 
 function addToCart(vendorId, itemId){
