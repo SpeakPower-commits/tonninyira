@@ -1899,7 +1899,7 @@ function tnPartnerBlock(kind, status){
       <span style="flex-grow:1">
         <span class="tn-dsp" style="font-size:1.25rem;display:block;color:var(--gold)">${TN_I18N.t(vendor?'partner.vendorManageTitle':'partner.riderViewTitle')}</span>
         <span class="tn-sub" style="margin:0">${TN_I18N.t('partner.approvedSub')}</span>
-      </span>${TN_ICON.arrow}</a>`;
+      </span>${TN_ICON.arrow}</a>${vendor?'':'<div id="tnRiderInbox" aria-live="polite"></div>'}`;
   }
   if(status === 'rejected')
     return note(TN_I18N.t('partner.rejectedNote', {noun}));
@@ -2519,5 +2519,6 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>{
 <script src="account-session-ui.js"></script>
 <script src="wishlist-account.js"></script>
 <script src="flutterwave-payments-v2.js"></script>
+<script src="rider-inbox.js"></script>
 </body>
 </html>

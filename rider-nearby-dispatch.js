@@ -64,7 +64,8 @@
 
   function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#039;')}
   function distanceLabel(km){
-    const n=Number(km||0);
+    if(km==null) return 'Open to all riders'; // offered without a GPS match
+    const n=Number(km);
     if(n<1) return Math.round(n*1000)+' m away';
     return n.toFixed(1)+' km away';
   }
@@ -77,7 +78,7 @@
     card.className='tn-offer';
     card.dataset.offerId=String(offer.id);
     card.innerHTML=`
-      <div class="tn-offer-top"><div class="tn-offer-title">🚴 Nearby delivery offer</div><div class="tn-offer-distance">${esc(distanceLabel(offer.distance_km))}</div></div>
+      <div class="tn-offer-top"><div class="tn-offer-title">🚴 ${offer.distance_km==null?'New delivery request':'Nearby delivery offer'}</div><div class="tn-offer-distance">${esc(distanceLabel(offer.distance_km))}</div></div>
       <div class="tn-offer-body">Order <strong>${esc(offer.order_id)}</strong> is available for pickup and delivery.</div>
       <div class="tn-offer-meta">Offer expires if another rider accepts it first.</div>
       <div class="tn-offer-actions"><button class="tn-offer-btn tn-offer-accept" type="button">Accept delivery</button><button class="tn-offer-btn tn-offer-dismiss" type="button">Not now</button></div>`;
