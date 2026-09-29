@@ -19,7 +19,7 @@
   }
   *{box-sizing:border-box;}
   body{margin:0; background:var(--ink); color:var(--sand); font-family:'Work Sans',sans-serif; padding-bottom:60px;}
-  .display{font-family:'Alfa Slab One',cursive;}
+  .display{font-family:'Alfa Slab One',cursive;font-weight:400;font-synthesis:none;}
   .hidden{display:none !important;}
   .wrap{max-width:640px; margin:0 auto; padding:16px;}
 
@@ -43,7 +43,7 @@
   input:focus{outline:none; border-color:var(--gold);}
 
   .card{background:var(--card2); border-radius:14px; padding:14px; margin-top:10px; border:1px solid rgba(243,232,216,0.06);}
-  .btn-primary{width:100%; padding:15px; border-radius:12px; border:none; background:var(--red); color:var(--sand); font-family:'Alfa Slab One'; font-size:1rem; cursor:pointer; margin-top:20px;}
+  .btn-primary{width:100%; padding:15px; border-radius:12px; border:none; background:var(--red); color:var(--sand); font-family:'Alfa Slab One';font-weight:400;font-synthesis:none; font-size:1rem; cursor:pointer; margin-top:20px;}
   .btn-secondary{width:100%; padding:12px; border-radius:12px; border:1.5px solid var(--card2); background:transparent; color:var(--sand); font-weight:700; font-size:0.88rem; cursor:pointer; margin-top:10px;}
   .helper{font-size:0.74rem; color:var(--muted); margin-top:4px; line-height:1.4;}
   .error-text{color:var(--red); font-size:0.82rem; font-weight:700; margin-top:10px;}
@@ -58,7 +58,7 @@
   .order-card.stage-out{border-left-color:var(--gold);}
   .order-card.stage-done{opacity:0.55;}
   .order-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
-  .order-id{font-weight:800; font-family:'Alfa Slab One'; font-size:0.92rem;}
+  .order-id{font-weight:800; font-family:'Alfa Slab One';font-weight:400;font-synthesis:none; font-size:0.92rem;}
   .order-time{font-size:0.72rem; color:var(--muted); margin-top:2px;}
   .status-pill{display:inline-block; padding:4px 10px; border-radius:20px; font-size:0.68rem; font-weight:800; text-transform:uppercase; letter-spacing:0.4px; white-space:nowrap;}
   .status-pill.stage-preparing{background:var(--gold); color:var(--ink);}
@@ -128,6 +128,10 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 let supabaseClient;
 try{ supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }
 catch(e){ supabaseClient = { from:()=>({select:()=>({eq:()=>({order:async()=>({data:null,error:'no client'})})})}), }; }
+/* A top-level `let` never attaches to `window` -- partner-wallet-payouts.js
+   (loaded below) reads window.supabaseClient and, finding it undefined,
+   has silently done nothing on this page since it was added. */
+window.supabaseClient = supabaseClient;
 
 function paintBrandSVG(){ document.getElementById('brandBadge').style.display = 'none'; }
 function matchWordmarkWidth(){
@@ -251,10 +255,12 @@ function timeAgo(iso){
    vendor line. */
 async function loadDeliveries(){
   if(!currentRider) return;
+  const forRider = currentRider.tonninyira_id;
   try{
     const { data, error } = await supabaseClient.from('orders').select('*')
-      .eq('rider_tid', currentRider.tonninyira_id).order('created_at', {ascending:false});
+      .eq('rider_tid', forRider).order('created_at', {ascending:false});
     if(error) throw error;
+    if(!currentRider || currentRider.tonninyira_id !== forRider) return;
     renderDeliveries(data||[]);
   }catch(e){
     document.getElementById('deliveriesList').innerHTML = `<div class="placeholder"><p>Couldn't load deliveries (${e.message||e}).</p></div>`;
@@ -269,10 +275,21 @@ function stageFor(rows){
 }
 const STAGE_LABEL = { preparing:'Stalls Still Preparing', ready:'Ready for Pickup', out:'Out for Delivery', done:'Delivered' };
 
+function escHtml(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function itemsLine(items){
+  if(!Array.isArray(items) || !items.length) return '';
+  return items.map(i=>`${Number(i.qty||1)}× ${escHtml(i.name||'item')}`).join(', ');
+}
+function paymentLine(group){
+  const first = group[0];
+  return `<div class="order-meta" style="color:var(--green)">Paid by ${escHtml(first.payment_method||'Mobile Money')} · nothing to collect</div>`;
+}
+
 function renderDeliveries(rows){
   const el = document.getElementById('deliveriesList');
   if(!rows.length){
-    el.innerHTML = `<div class="placeholder"><h3>No deliveries yet</h3><p>New deliveries assigned to you will show up here automatically.</p></div>`;
+    el.innerHTML = `<div class="placeholder"><h3>No deliveries yet</h3><p>When a customer near you pays for an order, a delivery offer pops up here. After you accept it, the delivery card appears with the customer, location and items.</p>
+      <button class="btn-secondary" type="button" onclick="showExampleDelivery()">Show an example delivery</button></div>`;
     return;
   }
   const groups = {};
@@ -282,7 +299,7 @@ function renderDeliveries(rows){
     const first = group[0];
     const stage = stageFor(group);
     const pickups = group.map(g=>`
-      <div class="pickup-line"><span>${g.vendor_name}</span>
+      <div class="pickup-line"><span>${g.vendor_name}${itemsLine(g.items)?' · '+itemsLine(g.items):''}</span>
         <span class="status-pill stage-${g.status==='ready'||g.status==='out_for_delivery'||g.status==='completed' ? 'ready':'preparing'}">${g.status==='ready'?'Ready':g.status==='out_for_delivery'?'Picked Up':g.status==='completed'?'Delivered':'Preparing'}</span>
       </div>`).join('');
     let action = '';
@@ -303,9 +320,33 @@ function renderDeliveries(rows){
       </div>
       ${pickups}
       <div class="order-meta">Customer: ${first.customer_name||'—'} · ${first.customer_phone||''}</div>
+      ${paymentLine(group)}
       <div class="order-actions">${mapsLink}${action}</div>
     </div>`;
   }).join('');
+}
+
+/* A preview for demonstrating the flow when there are no real orders.
+   Clearly labelled, buttons inert, nothing is read from or written to the database. */
+function showExampleDelivery(){
+  const el = document.getElementById('deliveriesList');
+  const sample = [{ order_id:'EXAMPLE', vendor_name:'Mama Rita Kitchen', status:'ready',
+    items:[{name:'Rolex',qty:2},{name:'Chapati',qty:1}], payment_method:'MTN Mobile Money', payment_status:'paid',
+    customer_name:'Grace N', customer_phone:'0772 000 000', customer_area:'Kansanga',
+    customer_lat:0.294, customer_lng:32.605, created_at:new Date().toISOString() }];
+  renderDeliveries(sample);
+  const card = el.innerHTML;
+  el.innerHTML = `<div class="placeholder" style="border:1px dashed var(--gold);padding:12px;margin-top:12px">
+      <strong style="color:var(--gold)">EXAMPLE — not a real order.</strong> This is what a rider sees. Buttons are switched off.</div>
+    <div class="tn-offer" style="margin-top:12px">
+      <div class="tn-offer-top"><div class="tn-offer-title">🚴 Nearby delivery offer</div><div class="tn-offer-distance">1.4 km away</div></div>
+      <div class="tn-offer-body">Order <strong>EXAMPLE</strong> is available for pickup and delivery.</div>
+      <div class="tn-offer-meta">Step 1: a paid order nearby pops up like this. The rider taps Accept.</div>
+      <div class="tn-offer-actions"><button class="tn-offer-btn tn-offer-accept" type="button" disabled>Accept delivery</button><button class="tn-offer-btn tn-offer-dismiss" type="button" disabled>Not now</button></div>
+    </div>
+    <p class="helper" style="margin-top:14px">Step 2: after accepting, the delivery card below appears.</p>
+    <div style="pointer-events:none">${card}</div>
+    <button class="btn-secondary" type="button" onclick="loadDeliveries()">Hide example</button>`;
 }
 
 async function advanceGroup(orderId, status){
@@ -323,6 +364,7 @@ async function advanceGroup(orderId, status){
   }catch(e){}
 })();
 </script>
+<script src="rider-home.js"></script>
 <script src="partner-dashboard-auth-earnings.js"></script>
 <script src="partner-wallet-payouts.js"></script>
 <script src="signout-visible.js"></script>

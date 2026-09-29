@@ -9,7 +9,7 @@
   async function getPartner(){
     const { data: { user } = {} } = await client.auth.getUser();
     if (!user) return null;
-    const { data: profile } = await client.from('profiles').select('role,display_name,phone').eq('id', user.id).maybeSingle();
+    const { data: profile } = await client.from('profiles').select('role,display_name,phone,phone_verified').eq('id', user.id).maybeSingle();
     const role = profile && (profile.role === 'vendor' || profile.role === 'rider') ? profile.role : null;
     if (!role) return null;
     return { user, profile, role };
@@ -22,19 +22,25 @@
       if (!vendor || vendor.approval_status !== 'approved') return { gross: 0, committed: 0, available: 0, partnerName: vendor?.business_name || partner.profile.display_name || 'Vendor' };
       const { data: settlements } = await client.from('platform_settlements').select('vendor_amount').eq('vendor_id', vendor.tonninyira_id);
       gross = (settlements || []).reduce((s,r)=>s + Number(r.vendor_amount || 0), 0);
-      return await withPayouts(gross, vendor.business_name || partner.profile.display_name || 'Vendor', vendor.phone || partner.profile.phone);
+      return await withPayouts(gross, vendor.business_name || partner.profile.display_name || 'Vendor', partner);
     }
     const { data: rider } = await client.from('riders').select('tonninyira_id,full_name,phone,approval_status').eq('auth_user_id', partner.user.id).maybeSingle();
     if (!rider || rider.approval_status !== 'approved') return { gross: 0, committed: 0, available: 0, partnerName: rider?.full_name || partner.profile.display_name || 'Rider' };
     const { data: settlements } = await client.from('platform_settlements').select('rider_amount').eq('rider_tid', rider.tonninyira_id);
     gross = (settlements || []).reduce((s,r)=>s + Number(r.rider_amount || 0), 0);
-    return await withPayouts(gross, rider.full_name || partner.profile.display_name || 'Rider', rider.phone || partner.profile.phone);
+    return await withPayouts(gross, rider.full_name || partner.profile.display_name || 'Rider', partner);
   }
 
-  async function withPayouts(gross, partnerName, phone){
-    const { data: payouts } = await client.from('partner_payouts').select('amount,status,method,requested_at,reference').in('status',['requested','approved','processing','paid']).order('requested_at',{ascending:false});
+  /* Mobile Money payouts disburse the instant they're requested, with no
+     admin in the loop -- see request_partner_payout() in the database. That
+     only stays safe because the destination is locked to a phone already
+     proven to belong to this account (profiles.phone_verified, set only by
+     verify-phone-otp), never to whatever a form field says. Bank payouts have
+     no equivalent verified-on-file concept yet, so they stay request-only. */
+  async function withPayouts(gross, partnerName, partner){
+    const { data: payouts } = await client.from('partner_payouts').select('amount,status,method,requested_at,reference,failed_reason').in('status',['requested','approved','processing','paid']).order('requested_at',{ascending:false});
     const committed = (payouts || []).reduce((s,r)=>s + Number(r.amount || 0), 0);
-    return { gross, committed, available: Math.max(gross - committed, 0), partnerName, phone, payouts: payouts || [] };
+    return { gross, committed, available: Math.max(gross - committed, 0), partnerName, phone: partner.profile.phone, phoneVerified: !!partner.profile.phone_verified, payouts: payouts || [] };
   }
 
   function style(){
@@ -67,6 +73,40 @@
     host.appendChild(b);
   }
 
+  async function functionError(res, fallback){
+    if(!res.error) return null;
+    try{
+      if(res.error.context && typeof res.error.context.json === 'function'){
+        const body = await res.error.context.json();
+        if(body?.error) return body.error;
+      }
+    }catch(_){}
+    return res.error.message || fallback;
+  }
+
+  /* Same OTP round-trip index.html's tnAddPhone() already uses for customers
+     -- send-phone-otp/verify-phone-otp write profiles.phone/phone_verified
+     via the service-role key regardless of who calls them, so reusing them
+     here needs no new backend work, just the same two prompts. */
+  async function verifyPhoneFlow(){
+    const raw = window.prompt('Your Mobile Money phone number (e.g. 0772 123 456):');
+    if(raw === null) return false;
+    const t = String(raw).replace(/[\s()-]/g,'');
+    const e164 = /^0\d{9}$/.test(t) ? '+256'+t.slice(1)
+               : /^256\d{9}$/.test(t) ? '+'+t
+               : /^\+256\d{9}$/.test(t) ? t : null;
+    if(!e164){ alert('Enter a valid Uganda phone number.'); return false; }
+    const sendRes = await client.functions.invoke('send-phone-otp', { body: { phone: e164 } });
+    if(sendRes.error){ alert('Could not send the code: ' + (await functionError(sendRes, 'network error'))); return false; }
+    const code = window.prompt('Enter the 6-digit code sent to ' + e164 + ':');
+    if(code === null) return false;
+    const cleanCode = String(code).replace(/\s+/g,'');
+    if(!/^\d{6}$/.test(cleanCode)){ alert('Enter the 6-digit code.'); return false; }
+    const verifyRes = await client.functions.invoke('verify-phone-otp', { body: { code: cleanCode } });
+    if(verifyRes.error){ alert('Could not verify the code: ' + (await functionError(verifyRes, 'network error'))); return false; }
+    return true;
+  }
+
   async function mountWallet(){
     const partner=await getPartner();
     if(!partner) { mountSignOut(); return; }
@@ -74,21 +114,51 @@
     const data=await getBalance(partner);
     let box=document.getElementById('tn-wallet-card');
     if(!box){ box=document.createElement('section'); box.id='tn-wallet-card'; box.className='tn-wallet-card'; const main=document.querySelector('main')||document.body; main.prepend(box); }
-    const history=(data.payouts||[]).slice(0,5).map(p=>`<div class="tn-wallet-row"><span>${esc(p.method==='mobile_money'?'Mobile Money':'Bank')} · ${esc(p.status)}</span><strong>${money(p.amount)}</strong></div>`).join('') || '<div class="tn-wallet-note">No payout requests yet.</div>';
-    box.innerHTML=`<h2 style="margin:0 0 6px">Wallet & payouts</h2><div class="tn-wallet-note">${esc(data.partnerName)} · Available money can be requested to Mobile Money or a bank account.</div><div class="tn-wallet-grid"><div class="tn-wallet-metric"><small>Total earned</small><strong>${money(data.gross)}</strong></div><div class="tn-wallet-metric"><small>Already requested/paid</small><strong>${money(data.committed)}</strong></div><div class="tn-wallet-metric"><small>Available</small><strong>${money(data.available)}</strong></div></div><div class="tn-wallet-actions"><button class="tn-wallet-btn" id="tn-withdraw-open">Withdraw money</button><button class="tn-wallet-btn secondary" id="tn-wallet-refresh">Refresh</button></div><div id="tn-withdraw-panel" hidden><form class="tn-wallet-form" id="tn-withdraw-form"><select id="tn-payout-method"><option value="mobile_money">Mobile Money</option><option value="bank">Bank account</option></select><input id="tn-payout-amount" type="number" min="1000" step="100" max="${Math.floor(data.available)}" placeholder="Amount in UGX" required><input id="tn-payout-provider" placeholder="Provider e.g. MTN / Airtel"><input id="tn-payout-name" placeholder="Account name" value="${esc(data.partnerName)}" required><input id="tn-payout-number" placeholder="Mobile Money number or bank account number" value="${esc(data.phone||'')}" required><input id="tn-bank-name" placeholder="Bank name (for bank payouts)" hidden><button class="tn-wallet-btn" type="submit">Request payout</button><div class="tn-wallet-note">Payout requests are recorded securely. Actual money transfer requires Tonninyira's connected payment/banking provider and approval process.</div></form></div><div class="tn-wallet-history"><strong>Recent payouts</strong>${history}</div>`;
+    const statusLabel=s=>({requested:'Requested',approved:'Approved',processing:'Sending…',paid:'Paid',failed:'Failed',rejected:'Rejected',cancelled:'Cancelled'}[s]||s);
+    const history=(data.payouts||[]).slice(0,5).map(p=>`<div class="tn-wallet-row"><span>${esc(p.method==='mobile_money'?'Mobile Money':'Bank')} · ${esc(statusLabel(p.status))}${p.status==='failed'&&p.failed_reason?' — '+esc(p.failed_reason):''}</span><strong>${money(p.amount)}</strong></div>`).join('') || '<div class="tn-wallet-note">No payout requests yet.</div>';
+    const phoneRow = data.phoneVerified
+      ? `<input id="tn-payout-number" value="${esc(data.phone)}" readonly>`
+      : `<div class="tn-wallet-note">Verify your phone number to enable instant Mobile Money payouts.</div><button type="button" class="tn-wallet-btn secondary" id="tn-verify-phone-btn" style="width:100%">Verify my phone</button>`;
+    box.innerHTML=`<h2 style="margin:0 0 6px">Wallet & payouts</h2><div class="tn-wallet-note">${esc(data.partnerName)} · Mobile Money payouts send automatically to your verified phone. Bank payouts are still processed manually.</div><div class="tn-wallet-grid"><div class="tn-wallet-metric"><small>Total earned</small><strong>${money(data.gross)}</strong></div><div class="tn-wallet-metric"><small>Already requested/paid</small><strong>${money(data.committed)}</strong></div><div class="tn-wallet-metric"><small>Available</small><strong>${money(data.available)}</strong></div></div><div class="tn-wallet-actions"><button class="tn-wallet-btn" id="tn-withdraw-open">Withdraw money</button><button class="tn-wallet-btn secondary" id="tn-wallet-refresh">Refresh</button></div><div id="tn-withdraw-panel" hidden><form class="tn-wallet-form" id="tn-withdraw-form"><select id="tn-payout-method"><option value="mobile_money">Mobile Money (instant)</option><option value="bank">Bank account (manual)</option></select><input id="tn-payout-amount" type="number" min="1000" step="100" max="${Math.floor(data.available)}" placeholder="Amount in UGX" required><input id="tn-payout-provider" placeholder="Network: MTN or Airtel"><input id="tn-payout-name" placeholder="Account name" value="${esc(data.partnerName)}"><div id="tn-payout-mm-slot">${phoneRow}</div><input id="tn-bank-name" placeholder="Bank name" hidden><input id="tn-payout-bank-number" placeholder="Bank account number" hidden><button class="tn-wallet-btn" type="submit">Request payout</button><div class="tn-wallet-note">Bank payouts are recorded securely and paid out manually.</div></form></div><div class="tn-wallet-history"><strong>Recent payouts</strong>${history}</div>`;
     const panel=box.querySelector('#tn-withdraw-panel');
     box.querySelector('#tn-withdraw-open').onclick=()=>panel.hidden=!panel.hidden;
     box.querySelector('#tn-wallet-refresh').onclick=()=>mountWallet();
+    box.querySelector('#tn-verify-phone-btn')?.addEventListener('click', async ()=>{ if(await verifyPhoneFlow()) mountWallet(); });
     const method=box.querySelector('#tn-payout-method');
     const bank=box.querySelector('#tn-bank-name');
-    method.onchange=()=>{bank.hidden=method.value!=='bank';bank.required=method.value==='bank';};
+    const bankNumber=box.querySelector('#tn-payout-bank-number');
+    const nameField=box.querySelector('#tn-payout-name');
+    const mmSlot=box.querySelector('#tn-payout-mm-slot');
+    const provider=box.querySelector('#tn-payout-provider');
+    const syncMethod=()=>{
+      const isBank=method.value==='bank';
+      bank.hidden=!isBank; bank.required=isBank;
+      bankNumber.hidden=!isBank; bankNumber.required=isBank;
+      mmSlot.hidden=isBank;
+      provider.hidden=isBank;
+      nameField.readOnly=!isBank; nameField.required=isBank;
+      if(!isBank) nameField.value=data.partnerName;
+    };
+    method.onchange=syncMethod; syncMethod();
     box.querySelector('#tn-withdraw-form').onsubmit=async(e)=>{
       e.preventDefault();
+      if(method.value==='mobile_money' && !data.phoneVerified){ alert('Verify your phone first.'); return; }
       const btn=e.currentTarget.querySelector('button[type=submit]'); btn.disabled=true; btn.textContent='Submitting…';
-      const {data:result,error}=await client.rpc('request_partner_payout',{p_partner_type:partner.role,p_amount:Number(box.querySelector('#tn-payout-amount').value),p_method:method.value,p_provider:box.querySelector('#tn-payout-provider').value,p_account_name:box.querySelector('#tn-payout-name').value,p_account_number:box.querySelector('#tn-payout-number').value,p_bank_name:box.querySelector('#tn-bank-name').value||null});
+      const res=await client.functions.invoke('disburse-partner-payout',{body:{
+        partner_type:partner.role,
+        amount:Number(box.querySelector('#tn-payout-amount').value),
+        method:method.value,
+        provider:provider.value,
+        account_name:nameField.value,
+        account_number:method.value==='mobile_money'?data.phone:bankNumber.value,
+        bank_name:bank.value||null,
+      }});
       btn.disabled=false;btn.textContent='Request payout';
-      if(error){ alert(error.message); return; }
-      alert('Payout request submitted. Reference: ' + (result?.reference || 'pending'));
+      if(res.error){ alert(await functionError(res, 'Could not submit the request')); return; }
+      const result=res.data;
+      if(result?.disbursement==='initiated') alert('Sent! It should arrive in your Mobile Money shortly. Reference: '+(result.reference||'pending'));
+      else if(result?.disbursement==='failed') alert('The transfer could not be completed: '+(result.failed_reason||'unknown error')+'. Your balance has been released -- you can try again.');
+      else alert('Payout request submitted. Reference: ' + (result?.reference || 'pending'));
       mountWallet();
     };
     mountSignOut();

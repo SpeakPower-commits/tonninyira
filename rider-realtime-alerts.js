@@ -157,7 +157,7 @@
 // Load the automatic nearby-delivery dispatch module after this alert layer.
 (function(){
   if(!location.pathname.toLowerCase().includes('rider-dashboard')) return;
-  if(document.querySelector('script[data-tn-nearby-dispatch]')) return;
+  if(document.querySelector('script[data-tn-nearby-dispatch],script[data-tn-rider-dispatch]')) return;
   const s=document.createElement('script');
   s.src='rider-nearby-dispatch.js';
   s.dataset.tnNearbyDispatch='1';

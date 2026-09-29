@@ -10,6 +10,9 @@
   if(isRider && !document.querySelector('script[data-tn-rider-realtime]')){
     const s=document.createElement('script');s.src='rider-realtime-alerts.js';s.dataset.tnRiderRealtime='1';document.head.appendChild(s);
   }
+  if(isRider && !document.querySelector('script[data-tn-rider-dispatch]')){
+    const s=document.createElement('script');s.src='rider-nearby-dispatch.js';s.dataset.tnRiderDispatch='1';document.head.appendChild(s);
+  }
   const session=async()=>{try{return (await c()?.auth?.getSession())?.data?.session||null}catch(_){return null}};
   const phone=v=>{const s=String(v||'').replace(/[\s()-]/g,'');if(/^0\d{9}$/.test(s))return '+256'+s.slice(1);if(/^256\d{9}$/.test(s))return '+'+s;if(/^\+256\d{9}$/.test(s))return s;return null};
   /* Partners used to sign in with an SMS code. That could never succeed: no SMS
@@ -71,11 +74,9 @@
   }
   const esc=v=>String(v??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
   function row(label,value){return `<div style="display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07)"><span class="helper" style="margin:0">${esc(label)}</span><span style="font-weight:800;text-align:right;word-break:break-word">${esc(value)}</span></div>`}
-  async function account(){
-    const s=await session();if(!s)return;
+  function account(s,r){
     const dash=document.getElementById('dashView');
     if(!dash||document.getElementById('ptaAccount'))return;
-    const r=await partnerRow(s.user.id);
     const box=document.createElement('section');box.id='ptaAccount';box.className='card';
     const phone=r?.phone||'';
     const phoneLine=phone?row('Phone',phone)
@@ -94,6 +95,36 @@
     dash.insertBefore(box, dash.firstChild);
   }
   async function earnings(){const s=await session();if(!s||(!isVendor&&!isRider))return;const {data,error}=await c().from('my_settlement_summary').select('*').order('created_at',{ascending:false}).limit(100);if(error)return;let gross=0,fee=0,net=0;for(const r of(data||[])){if(isVendor){gross+=Number(r.gross_amount||0);fee+=Number(r.platform_fee||0);net+=Number(r.vendor_amount||0)}else{gross+=Number(r.rider_gross||0);fee+=Number(r.rider_platform_fee||0);net+=Number(r.rider_amount||0)}}const dash=document.getElementById('dashView');if(!dash||document.getElementById('ptaEarnings'))return;const box=document.createElement('section');box.id='ptaEarnings';box.className='card';box.innerHTML=`<h3 style="margin-top:0">YOUR EARNINGS</h3><p class="helper">Tonninyira keeps a 5% service cut. Your net amount is shown separately from the gross amount.</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px"><div style="background:var(--card);padding:10px;border-radius:10px"><div class="helper">Gross</div><strong>UGX ${Math.round(gross).toLocaleString()}</strong></div><div style="background:var(--card);padding:10px;border-radius:10px"><div class="helper">Tonninyira 5%</div><strong>UGX ${Math.round(fee).toLocaleString()}</strong></div><div style="background:var(--card);padding:10px;border-radius:10px"><div class="helper">Your net</div><strong>UGX ${Math.round(net).toLocaleString()}</strong></div><div style="background:var(--card);padding:10px;border-radius:10px"><div class="helper">Settlements</div><strong>${(data||[]).length}</strong></div></div>`;dash.insertBefore(box,dash.querySelector('#ordersList'));}
-  async function patch(){const s=await session();if(s){if(document.getElementById('loginView')){document.getElementById('loginView').style.display='none';document.getElementById('dashView')?.classList.remove('hidden')}setTimeout(account,250);setTimeout(earnings,300);return}ui()}
-  document.addEventListener('DOMContentLoaded',patch); setTimeout(patch,250);
+  /* The page keeps its own saved partner (localStorage) and only loads orders or
+     deliveries from that. A signed-in account is the real authority: open the
+     dashboard for the partner record this login actually owns, and replace any
+     stale saved record (e.g. one an admin has since removed). */
+  let booted=false;
+  async function patch(){
+    if(booted)return;booted=true;
+    const s=await session();
+    if(!s){ui();return}
+    const r=await partnerRow(s.user.id);
+    const key=isVendor?'tonninyira_vendor_session':'tonninyira_rider_session';
+    if(!r||(r.approval_status&&r.approval_status!=='approved')){
+      try{localStorage.removeItem(key)}catch(_){}
+      document.getElementById('dashView')?.classList.add('hidden');
+      const lv=document.getElementById('loginView');if(lv){lv.style.display='';lv.classList.remove('hidden')}
+      ui();
+      say(r?`Your ${isVendor?'stall':'rider'} profile is ${r.approval_status}. You will be able to use this dashboard once an admin approves it.`
+           :`This account has no ${isVendor?'stall':'rider'} profile yet. Apply to join, or ask an admin to link one to ${s.user.email||'this account'}.`);
+      return;
+    }
+    const legacy=isVendor?{tonninyira_id:r.tonninyira_id,business_name:r.business_name}:{tonninyira_id:r.tonninyira_id,full_name:r.full_name};
+    try{localStorage.setItem(key,JSON.stringify(legacy))}catch(_){}
+    try{
+      if(isVendor)currentVendor=legacy;else currentRider=legacy;
+      if(typeof showDashboard==='function')showDashboard();
+    }catch(_){}
+    const lv=document.getElementById('loginView');if(lv)lv.style.display='none';
+    document.getElementById('dashView')?.classList.remove('hidden');
+    account(s,r);
+    earnings();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',patch);else patch();
 })();

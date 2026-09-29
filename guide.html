@@ -44,7 +44,7 @@
   body{margin:0;min-height:100vh;background:var(--ink);color:var(--sand);font-family:'Work Sans',Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
   .wrap{max-width:460px;margin:0 auto;padding:20px 20px 40px;min-height:100vh;display:flex;flex-direction:column}
   .head{display:flex;align-items:center;justify-content:space-between}
-  .mark{font-family:'Alfa Slab One',cursive;color:var(--gold);font-size:15px;letter-spacing:.01em}
+  .mark{font-family:'Alfa Slab One',cursive;font-weight:400;font-synthesis:none;color:var(--gold);font-size:15px;letter-spacing:.01em}
   .back{font-size:13px;font-weight:600;color:var(--safe2);text-decoration:none}
   .back:hover{color:var(--sand)}
   .langs{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
@@ -159,7 +159,7 @@ const GUIDE_DATA = {
     { id:'shopper-4', icon:'star', caption:'Open a stall', detail:'Check its verification badge, ratings, and the items it sells.' },
     { id:'shopper-5', icon:'heart', caption:'Save it, or add to basket', detail:'Tap the heart to save a stall for later. Tap + on an item to add it to your basket.' },
     { id:'shopper-6', icon:'cart', caption:'Review your basket', detail:'The delivery fee is shown before you pay — no surprises.' },
-    { id:'shopper-7', icon:'phone', caption:'Choose how to pay', detail:'Cash on Delivery, or Mobile Money (MTN or Airtel). Sign in, or choose "I’m buying," if you haven’t yet.' },
+    { id:'shopper-7', icon:'phone', caption:'Choose how to pay', detail:'Pay upfront with Mobile Money (MTN or Airtel). The stall only starts once your payment is confirmed; there is no cash on delivery. Sign in, or choose "I’m buying," if you haven’t yet.' },
     { id:'shopper-8', icon:'moto', caption:'Order placed', detail:'You’ll see a confirmation with the rider assigned to bring your order.' },
     { id:'shopper-9', icon:'receipt', caption:'Track it, then rate it', detail:'Follow it under "Orders." Rate it once delivered. Your Profile shows your points (1 per UGX 1,000 spent), saved stalls, and a "Something wrong?" chat.' }
   ]},
@@ -206,7 +206,7 @@ lg: {
   'shopper-4': { caption:'Ggulawo eduuka', detail:'Kebera akabonero k’okukakasibwa, endowooza z’abaguzi, n’ebintu bye batunda.' },
   'shopper-5': { caption:'Tereka, oba oteeke mu kikapu', detail:'Nyiga ku mutima okutereka eduuka olw’oluvannyuma. Nyiga ku + ku kintu okukiteeka mu kikapu kyo.' },
   'shopper-6': { caption:'Kebera ekikapu kyo', detail:'Empeera y’okutwala erabika nga tonnasasula — tewali kw’eyongera.' },
-  'shopper-7': { caption:'Londa engeri gy’osasulamu', detail:'Sente z’omukono nga eduuka litusa, oba Mobile Money (MTN oba Airtel). Yingira, oba londa "Ndi muguzi," bw’oba tonnakikola.' },
+  'shopper-7': { caption:'Londa engeri gy’osasulamu', detail:'Sasula mu maaso ne Mobile Money (MTN oba Airtel). Eduuka litandika nga ssente zo zimaze okukakasibwa; tewali kusasula nga kituuse. Yingira, oba londa "Ndi muguzi," bw’oba tonnakikola.' },
   'shopper-8': { caption:'Ekiragiro kituumiddwa', detail:'Ojja kulaba okukakasa awamu n’omutambuze eyagabiddwa okukuleetera ekiragiro kyo.' },
   'shopper-9': { caption:'Kigoberere, oluvannyuma ogwe endowooza', detail:'Kigoberere wansi wa "Orders." Wa endowooza nga kimaze okutuuka. Profile yo elaga amanoteka go (1 buli UGX 1,000 gy’osasudde), amaduuka ge otadde, ne "Something wrong?" chat.' },
   'vendor-1': { caption:'Kola akawunti yo', detail:'Email oba essimu, ne password, oba weyongereko ne Google.' },
@@ -237,7 +237,7 @@ sw: {
   'shopper-4': { caption:'Fungua duka', detail:'Angalia alama yake ya uthibitisho, tathmini, na bidhaa anazouza.' },
   'shopper-5': { caption:'Hifadhi, au weka kikapuni', detail:'Bonyeza moyo kuhifadhi duka kwa baadaye. Bonyeza + kwenye bidhaa kuiweka kikapuni mwako.' },
   'shopper-6': { caption:'Angalia kikapu chako', detail:'Ada ya usafirishaji inaonyeshwa kabla hujalipa — hakuna mshangao.' },
-  'shopper-7': { caption:'Chagua namna ya kulipa', detail:'Kulipa Ukipokea Bidhaa, au Mobile Money (MTN au Airtel). Ingia, au chagua "Ninanunua," kama bado hujafanya hivyo.' },
+  'shopper-7': { caption:'Chagua namna ya kulipa', detail:'Lipa kwanza kwa Mobile Money (MTN au Airtel). Duka huanza tu malipo yako yakithibitishwa; hakuna kulipa ukipokea bidhaa. Ingia, au chagua "Ninanunua," kama bado hujafanya hivyo.' },
   'shopper-8': { caption:'Oda imewekwa', detail:'Utaona uthibitisho pamoja na dereva aliyepangiwa kukuletea oda yako.' },
   'shopper-9': { caption:'Ifuatilie, kisha uipe alama', detail:'Ifuatilie chini ya "Orders." Ipe alama baada ya kufika. Wasifu wako unaonyesha pointi zako (1 kwa kila UGX 1,000 ulizotumia), maduka uliyohifadhi, na mazungumzo ya "Something wrong?"' },
   'vendor-1': { caption:'Fungua akaunti yako', detail:'Barua pepe au simu na password, au uendelee na Google.' },
@@ -268,7 +268,7 @@ ach: {
   'shopper-4': { caption:'Yab cato', detail:'Nen giramona pi ada me cato-ni, tam pa lwak, ki jami ma gicato.' },
   'shopper-5': { caption:'Gwok, onyo ket i basket', detail:'Dii i cwiny me gwoko cato-ni pi anyim. Dii i + i gin acel me keto i basket-ni.' },
   'shopper-6': { caption:'Nen basket-ni', detail:'Nyuto rwod me poto ma peya icoyo — pe tye lworo mo.' },
-  'shopper-7': { caption:'Yer kit me culo', detail:'Culo i Cwiny me Poto, onyo Mobile Money (MTN onyo Airtel). Donyo, onyo yer "Amito ngolo," ka pud pe itimo.' },
+  'shopper-7': { caption:'Yer kit me culo', detail:'Cul mukwongo ki Mobile Money (MTN onyo Airtel). Duka cako keken ka culo mamegi otye ki ada; culo ka oda oromo pe tye. Donyo, onyo yer "Amito ngolo," ka pud pe itimo.' },
   'shopper-8': { caption:'Oda oketi', detail:'Ibineno buk pi kite ki ngat mabipoto gin-ni botti.' },
   'shopper-9': { caption:'Lub kore, ci imi giramona', detail:'Lube i tin "Orders." Mi giramona ka oromo poto. Profile-ni nyuto points-ni (acel pi UGX 1,000 ma icito), cato ma igwoko, ki lok "Something wrong?"' },
   'vendor-1': { caption:'Yab akaunti-ni', detail:'Email onyo cim ki password, onyo imed ki Google.' },
@@ -299,7 +299,7 @@ myx: {
   'shopper-4': { caption:'Fungula eduuka', detail:'Linga akhabonero ka khusubila, endowooza tsy’abakuusi, nende ebindu ebio bakusinjia.' },
   'shopper-5': { caption:'Teekha, nohomba oteekhe mu kikapu', detail:'Nyikha khu mutima khuteekha eduuka khu buyeekhelo. Nyikha khu + khu shindu khu oshiteekhe mu kikapu kyo.' },
   'shopper-6': { caption:'Linga kikapu kyo', detail:'Empeera y’okhutwala eloolekha nga tonasasula — tawali khwiyongera.' },
-  'shopper-7': { caption:'Loonda engeri y’okhusaasula', detail:'Sente z’omukono nga eduuka lisile, nohomba Mobile Money (MTN nohomba Airtel). Yingira, nohomba loonda "Ndi mukuusi," nga otanakhola.' },
+  'shopper-7': { caption:'Loonda engeri y’okhusaasula', detail:'Sasula khusooka ne Mobile Money (MTN nohomba Airtel). Eduuka litandikha nga esente tsyo tsimalile okhukakasibwa; sikhuli okhusasula nga khitukhile. Yingira, nohomba loonda "Ndi mukuusi," nga otanakhola.' },
   'shopper-8': { caption:'Ekiragilo kiwelesibwa', detail:'Oja khulola okhusubila halala nende omutambuzi wagabwa okhukhulereera ekiragilo kyo.' },
   'shopper-9': { caption:'Kilonderere, khandi omuwe endowooza', detail:'Kilonderere hasi wa "Orders." Muwe endowooza nga kimaliile khutuukha. Profile yo eloolekha amanoteka ko (kamu khu buli UGX 1,000 esasulikho), tsimaduuka etsyo oteekho, na "Something wrong?" chat.' },
   'vendor-1': { caption:'Fungula akhawunti yo', detail:'Email nohomba esimu na password, nohomba wongeleho na Google.' },
@@ -330,7 +330,7 @@ nyn: {
   'shopper-4': { caption:'Gurura eduka', detail:'Reba akamenyeso k’okuhamya, endaro z’abaguzi, n’ebintu ebi bagurisa.' },
   'shopper-5': { caption:'Bikye, nari oteeke omu kikapu', detail:'Kanda aha mutima kubika eduka kubw’obwenyima. Kanda aha + aha kintu kukiteeka omu kikapu kyawe.' },
   'shopper-6': { caption:'Reba kikapu kyawe', detail:'Omusaho gw’okuhagiza nigworekwa otakabashaho kusasura — tihariho ekitangaaza.' },
-  'shopper-7': { caption:'Sherura oku warikusasura', detail:'Sente z’omukono eduka niryahika, nari Mobile Money (MTN nari Airtel). Yingira, nari osherure "Ninguura," yaba otakakikoze.' },
+  'shopper-7': { caption:'Sherura oku warikusasura', detail:'Sasura kubanza na Mobile Money (MTN nari Airtel). Eduka ritandika sente zawe zaamara kuhamibwa; tihariho kusasura oda yaahika. Yingira, nari osherure "Ninguura," yaba otakakikoze.' },
   'shopper-8': { caption:'Oda ehandiikirwe', detail:'Oryareeba okuhamya hamwe n’omuhagizi ohairwe kukureeta oda yawe.' },
   'shopper-9': { caption:'Girurira, obundi ogire endaro', detail:'Girurira aha "Orders." Ha endaro obu eyahika. Profile yawe neyoreka amanoteka gawe (rimwe aha buri UGX 1,000 osasuire), amaduka agu obikire, na "Something wrong?" chat.' },
   'vendor-1': { caption:'Gurura akaunti yawe', detail:'Email nari esimu na password, nari owongyeriremu na Google.' },

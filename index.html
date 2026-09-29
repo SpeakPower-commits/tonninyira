@@ -30,7 +30,7 @@
     -webkit-font-smoothing:antialiased;
     padding-bottom:84px;
   }
-  .display{font-family:'Alfa Slab One',cursive;}
+  .display{font-family:'Alfa Slab One',cursive;font-weight:400;font-synthesis:none;}
   .hidden{display:none !important;}
   .identity-wrap{padding:20px 16px; text-align:center;}
   .identity-wrap p{color:var(--muted); font-size:0.85rem;}
@@ -54,7 +54,7 @@
 
   header{
     background:var(--ink);
-    position:sticky; top:0; z-index:40;
+    position:relative; z-index:40;
     border-bottom:1px solid rgba(243,232,216,0.08);
     padding:14px 16px 12px;
   }
@@ -64,6 +64,19 @@
   .brand-badge{width:60px;height:60px;border-radius:14px;background:var(--card);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
   .brand-name{font-size:1.4rem; letter-spacing:0.5px; color:var(--sand); line-height:1; background:var(--card); padding:7px 14px; border-radius:10px; display:inline-block;}
   .brand-tag{font-size:0.62rem; letter-spacing:1.5px; color:var(--gold); font-weight:700; margin-top:6px; background:var(--card); padding:3px 9px; border-radius:6px; display:inline-block;}
+  .brand-lockup{min-width:0; flex:1 1 auto;}
+  .brand-text{min-width:0;}
+  .brand-tag{max-width:100%;}
+  .brand-row > .icon-btn{flex-shrink:0;}
+  .brand-row > .tn-acct-btn{flex-shrink:0; white-space:nowrap; max-width:32vw; overflow:hidden; text-overflow:ellipsis; display:block;}
+  @media (max-width:380px){ .brand-row{gap:8px;} .brand-lockup{gap:8px;} .brand-badge{width:48px;height:48px;} .brand-tag{display:none;} }
+  body.tn-has-install-banner{padding-bottom:190px;}
+  .brand-lockup{overflow:hidden;}
+  #gpsBtn{flex-shrink:1; min-width:0; max-width:58%; overflow:hidden; text-overflow:ellipsis;}
+  .location-row input{min-width:64px;}
+  .nav-btn{min-width:0;}
+  .nav-btn span{max-width:100%; text-align:center; line-height:1.15; overflow-wrap:break-word;}
+  @media (max-width:380px){ .tn-gi-sub{display:none!important;} }
   .icon-btn{
     position:relative; width:44px; height:44px; border-radius:12px;
     background:var(--card); border:none; color:var(--sand);
@@ -97,7 +110,7 @@
   .cat-tabs{display:flex; gap:8px; padding:14px 16px 0;}
   .cat-tab{
     flex:1; padding:13px 10px; border-radius:14px; border:none; cursor:pointer;
-    font-family:'Alfa Slab One'; font-size:1rem; letter-spacing:0.5px;
+    font-family:'Alfa Slab One';font-weight:400;font-synthesis:none; font-size:1rem; letter-spacing:0.5px;
     background:var(--card); color:var(--muted); text-align:center; transition:all .15s ease;
   }
   .cat-tab.active{background:var(--red); color:var(--sand);}
@@ -134,7 +147,7 @@
     text-align:center; border:1px solid rgba(243,232,216,0.06);
   }
   .pop-chip .avatar{width:40px;height:40px; margin:0 auto 6px;}
-  .pop-chip .name{font-size:0.72rem; font-weight:700; line-height:1.2; color:var(--sand); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .pop-chip .name{font-size:0.72rem; font-weight:700; line-height:1.2; color:var(--sand); overflow-wrap:anywhere; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:2.4em;}
   .pop-chip .rating{font-size:0.68rem; color:var(--gold); font-weight:700; margin-top:2px;}
 
   .stall-list{padding:16px;}
@@ -158,7 +171,7 @@
   .avatar{
     width:52px; height:52px; border-radius:50%; flex-shrink:0;
     display:flex; align-items:center; justify-content:center;
-    font-family:'Alfa Slab One'; font-size:1.05rem; color:var(--ink);
+    font-family:'Alfa Slab One';font-weight:400;font-synthesis:none; font-size:1.05rem; color:var(--ink);
     object-fit:cover;
   }
   .stall-eyebrow{font-size:0.64rem; font-weight:800; letter-spacing:1px; color:var(--gold); margin-bottom:2px;}
@@ -171,10 +184,40 @@
 
   .gallery-strip{display:flex; gap:8px; overflow-x:auto; padding:2px 16px 14px; scrollbar-width:none;}
   .gallery-strip::-webkit-scrollbar{display:none;}
-  .gallery-item{flex-shrink:0; width:118px;}
-  .gallery-item img, .gallery-item video{width:118px; height:88px; object-fit:cover; border-radius:10px; display:block; background:var(--card2);}
-  .gallery-caption{font-size:0.66rem; color:var(--muted); margin-top:4px; line-height:1.25;}
+  .gallery-item{flex-shrink:0; width:156px; padding:0; border:0; background:none; color:inherit; font:inherit; text-align:left; cursor:pointer;}
+  .gallery-item img, .gallery-item video, .gallery-video{width:156px; height:116px; object-fit:cover; border-radius:12px; display:block; background:var(--card2);}
+  .gallery-video{position:relative; overflow:hidden;}
+  .gallery-video img{position:absolute; inset:0;}
+  .gallery-play{position:absolute; left:50%; top:50%; width:44px; height:44px; margin:-22px 0 0 -22px; border-radius:50%; background:var(--gold); color:var(--ink); display:flex; align-items:center; justify-content:center; font-size:16px;}
+  .gallery-dur{position:absolute; right:6px; bottom:6px; padding:2px 6px; border-radius:6px; background:rgba(20,14,11,.85); color:var(--sand); font-size:.68rem; font-weight:700;}
+  .gallery-caption{display:block; font-size:0.66rem; color:var(--muted); margin-top:4px; line-height:1.25; overflow-wrap:break-word;}
+  .item-photo{position:relative; flex-shrink:0; width:64px; height:64px; padding:0; border:0; border-radius:12px; overflow:hidden; background:var(--card2); cursor:pointer;}
+  .item-photo img{width:100%; height:100%; object-fit:cover; display:block;}
+  .item-photo span{position:absolute; right:4px; bottom:4px; min-width:18px; padding:1px 5px; border-radius:99px; background:rgba(20,14,11,.85); color:var(--sand); font-size:.62rem; font-weight:800;}
 
+  .stall-cover{display:block; width:100%; height:170px; padding:0; border:0; background:var(--card2); cursor:pointer; overflow:hidden;}
+  .stall-cover img{width:100%; height:100%; object-fit:cover; display:block;}
+  .stall-card.has-cover .stall-header{margin-top:-30px; position:relative;}
+  .stall-card.has-cover .stall-header .avatar{width:64px; height:64px; border:4px solid var(--card); box-sizing:content-box; font-size:1.25rem;}
+  .stall-card.has-cover .stall-header > div{padding-top:32px;}
+  .stall-sec{display:flex; justify-content:space-between; align-items:baseline; gap:8px; padding:6px 16px 8px;}
+  .stall-sec span{font-size:0.66rem; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; color:var(--gold);}
+  .stall-sec small{font-size:0.7rem; color:var(--muted);}
+  .prod-grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; padding:0 12px 14px;}
+  .prod-card{background:var(--card2); border-radius:16px; overflow:hidden; display:flex; flex-direction:column; min-width:0;}
+  .prod-img{position:relative; display:block; width:100%; aspect-ratio:1/1; padding:0; border:0; background:#3A2C22; cursor:pointer; overflow:hidden;}
+  .prod-img img{width:100%; height:100%; object-fit:cover; display:block;}
+  .prod-count{position:absolute; right:6px; bottom:6px; padding:2px 7px; border-radius:99px; background:rgba(20,14,11,.85); color:var(--sand); font-size:.62rem; font-weight:800;}
+  .prod-ph{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; cursor:default; background:#3A2C22;}
+  .prod-ph b{font-family:'Alfa Slab One'; font-weight:400; font-synthesis:none; font-size:2.2rem; line-height:1; opacity:.85;}
+  .prod-ph small{font-size:.62rem; font-weight:700; color:var(--muted);}
+  .prod-body{padding:10px 10px 8px; flex:1; min-width:0;}
+  .prod-name{font-weight:800; font-size:0.88rem; color:var(--sand); line-height:1.25; overflow-wrap:break-word;}
+  .prod-desc{font-size:0.72rem; color:var(--muted); margin-top:2px; line-height:1.3; overflow-wrap:break-word; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
+  .prod-price{font-family:'Alfa Slab One'; font-weight:400; font-synthesis:none; color:var(--gold); font-size:1rem; margin-top:6px;}
+  .prod-add{min-height:44px; margin:0 8px 8px; border:0; border-radius:12px; background:var(--gold); color:var(--ink); font:inherit; font-weight:800; font-size:0.82rem; cursor:pointer;}
+  .prod-add:active{background:var(--gold-dark);}
+  .prod-add.is-added{background:var(--green); color:var(--sand);}
   .item-row{
     display:flex; justify-content:space-between; align-items:center; gap:10px;
     padding:12px 16px; border-top:1px solid rgba(243,232,216,0.06);
@@ -240,7 +283,7 @@
     display:flex; justify-content:space-between; align-items:center;
     padding:18px 16px; border-bottom:1px solid rgba(243,232,216,0.08);
   }
-  .sheet-header h2{font-family:'Alfa Slab One'; font-size:1.2rem; margin:0; letter-spacing:0.5px;}
+  .sheet-header h2{font-family:'Alfa Slab One';font-weight:400;font-synthesis:none; font-size:1.2rem; margin:0; letter-spacing:0.5px;}
   .close-x{background:none; border:none; color:var(--sand); font-size:1.6rem; cursor:pointer; line-height:1;}
   .sheet-body{flex:1; overflow-y:auto; padding:16px;}
 
@@ -266,7 +309,7 @@
 
   .btn-primary{
     width:100%; padding:16px; border-radius:14px; border:none; background:var(--red); color:var(--sand);
-    font-family:'Alfa Slab One'; font-size:1.02rem; letter-spacing:0.3px; cursor:pointer; margin-top:14px;
+    font-family:'Alfa Slab One';font-weight:400;font-synthesis:none; font-size:1.02rem; letter-spacing:0.3px; cursor:pointer; margin-top:14px;
   }
   .btn-secondary{
     width:100%; padding:13px; border-radius:14px; border:1.5px solid var(--card2); background:transparent; color:var(--sand);
@@ -283,6 +326,7 @@
     padding:14px; margin-bottom:10px; cursor:pointer;
   }
   .pay-option .pay-icon{width:40px;height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .pay-option .pay-logo{width:48px;height:48px;border-radius:12px;object-fit:cover;background:#fff;}
   .pay-option .pay-name{font-weight:800; font-size:0.95rem; color:var(--sand);}
   .pay-option .pay-sub{font-size:0.74rem; color:var(--muted); margin-top:2px;}
 
@@ -301,7 +345,7 @@
    on the way to something else, so it carries its own type and card system.
    Everything here is scoped to #tnAccountPage: the storefront is untouched. */
 #tnAccountPage{font-family:'Plus Jakarta Sans',sans-serif;padding:0 16px 28px!important;max-width:460px;margin:0 auto}
-#tnAccountPage .tn-dsp{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;letter-spacing:-.03em;line-height:1.02}
+#tnAccountPage .tn-dsp{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;letter-spacing:-.03em;line-height:1.02;min-width:0;max-width:100%;overflow-wrap:anywhere}
 #tnAccountPage .tn-card{border-radius:22px;padding:16px;display:flex;flex-direction:column;justify-content:space-between;text-decoration:none;box-sizing:border-box}
 #tnAccountPage .tn-card-dark{background:#1F1916;border:1px solid #332A24;color:var(--sand)}
 #tnAccountPage .tn-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -316,11 +360,12 @@
 #tnAccountPage .tn-cover{position:relative;aspect-ratio:800/512;margin:0 -16px 0;overflow:hidden}
 #tnAccountPage .tn-cover img{width:100%;height:100%;object-fit:cover;display:block}
 #tnAccountPage .tn-cover-scrim{position:absolute;inset:0;background:linear-gradient(to top,var(--ink) 4%,rgba(28,20,16,.72) 38%,rgba(28,20,16,.12) 100%)}
-#tnAccountPage .tn-cover h2{position:absolute;left:16px;right:16px;bottom:12px;margin:0;color:#fff;font-size:2.35rem;white-space:nowrap}
+#tnAccountPage .tn-cover-text{position:absolute;left:16px;right:16px;bottom:12px}
+#tnAccountPage .tn-cover h2{margin:0;color:#fff;font-size:clamp(1.55rem,8.2vw,2.35rem)}
 #tnAccountPage .tn-cover .tn-slide{position:absolute;inset:0;opacity:0;transition:opacity .9s ease}
 #tnAccountPage .tn-cover .tn-slide.is-on{opacity:1}
-#tnAccountPage .tn-story-cap{position:absolute;left:16px;right:70px;bottom:52px;margin:0;color:#fff;font-size:.86rem;font-weight:700;line-height:1.35;text-shadow:0 1px 10px rgba(0,0,0,.6);transition:opacity .35s ease}
-#tnAccountPage .tn-dots{position:absolute;right:14px;bottom:14px;display:flex;gap:6px}
+#tnAccountPage .tn-story-cap{margin:0 0 6px;color:#fff;font-size:.86rem;font-weight:700;line-height:1.35;text-shadow:0 1px 10px rgba(0,0,0,.6);transition:opacity .35s ease}
+#tnAccountPage .tn-dots{position:absolute;right:10px;top:10px;display:flex;gap:2px}
 #tnAccountPage .tn-dots button{width:22px;height:22px;padding:0;border:0;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
 #tnAccountPage .tn-dots button::after{content:'';width:7px;height:7px;border-radius:99px;background:rgba(255,255,255,.42);transition:background .3s,width .3s}
 #tnAccountPage .tn-dots button[aria-current="true"]::after{background:var(--gold);width:18px}
@@ -444,6 +489,7 @@
 
 <script>
 const ICONS = {
+  play: `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>`,
   heart: `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>`,
   search: `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
   cart: `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>`,
@@ -498,9 +544,25 @@ function matchWordmarkWidth(){
   const wordStyle = getComputedStyle(word);
   const wordPad = parseFloat(wordStyle.paddingLeft) + parseFloat(wordStyle.paddingRight);
   const tagBoxWidth = tag.getBoundingClientRect().width;
+  if(tagBoxWidth <= 0){
+    /* Narrow phones hide the tagline; shrink the wordmark to the space left
+       beside the logo instead, and drop it (the logo carries the name) if even
+       half size cannot fit. */
+    word.style.fontSize = ''; word.style.display = '';
+    const lockup = word.closest('.brand-lockup'), badge = document.getElementById('brandBadge');
+    if(!lockup) return;
+    const gap = parseFloat(getComputedStyle(lockup).columnGap) || 8;
+    const room = lockup.getBoundingClientRect().width - (badge ? badge.getBoundingClientRect().width : 0) - gap;
+    const need = word.getBoundingClientRect().width;
+    if(need <= room) return;
+    const scale = (room - wordPad) / (need - wordPad);
+    if(scale < 0.5){ word.style.display = 'none'; return; }
+    word.style.fontSize = (parseFloat(wordStyle.fontSize) * scale).toFixed(2) + 'px';
+    return;
+  }
   const wordBoxWidth = word.getBoundingClientRect().width;
   const wordTextWidth = wordBoxWidth - wordPad;
-  if(wordTextWidth <= 0 || tagBoxWidth <= 0) return;
+  if(wordTextWidth <= 0) return;
   const currentSize = parseFloat(wordStyle.fontSize);
   const targetTextWidth = tagBoxWidth - wordPad;
   const scale = Math.min(3, Math.max(0.5, targetTextWidth / wordTextWidth));
@@ -508,6 +570,10 @@ function matchWordmarkWidth(){
 }
 if(document.fonts && document.fonts.ready) document.fonts.ready.then(matchWordmarkWidth);
 else window.addEventListener('load', matchWordmarkWidth);
+/* The Account button's label arrives later and narrows the tagline, and the
+   tagline changes with language, so re-fit the wordmark whenever it resizes. */
+if(window.ResizeObserver){ const tnTag = document.querySelector('.brand-tag'), tnLock = document.querySelector('.brand-lockup'); const ro = new ResizeObserver(()=>requestAnimationFrame(matchWordmarkWidth)); if(tnTag) ro.observe(tnTag); if(tnLock) ro.observe(tnLock); }
+window.addEventListener('resize', matchWordmarkWidth);
 
 /* Favicon needs the same robustness as the header logo -- a <link> tag has
    no fallback of its own, so if the file isn't at exactly the path guessed,
@@ -679,6 +745,7 @@ window.TN_I18N = (function(){
       "partner.riderNoteLabel": "Your rider profile",
       "partner.rejectedNote": "Your {noun} application was not approved. Reply to the email we sent you if you would like it looked at again.",
       "partner.pendingNote": "Your {noun} application is with our team for review. We will email you as soon as it is decided.",
+      "partner.suspendedNote": "Your {noun} is paused by Tonninyira for now. Please contact support through the Something wrong? chat.",
       "partner.nounStall": "stall",
       "partner.nounRiderProfile": "rider profile",
       "cart.redeemLabel": "Use {cost} points for free delivery (you have {points})",
@@ -777,6 +844,7 @@ window.TN_I18N = (function(){
       "partner.riderNoteLabel": "Wasifu wako wa rider",
       "partner.rejectedNote": "Ombi lako la {noun} halikuidhinishwa. Jibu barua pepe tuliyokutumia kama unataka litazamwe tena.",
       "partner.pendingNote": "Ombi lako la {noun} liko kwa timu yetu kwa ukaguzi. Tutakutumia barua pepe mara tu litakapoamuliwa.",
+      "partner.suspendedNote": "{noun} yako imesimamishwa na Tonninyira kwa sasa. Tafadhali wasiliana na huduma kupitia mazungumzo ya Something wrong?.",
       "partner.nounStall": "duka",
       "partner.nounRiderProfile": "wasifu wa rider",
       "cart.redeemLabel": "Tumia pointi {cost} kupata usafirishaji bure (una pointi {points})",
@@ -875,6 +943,7 @@ window.TN_I18N = (function(){
       "partner.riderNoteLabel": "Ebikukwatako ng'omuleese",
       "partner.rejectedNote": "Okusaba kwo okw'{noun} tekukkirizibbwa. Ddamu ku email gye twakuweereza singa oyagala kudinnye nate.",
       "partner.pendingNote": "Okusaba kwo okw'{noun} kuli n'ekibinja kyaffe okulikebera. Tujja kukuweereza email nga bakimazeewo.",
+      "partner.suspendedNote": "{noun} yo eyimiriziddwa Tonninyira okumala akaseera. Tukiise ku support mu chat ya Something wrong?.",
       "partner.nounStall": "eddaala",
       "partner.nounRiderProfile": "ebikukwatako ng'omuleese",
       "cart.redeemLabel": "Kozesa poyinti {cost} ofune okuleeta obwereere (olina poyinti {points})",
@@ -973,6 +1042,7 @@ window.TN_I18N = (function(){
       "partner.riderNoteLabel": "Kom ni macalo lakelo",
       "partner.rejectedNote": "Kwayo mo pi {noun} pe oye. Dwok lok i imeel ma wacwalo ka imito ni ki nen doki.",
       "partner.pendingNote": "Kwayo mo pi {noun} tye ki jo mwaka pi neno. Wabicwali imeel ma dong okeco.",
+      "partner.suspendedNote": "Tonninyira ocungo {noun} mamegi pi kare manok. Tim ber iwac bot jo kony i chat me Something wrong?.",
       "partner.nounStall": "cuk",
       "partner.nounRiderProfile": "kom macalo lakelo",
       "cart.redeemLabel": "Ti ki poi {cost} me nongo kelo abongo cul (itye ki poi {points})",
@@ -1071,6 +1141,7 @@ window.TN_I18N = (function(){
       "partner.riderNoteLabel": "Ebikwatako iwe nga omuletsi",
       "partner.rejectedNote": "Okhusaba khwo okhwe {noun} sikhwikirisibwa. Kalukha khu imeeli yetumire nga oyenya khudibonwa khindi.",
       "partner.pendingNote": "Okhusaba khwo okhwe {noun} khuli ne ekibiina kiefwe khukebwa. Nikhukhuweereza imeeli nga bakhimalile.",
+      "partner.suspendedNote": "{noun} yo yiimilisiibwe Tonninyira okhumala akaseera. Khubila support khu chat ye Something wrong?.",
       "partner.nounStall": "iduuka",
       "partner.nounRiderProfile": "ebikwatako nga omuletsi",
       "cart.redeemLabel": "Kozesa ba point {cost} khunyoola khuleeta khutakhola sente (oli ne ba point {points})",
@@ -1169,6 +1240,7 @@ window.TN_I18N = (function(){
       "partner.riderNoteLabel": "Ebikukwatako nk'omuleeta",
       "partner.rejectedNote": "Okusaba kwawe kwa {noun} tikwikirizibwe. Garuka aha imeeri twakutumire kakuba noyenda kugarurirwamu.",
       "partner.pendingNote": "Okusaba kwawe kwa {noun} kuriho n'ekibiina kyaitu kukebwa. Turaakutumira imeeri baaba bamazeho kucweka.",
+      "partner.suspendedNote": "{noun} yaawe eyemerirwe Tonninyira kumara akanya. Twakushaba otukaatirire omu chat ya Something wrong?.",
       "partner.nounStall": "eduuka",
       "partner.nounRiderProfile": "ebikukwatako nk'omuleeta",
       "cart.redeemLabel": "Koresa points {cost} kutunga kutwarwa kwa buseere (oine points {points})",
@@ -1685,24 +1757,48 @@ function vendorCardHTML(v){
   const avatarOrLogo = logoSrc
     ? fallbackAvatar('display:none;') + `<img src="${logoSrc}" class="avatar" onerror="this.previousElementSibling.style.display='';this.remove()">`
     : fallbackAvatar();
+  /* Tiles open the full-screen viewer (stall-viewer.js). Videos show their
+     cover picture and length; the video itself only downloads when played,
+     which protects the free plan's small monthly viewing allowance. */
   const galleryHTML = (v.gallery && v.gallery.length) ? `
     <div class="gallery-strip">
-      ${v.gallery.map(g=>`
-        <div class="gallery-item">
+      ${v.gallery.map((g,gi)=>`
+        <button type="button" class="gallery-item" onclick="tnOpenViewer('${safeId(v.id)}','g',${gi})" aria-label="${g.type==='video'?'Play video':'View photo'} ${gi+1}">
           ${g.type==='video'
-            ? `<video src="${safeUrl(g.url)}" muted loop playsinline onmouseover="this.play()" onmouseout="this.pause()"></video>`
-            : `<img src="${safeUrl(g.url)}" loading="lazy">`}
-          ${g.caption ? `<div class="gallery-caption">${esc(g.caption)}</div>` : ''}
-        </div>`).join('')}
+            ? `<span class="gallery-video">${g.poster?`<img src="${safeUrl(g.poster)}" alt="" loading="lazy">`:''}<span class="gallery-play">${ICONS.play}</span>${g.duration?`<span class="gallery-dur">${Math.floor(g.duration/60)}:${String(Math.round(g.duration%60)).padStart(2,'0')}</span>`:''}</span>`
+            : `<img src="${safeUrl(g.url)}" alt="${esc(g.caption||'Stall photo')}" loading="lazy">`}
+          ${g.caption ? `<span class="gallery-caption">${esc(g.caption)}</span>` : ''}
+        </button>`).join('')}
     </div>` : '';
 
+  /* Stall page, as in the approved sample: a cover photo (the stall's first
+     picture) with the logo over it, the stall's photos and videos, then the
+     products as photo cards with a clear Add to basket. A product without a
+     photo gets a named placeholder so the grid still reads as a shop. */
+  const gal = v.gallery || [];
+  const coverIdx = gal.findIndex(g=>g && (g.type!=='video' ? g.url : g.poster));
+  const cover = coverIdx < 0 ? null : (gal[coverIdx].type==='video' ? gal[coverIdx].poster : gal[coverIdx].url);
+  const coverHTML = cover
+    ? `<button type="button" class="stall-cover" onclick="tnOpenViewer('${safeId(v.id)}','g',${coverIdx})" aria-label="View photos of ${esc(v.name)}"><img src="${safeUrl(cover)}" alt="" loading="lazy"></button>`
+    : '';
+  const productHTML = v.items.map(item=>{
+    const ph = item.photos || [];
+    const img = ph.length
+      ? `<button type="button" class="prod-img" onclick="tnOpenViewer('${safeId(v.id)}','i','${safeId(item.id)}')" aria-label="See photos of ${esc(item.name)}"><img src="${safeUrl(ph[0])}" alt="" loading="lazy">${ph.length>1?`<span class="prod-count">${ph.length} photos</span>`:''}</button>`
+      : `<div class="prod-img prod-ph" style="color:${avatarColor(item.name)}" aria-hidden="true"><b>${esc(String(item.name||'?').trim().charAt(0).toUpperCase())}</b><small>Photo coming soon</small></div>`;
+    return `<div class="prod-card">${img}
+      <div class="prod-body"><div class="prod-name">${esc(item.name)}</div>${item.desc?`<div class="prod-desc">${esc(item.desc)}</div>`:''}<div class="prod-price">UGX ${fmt(item.price)}</div></div>
+      <button type="button" class="prod-add" onclick="tnAddFromCard(this,'${safeId(v.id)}','${safeId(item.id)}')">Add to basket</button></div>`;
+  }).join('');
+
   return `
-    <div class="stall-card" id="vendor-${safeId(v.id)}">
+    <div class="stall-card${cover?' has-cover':''}" id="vendor-${safeId(v.id)}">
       <div class="stall-roof"></div>
       <button class="fav-btn ${isFavorite(v.id)?'active':''}" id="fav-${safeId(v.id)}" onclick="toggleFavorite('${safeId(v.id)}')" aria-label="Save stall">${ICONS.heart}</button>
+      ${coverHTML}
       <div class="stall-header">
         ${avatarOrLogo}
-        <div>
+        <div style="min-width:0">
           <div class="stall-eyebrow">STALL NO. ${stallNo}</div>
           <div class="stall-name">${esc(v.name)}</div>
           <div class="stall-meta">
@@ -1714,19 +1810,17 @@ function vendorCardHTML(v){
           </div>
         </div>
       </div>
-      ${galleryHTML}
-      ${v.items.map(item=>`
-        <div class="item-row">
-          <div>
-            <div class="item-name">${esc(item.name)}</div>
-            <div class="item-desc">${item.desc}</div>
-          </div>
-          <div class="item-action">
-            <span class="price-tag">${fmt(item.price)}</span>
-            <button class="add-btn" onclick="addToCart('${safeId(v.id)}','${safeId(item.id)}')">+</button>
-          </div>
-        </div>`).join('')}
+      ${galleryHTML ? `<div class="stall-sec"><span>See the stall</span><small>Tap to view full screen</small></div>${galleryHTML}` : ''}
+      <div class="stall-sec"><span>Products</span><small>${v.items.length} item${v.items.length===1?'':'s'}</small></div>
+      <div class="prod-grid">${productHTML}</div>
     </div>`;
+}
+
+/* Product card button: add, then say so on the button itself. */
+function tnAddFromCard(btn, vendorId, itemId){
+  addToCart(vendorId, itemId);
+  btn.textContent = 'Added ✓'; btn.classList.add('is-added');
+  clearTimeout(btn._t); btn._t = setTimeout(()=>{ btn.textContent = 'Add to basket'; btn.classList.remove('is-added'); }, 1400);
 }
 
 function addToCart(vendorId, itemId){
@@ -1796,22 +1890,19 @@ function updateCartUI(){
       <div class="summary-row"><span>Delivery</span><span>UGX ${fmt(deliveryFee)}</span></div>
       <div class="summary-row total"><span>Total</span><span>UGX ${fmt(cartSubtotal()+deliveryFee)}</span></div>
     </div>
-    <button class="btn-primary" onclick="completeOrder('Cash on Delivery')">Place Order — Pay Cash on Delivery</button>
-    <button class="btn-link-alt" onclick="toggleAltPay()">Prefer Mobile Money instead?</button>
-    <div id="altPayBox" class="hidden" style="margin-top:6px;">
-      <button class="pay-option" onclick="completeOrder('MTN MoMo')">
-        <div class="pay-icon" style="background:var(--gold); color:var(--ink);">${ICONS.phone}</div>
-        <div><div class="pay-name">MTN MoMo</div><div class="pay-sub">Pay from your MTN mobile money</div></div>
-      </button>
-      <button class="pay-option" onclick="completeOrder('Airtel Money')">
-        <div class="pay-icon" style="background:var(--red); color:var(--sand);">${ICONS.phone}</div>
-        <div><div class="pay-name">Airtel Money</div><div class="pay-sub">Pay from your Airtel mobile money</div></div>
-      </button>
-    </div>
+    <div style="font-size:.72rem;font-weight:800;letter-spacing:1.5px;color:var(--gold);margin:4px 0 8px">PAY NOW TO PLACE YOUR ORDER</div>
+    <button class="pay-option" onclick="completeOrder('MTN MoMo')">
+      <img class="pay-icon pay-logo" src="assets/payments/mtn.png" alt="MTN" width="48" height="48">
+      <div><div class="pay-name">MTN MoMo</div><div class="pay-sub">Pay from your MTN mobile money</div></div>
+    </button>
+    <button class="pay-option" onclick="completeOrder('Airtel Money')">
+      <img class="pay-icon pay-logo" src="assets/payments/airtel.png" alt="Airtel" width="48" height="48">
+      <div><div class="pay-name">Airtel Money</div><div class="pay-sub">Pay from your Airtel mobile money</div></div>
+    </button>
+    <p style="font-size:.76rem;color:var(--muted);line-height:1.5;margin:4px 0 10px">Your order goes to the vendor as soon as your payment is confirmed. Tonninyira does not take cash on delivery.</p>
     <button class="btn-secondary" onclick="closeCart()">Keep Browsing</button>
   `;
 }
-function toggleAltPay(){ document.getElementById('altPayBox').classList.toggle('hidden'); }
 
 function openCart(){ document.getElementById('cartOverlay').classList.remove('hidden'); document.getElementById('cartSheet').classList.remove('hidden'); tnRefreshLoyaltyPoints(); }
 function closeCart(){ document.getElementById('cartOverlay').classList.add('hidden'); document.getElementById('cartSheet').classList.add('hidden'); }
@@ -1862,10 +1953,13 @@ function tnPartnerBlock(kind, status){
       <span style="flex-grow:1">
         <span class="tn-dsp" style="font-size:1.25rem;display:block;color:var(--gold)">${TN_I18N.t(vendor?'partner.vendorManageTitle':'partner.riderViewTitle')}</span>
         <span class="tn-sub" style="margin:0">${TN_I18N.t('partner.approvedSub')}</span>
-      </span>${TN_ICON.arrow}</a>`;
+      </span>${TN_ICON.arrow}</a>${vendor?'':'<div id="tnRiderInbox" aria-live="polite"></div>'}`;
   }
   if(status === 'rejected')
     return note(TN_I18N.t('partner.rejectedNote', {noun}));
+  if(status === 'suspended')
+    return note(TN_I18N.t('partner.suspendedNote', {noun}));
+  if(status === 'removed') return tnPartnerBlock(kind, null);
   return note(TN_I18N.t('partner.pendingNote', {noun}));
 }
 
@@ -1958,13 +2052,14 @@ function tnDismissGlobalInstall(){
 function tnRenderGlobalInstall(){
   const el = document.getElementById('tnGlobalInstall');
   if(!el) return;
-  if(!tnShowInstallCard() || tnGlobalInstallDismissed()){ el.classList.add('hidden'); el.innerHTML=''; return; }
+  if(!tnShowInstallCard() || tnGlobalInstallDismissed()){ el.classList.add('hidden'); el.innerHTML=''; document.body.classList.remove('tn-has-install-banner'); return; }
   el.classList.remove('hidden');
+  document.body.classList.add('tn-has-install-banner');
   el.innerHTML = `<div style="background:#1B2140;border:1px solid #2C3566;border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(0,0,0,.35)">
     <span aria-hidden="true" style="width:38px;height:38px;border-radius:12px;background:#4FB477;display:flex;align-items:center;justify-content:center;flex-shrink:0">${TN_ICON.download}</span>
     <span style="flex-grow:1;min-width:0" onclick="tnTriggerInstall()" role="button">
       <span class="tn-dsp" style="font-size:.95rem;color:#fff;display:block">${TN_I18N.t('install.cardTitle')}</span>
-      <span style="font-size:.7rem;font-weight:500;color:#AEB6E8">${tnInstallPrompt ? TN_I18N.t('install.cardSub') : TN_I18N.t('install.iosHint')}</span>
+      <span class="tn-gi-sub" style="font-size:.7rem;font-weight:500;color:#AEB6E8">${tnInstallPrompt ? TN_I18N.t('install.cardSub') : TN_I18N.t('install.iosHint')}</span>
     </span>
     <button type="button" aria-label="Dismiss" onclick="tnDismissGlobalInstall()" style="background:none;border:0;color:#AEB6E8;font-size:1.1rem;line-height:1;padding:4px;cursor:pointer;flex-shrink:0">&times;</button>
   </div>`;
@@ -2045,8 +2140,10 @@ async function renderAccountPage(){
             <img src="${src}" alt="${esc(alt)}" width="800" height="512" ${i?'loading="lazy"':''}>
           </div>`).join('')}
         <div class="tn-cover-scrim"></div>
-        <p class="tn-story-cap" id="tnStoryCap">${story[0][1]}</p>
-        <h2 class="tn-dsp">${TN_I18N.t('guest.tagline')}</h2>
+        <div class="tn-cover-text">
+          <p class="tn-story-cap" id="tnStoryCap">${story[0][1]}</p>
+          <h2 class="tn-dsp">${TN_I18N.t('guest.tagline')}</h2>
+        </div>
         <div class="tn-dots" id="tnStoryDots" role="tablist" aria-label="Story">
           ${story.map((_,i)=>`<button type="button" role="tab" data-i="${i}" aria-current="${i===0}" aria-label="Step ${i+1} of ${story.length}"></button>`).join('')}
         </div>
@@ -2064,7 +2161,7 @@ async function renderAccountPage(){
           <div class="tn-card ${bg?'':'tn-card-dark'}" style="min-height:142px${bg?`;background:${bg};color:${fg}`:''}">
             <span style="${bg?'':'color:var(--gold)'}">${icon}</span>
             <div>
-              <div class="tn-dsp" style="font-size:1.55rem;${bg?'':'color:#fff'}">${esc(t)}</div>
+              <div class="tn-dsp" style="font-size:clamp(1rem,4.6vw,1.55rem);${bg?'':'color:#fff'}">${esc(t)}</div>
               <div class="${bg?'':'tn-sub'}" style="${bg?'font-size:.72rem;font-weight:600;opacity:.78;margin-top:3px;line-height:1.35':''}">${esc(d)}</div>
             </div>
           </div>`).join('')}
@@ -2106,13 +2203,13 @@ async function renderAccountPage(){
       <a href="#orders" class="tn-card tn-card-dark" style="min-height:118px" onclick="event.preventDefault();goView('orders')">
         <div style="display:flex;align-items:center;justify-content:space-between">${TN_ICON.bag}
           ${stats.orders?`<span class="tn-pill" style="background:#4FB477;color:#08150E">${stats.orders}</span>`:''}</div>
-        <div><div class="tn-dsp" style="font-size:1.35rem;color:#fff">${TN_I18N.t('account.ordersTitle')}</div>
+        <div><div class="tn-dsp" style="font-size:clamp(1.05rem,4.8vw,1.35rem);color:#fff">${TN_I18N.t('account.ordersTitle')}</div>
           <div class="tn-sub">${stats.orders?TN_I18N.t('account.ordersSubTrack'):TN_I18N.t('account.ordersSubEmpty')}</div></div>
       </a>
       <a href="#saved" class="tn-card tn-card-dark" style="min-height:118px" onclick="event.preventDefault();AppState.view='favorites';renderMain();window.scrollTo(0,0)">
         <div style="display:flex;align-items:center;justify-content:space-between">${TN_ICON.heart}
           ${stats.saved?`<span class="tn-dsp" style="font-size:1.35rem;color:#FF7A5C">${stats.saved}</span>`:''}</div>
-        <div><div class="tn-dsp" style="font-size:1.35rem;color:#fff">${TN_I18N.t('account.savedTitle')}</div>
+        <div><div class="tn-dsp" style="font-size:clamp(1.05rem,4.8vw,1.35rem);color:#fff">${TN_I18N.t('account.savedTitle')}</div>
           <div class="tn-sub">${stats.saved?TN_I18N.t('account.savedSubHas'):TN_I18N.t('account.savedSubEmpty')}</div></div>
       </a>
     </div>
@@ -2318,127 +2415,26 @@ function confirmIdentityAndContinue(){
   const id = saveCustomerIdentity(name, phone);
   document.getElementById('identityOverlay').classList.add('hidden');
   document.getElementById('identitySheet').classList.add('hidden');
-  if(pendingCheckoutMethod){ const m = pendingCheckoutMethod; pendingCheckoutMethod = null; finishOrder(m, id); }
+  if(pendingCheckoutMethod){ const m = pendingCheckoutMethod; pendingCheckoutMethod = null; completeOrder(m); }
   else if(AppState.view==='orders'){ renderMyOrders(); }
 }
 
+/* Every order is paid before anything else happens: the only way to place
+   one is to start a Flutterwave payment. There is no cash-on-delivery path. */
 async function completeOrder(method){
   if(AppState.cart.length===0) return;
-  const id = getCustomerIdentity();
-  if(!id || !id.name || !id.phone){
-    pendingCheckoutMethod = method;
-    document.getElementById('identityOverlay').classList.remove('hidden');
-    document.getElementById('identitySheet').classList.remove('hidden');
-    return;
-  }
-  finishOrder(method, id);
-}
-
-/* enhancements.js's enhancedFinishOrder() unconditionally replaces
-   window.finishOrder on load -- this function only actually runs if that
-   override is somehow absent (a failed/blocked script load), so it stays
-   redemption-aware and correct as a fallback rather than being deleted. If
-   you're chasing a checkout bug and this function's edits don't seem to
-   take effect, that override is almost certainly why -- check
-   secureFinishOrder() in enhancements.js first. */
-async function finishOrder(method, custId){
-  if(!SAMPLE_RIDERS.length){
-    closeCart();
-    alert("No delivery riders are registered yet, so orders can't be placed right now. Check back once a rider signs up from the Profile tab.");
-    return;
-  }
-  const orderId = 'TN-' + Math.random().toString(36).substr(2,7).toUpperCase();
-  const subtotal = cartSubtotal();
-  const deliveryFee = computeDeliveryFee(); // the real fee -- sent regardless of redemption, so the DB trigger has an honest fallback if it has to refuse the redemption
-  const wantsRedeem = AppState.redeemDelivery && AppState.loyaltyPoints !== null && AppState.loyaltyPoints >= FREE_DELIVERY_POINTS_COST;
-  const rider = SAMPLE_RIDERS[Math.floor(Math.random()*SAMPLE_RIDERS.length)];
-  const area = document.getElementById('areaSelect').value;
-
-  /* One checkout can span several stalls (a real mixed market basket), but a
-     vendor should only ever see their own items to fulfil -- not the whole
-     order. So one checkout becomes one 'orders' row per vendor, all sharing
-     this same order_id as the group reference the customer sees. Vendors
-     query their own rows by vendor_id from vendor-dashboard.html. */
-  const byVendor = {};
-  AppState.cart.forEach(c=>{
-    if(!byVendor[c.vendorId]) byVendor[c.vendorId] = {vendorName: c.vendorName, items: []};
-    byVendor[c.vendorId].items.push(c);
-  });
-  /* orders_customer_insert is `user_id = auth.uid()`, so an order without the
-     account attached is refused outright -- and award_order_loyalty() needs
-     the same field to award points. This was missing, which is why every
-     order on record is a guest order worth nothing to its customer. */
-  let tnUserId = null;
-  try{ tnUserId = (await supabaseClient.auth.getSession())?.data?.session?.user?.id || null; }catch(_){}
-  if(!tnUserId){
+  let signedIn = false;
+  try{ signedIn = !!(await supabaseClient.auth.getSession())?.data?.session; }catch(_){}
+  if(!signedIn){
     if(typeof window.authStart === 'function'){ window.authStart(); return; }
     alert('Please sign in to place your order.');
     return;
   }
-
-  const rows = Object.entries(byVendor).map(([vendorId, group])=>({
-    order_id: orderId, user_id: tnUserId, vendor_id: vendorId, vendor_name: group.vendorName,
-    items: group.items, item_subtotal: group.items.reduce((s,i)=>s+i.price*i.qty,0),
-    delivery_fee: deliveryFee, payment_method: method, customer_area: area, rider_tid: rider.tid,
-    customer_name: custId.name, customer_phone: custId.phone,
-    customer_lat: AppState.customerLocation ? AppState.customerLocation.lat : null,
-    customer_lng: AppState.customerLocation ? AppState.customerLocation.lng : null,
-    status: 'new', created_at: new Date().toISOString(),
-    redeemed_free_delivery: wantsRedeem,
-  }));
-
-  /* Save FIRST, confirm it actually landed, THEN show success -- never the
-     other way around. A customer should never see "order confirmed" for an
-     order that was never recorded. If the save fails, the basket is kept
-     untouched so nothing is lost and they can just try again.
-     redeem_free_delivery_points() (a DB trigger) is the real word on whether
-     the redemption held -- it can refuse a stale balance the client hasn't
-     seen yet, so the confirmation below reads its answer back rather than
-     assuming the request it sent was honoured. */
-  let saveError = null, savedRows = null;
-  try{
-    const { data, error } = await supabaseClient.from('orders').insert(rows).select('delivery_fee,redeemed_free_delivery');
-    if(error) throw error;
-    savedRows = data;
-  }catch(e){
-    saveError = e.message || String(e);
-    console.log('Order not saved:', saveError);
-  }
-  if(saveError){
-    alert(`Your order could not be placed — ${saveError}. Your basket has been kept — please try again.`);
+  if(typeof window.tnStartMobileMoney !== 'function'){
+    alert('Secure payment is still loading. Please try again in a moment.');
     return;
   }
-
-  const actualFee = Number(savedRows?.[0]?.delivery_fee ?? deliveryFee);
-  const actuallyRedeemed = !!savedRows?.[0]?.redeemed_free_delivery;
-  AppState.redeemDelivery = false;
-  tnRefreshLoyaltyPoints();
-
-  closeCart();
-  document.getElementById('confirmOrderId').textContent = orderId;
-  document.getElementById('confirmSummary').innerHTML = `
-    <div class="summary-box" style="text-align:left;">
-      ${AppState.cart.map(c=>`<div class="summary-row"><span>${esc(c.name)} ×${esc(c.qty)}</span><span>UGX ${fmt(c.price*c.qty)}</span></div>`).join('')}
-      <div class="summary-row"><span>Delivery</span><span>UGX ${fmt(actualFee)}</span></div>
-      <div class="summary-row total"><span>Paid via ${method}</span><span>UGX ${fmt(subtotal+actualFee)}</span></div>
-    </div>
-    ${actuallyRedeemed ? `<p class="tn-sub" style="color:var(--gold);margin-top:8px">${esc(TN_I18N.t('cart.redeemedNote'))}</p>` : (wantsRedeem ? `<p class="tn-sub" style="margin-top:8px">${esc(TN_I18N.t('cart.redeemFailedNote'))}</p>` : '')}`;
-
-  document.getElementById('confirmRider').innerHTML = `
-    <div class="rider-card">
-      <div class="avatar" style="background:${avatarColor(rider.name)}; width:44px;height:44px;font-size:0.85rem;">${initials(rider.name)}</div>
-      <div style="flex:1;">
-        <div style="font-weight:800;">${rider.name} <span class="verify-check">${ICONS.check}</span></div>
-        <div style="font-size:0.78rem; color:var(--muted);">${rider.vehicle} · ${rider.tid}</div>
-      </div>
-      <div style="text-align:right; color:var(--gold); font-weight:800;">★ ${rider.rating}</div>
-    </div>`;
-
-  document.getElementById('confirmOverlay').classList.remove('hidden');
-  document.getElementById('confirmSheet').classList.remove('hidden');
-
-  AppState.cart = [];
-  updateCartUI();
+  return window.tnStartMobileMoney(method === 'Airtel Money' ? 'AIRTEL' : 'MTN');
 }
 
 function goView(view){
@@ -2565,17 +2561,19 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>{
   });
 });
 </script>
-<script src="account-session-ui.js"></script>
-<script src="flutterwave-payments-v2.js"></script>
+<script src="rider-inbox.js"></script>
+<script src="stall-viewer.js"></script>
 <script src="enhancements.js"></script>
 <script src="enhancements-fix.js"></script>
 <script src="profile-copy-enhancements.js"></script>
 <script src="guest-access-flow.js"></script>
 <script src="admin-entrypoint.js"></script>
-<script src="session-compat.js"></script>
-<script src="wishlist-account.js"></script>
 <script src="partner-wallet-payouts.js"></script>
 <script src="signout-visible.js"></script>
 <script src="performance-optimizations.js"></script>
+<script src="session-compat.js"></script>
+<script src="account-session-ui.js"></script>
+<script src="wishlist-account.js"></script>
+<script src="flutterwave-payments-v2.js"></script>
 </body>
 </html>

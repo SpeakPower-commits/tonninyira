@@ -13,7 +13,7 @@ async function check(){
     tries++;
     try{
       const r=await client.functions.invoke('verify-flutterwave-payment',{body:{tx_ref:ref,transaction_id:chargeId||null}});
-      if(!r.error&&r.data?.status==='paid'){try{sessionStorage.removeItem('tn_pending_payment')}catch(_){}finish(true,'Payment successful','Your Tonninyira order is now marked paid.');return}
+      if(!r.error&&r.data?.status==='paid'){try{sessionStorage.removeItem('tn_pending_payment');localStorage.setItem('tonninyira_cart_v2','[]')}catch(_){}finish(true,'Payment successful','Your order is paid and has gone to the vendor. We are finding you a nearby rider.');return}
       if(!r.error&&r.data?.status==='failed'){finish(false,'Payment not completed','Your order remains unpaid. You may return and try again.');return}
     }catch(_){ }
     if(tries<10){setTimeout(poll,2000)}else{finish(false,'Payment still processing','Do not pay again yet. Check My Orders shortly.')}

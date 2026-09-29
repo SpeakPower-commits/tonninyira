@@ -19,7 +19,7 @@
   }
   *{box-sizing:border-box;}
   body{margin:0; background:var(--ink); color:var(--sand); font-family:'Work Sans',sans-serif; padding-bottom:60px;}
-  .display{font-family:'Alfa Slab One',cursive;}
+  .display{font-family:'Alfa Slab One',cursive;font-weight:400;font-synthesis:none;}
   .hidden{display:none !important;}
   .wrap{max-width:640px; margin:0 auto; padding:16px;}
 
@@ -34,7 +34,7 @@
   .back-link:hover{color:var(--sand);}
 
   .tabs{display:flex; gap:8px; margin:18px 0 6px;}
-  .tab-btn{flex:1; padding:13px; border-radius:12px; border:none; cursor:pointer; font-family:'Alfa Slab One'; font-size:0.92rem; background:var(--card); color:var(--muted);}
+  .tab-btn{flex:1; padding:13px; border-radius:12px; border:none; cursor:pointer; font-family:'Alfa Slab One';font-weight:400;font-synthesis:none; font-size:0.92rem; background:var(--card); color:var(--muted);}
   .tab-btn.active{background:var(--red); color:var(--sand);}
 
   h3{font-size:0.95rem; color:var(--gold); letter-spacing:0.5px; margin:22px 0 10px; text-transform:uppercase; font-weight:800;}
@@ -58,7 +58,7 @@
   .file-slot-fields{flex:1;}
   .file-slot-fields input[type=file]{width:100%; font-size:0.78rem; color:var(--muted);}
 
-  .btn-primary{width:100%; padding:15px; border-radius:12px; border:none; background:var(--red); color:var(--sand); font-family:'Alfa Slab One'; font-size:1rem; cursor:pointer; margin-top:20px;}
+  .btn-primary{width:100%; padding:15px; border-radius:12px; border:none; background:var(--red); color:var(--sand); font-family:'Alfa Slab One';font-weight:400;font-synthesis:none; font-size:1rem; cursor:pointer; margin-top:20px;}
   .helper{font-size:0.74rem; color:var(--muted); margin-top:4px; line-height:1.4;}
 
   .session-card{background:var(--card); border-radius:12px; padding:13px; margin-bottom:8px; border-left:4px solid var(--green);}
@@ -390,16 +390,24 @@ function showToast(msg, isError){
   setTimeout(()=>t.classList.add('hidden'), isError ? 6000 : 3500);
 }
 
-async function uploadToStorage(file, path){
-  const {error} = await supabaseClient.storage.from('tonninyira-media').upload(path, file, {upsert:true});
-  if(error) throw error;
-  return supabaseClient.storage.from('tonninyira-media').getPublicUrl(path).data.publicUrl;
+/* Photos are resized and videos shrunk on the phone, then stored under the
+   applicant's own media/<user id>/ folder -- the only place storage accepts
+   uploads (media-uploader.js). Returns a gallery entry. */
+async function uploadToStorage(file, _path, label){
+  if(file.type.startsWith('video/')){
+    const v = await TNMedia.prepareVideo(file, p=>showToast(`${label}: preparing video ${Math.round(p*100)}% — keep this page open`));
+    const poster = v.poster ? await TNMedia.upload(v.poster, {kind:'poster', ext:'jpg'}) : null;
+    const url = await TNMedia.upload(v.blob, {kind:'video', ext:v.ext, onProgress:p=>showToast(`${label}: uploading ${Math.round(p*100)}%`)});
+    return {url, type:'video', poster, duration:Math.round(v.duration)};
+  }
+  const img = await TNMedia.prepareImage(file);
+  return {url: await TNMedia.upload(img.blob, {kind:'photo', ext:img.ext}), type:'image'};
 }
 let uploadFailures = [];
 async function tryUpload(file, path, label){
-  try{ return await uploadToStorage(file, path); }
+  try{ return await uploadToStorage(file, path, label); }
   catch(e){
-    uploadFailures.push(label);
+    uploadFailures.push(label + (e instanceof TNMedia.MediaError ? ` (${e.message})` : ''));
     console.log(`Upload failed for ${label}:`, e.message||e);
     return null;
   }
@@ -466,14 +474,14 @@ async function submitVendorForm(e){
   uploadFailures = [];
   let logoUrl = null;
   const logoFile = f.logoFile.files[0];
-  if(logoFile) logoUrl = await tryUpload(logoFile, `vendors/${tid}/logo-${logoFile.name}`, 'Logo');
+  if(logoFile) logoUrl = (await tryUpload(logoFile, null, 'Logo'))?.url || null;
 
   const gallery = [];
   for(let i=1;i<=4;i++){
     const file = document.getElementById('galFile'+i).files[0];
     if(!file) continue;
-    const url = await tryUpload(file, `vendors/${tid}/gallery-${i}-${file.name}`, `Photo ${i}`);
-    if(url) gallery.push({url, caption: document.getElementById('galCap'+i).value.trim(), type: file.type.startsWith('video/')?'video':'image'});
+    const entry = await tryUpload(file, null, `Photo ${i}`);
+    if(entry) gallery.push({...entry, caption: document.getElementById('galCap'+i).value.trim()});
   }
 
   const pinHash = await hashPin(f.phone.value, f.vendorPin.value);
@@ -498,7 +506,9 @@ async function submitVendorForm(e){
     const { error } = await supabaseClient.from('vendors').insert(record);
     if(error) throw error;
   }catch(err){
-    saveError = err.message || String(err);
+    saveError = err?.code === '23505'
+      ? 'this phone number or account already has a stall on Tonninyira. Contact support if you need it changed.'
+      : (err.message || String(err));
     console.log('Vendor row not saved:', saveError);
   }
   if(saveError){
@@ -549,7 +559,7 @@ async function submitRiderForm(e){
   uploadFailures = [];
   let photoUrl = null;
   const photoFile = f.riderPhoto.files[0];
-  if(photoFile) photoUrl = await tryUpload(photoFile, `riders/${tid}/${photoFile.name}`, 'Profile Photo');
+  if(photoFile) photoUrl = (await tryUpload(photoFile, null, 'Profile Photo'))?.url || null;
 
   const pinHash = await hashPin(f.riderPhone.value, f.riderPin.value);
   const record = {
@@ -567,7 +577,9 @@ async function submitRiderForm(e){
     const { error } = await supabaseClient.from('riders').insert(record);
     if(error) throw error;
   }catch(err){
-    saveError = err.message || String(err);
+    saveError = err?.code === '23505'
+      ? 'this phone number or account already has a rider account on Tonninyira. Contact support if you need it changed.'
+      : (err.message || String(err));
     console.log('Rider row not saved:', saveError);
   }
   if(saveError){
@@ -678,5 +690,6 @@ function showApplyingAs(session){
   });
 })();
 </script>
+<script src="media-uploader.js"></script>
 </body>
 </html>
