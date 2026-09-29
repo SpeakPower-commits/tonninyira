@@ -326,6 +326,7 @@
     padding:14px; margin-bottom:10px; cursor:pointer;
   }
   .pay-option .pay-icon{width:40px;height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .pay-option .pay-logo{width:48px;height:48px;border-radius:12px;object-fit:cover;background:#fff;}
   .pay-option .pay-name{font-weight:800; font-size:0.95rem; color:var(--sand);}
   .pay-option .pay-sub{font-size:0.74rem; color:var(--muted); margin-top:2px;}
 
@@ -1891,11 +1892,11 @@ function updateCartUI(){
     </div>
     <div style="font-size:.72rem;font-weight:800;letter-spacing:1.5px;color:var(--gold);margin:4px 0 8px">PAY NOW TO PLACE YOUR ORDER</div>
     <button class="pay-option" onclick="completeOrder('MTN MoMo')">
-      <div class="pay-icon" style="background:var(--gold); color:var(--ink);">${ICONS.phone}</div>
+      <img class="pay-icon pay-logo" src="assets/payments/mtn.png" alt="MTN" width="48" height="48">
       <div><div class="pay-name">MTN MoMo</div><div class="pay-sub">Pay from your MTN mobile money</div></div>
     </button>
     <button class="pay-option" onclick="completeOrder('Airtel Money')">
-      <div class="pay-icon" style="background:var(--red); color:var(--sand);">${ICONS.phone}</div>
+      <img class="pay-icon pay-logo" src="assets/payments/airtel.png" alt="Airtel" width="48" height="48">
       <div><div class="pay-name">Airtel Money</div><div class="pay-sub">Pay from your Airtel mobile money</div></div>
     </button>
     <p style="font-size:.76rem;color:var(--muted);line-height:1.5;margin:4px 0 10px">Your order goes to the vendor as soon as your payment is confirmed. Tonninyira does not take cash on delivery.</p>
