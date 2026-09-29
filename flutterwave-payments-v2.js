@@ -48,7 +48,9 @@
         group=newGroup;s.redeemDelivery=false;if(typeof tnRefreshLoyaltyPoints==='function')tnRefreshLoyaltyPoints();
         }
         const r=await c.functions.invoke('create-flutterwave-payment',{body:{order_group_id:group,network,phone_number:phone,email:session.user.email||null,fullname:session.user.user_metadata?.name||session.user.user_metadata?.full_name||'Tonninyira Customer'}});
-        if(r.error)throw new Error(r.error.message||'Payment service error');
+        /* supabase-js reports any non-2xx as a generic "Edge Function returned a
+           non-2xx status code"; the real reason is in the response body. */
+        if(r.error){let m=r.error.message||'Payment service error';try{const body=await r.error.context?.json?.();if(body?.error)m=body.error}catch(_){}throw new Error(m)}
         if(r.data?.status==='paid'){close();alert('This order is already paid.');return}
         if(!r.data?.tx_ref)throw new Error(r.data?.message||'No Flutterwave transaction reference returned');
         sessionStorage.setItem('tn_pending_payment',JSON.stringify({order_group_id:group,tx_ref:r.data.tx_ref,charge_id:r.data.charge_id||null,total,created_at:Date.now()}));
