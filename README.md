@@ -85,6 +85,19 @@ flowchart LR
 
 ---
 
+## Delivery fee
+
+**UGX 1,000 per km by road, minimum UGX 1,000**, rounded up per 100 m (300 m costs UGX 1,000; 2.35 km
+costs UGX 2,400). Road distance is estimated as the straight-line distance × 1.3.
+
+- Every stall sets its **location pin** in My stall. A stall without a pin cannot take orders.
+- The customer drops a **delivery pin** at checkout. The basket shows the fee and the rider's route
+  before payment.
+- The database prices it (`quote_delivery` for the preview, `tn_price_order_delivery` when the order is
+  saved). The phone's number is ignored, and the limit is 60 km.
+- One rider collects from several stalls, nearest stall next, then the customer. The fee covers the
+  whole route.
+
 ## How the money works
 
 One payment, many recipients. The customer pays once for the whole basket; Tonninyira holds the
@@ -201,7 +214,7 @@ flowchart TB
 
 | Object | Purpose |
 | --- | --- |
-| `orders` | One row per stall per order; `order_id` groups a basket. The first stall's row carries the delivery fee. |
+| `orders` | One row per stall per order; `order_id` groups a basket. The first stall's row carries the delivery fee and `delivery_km`. |
 | `platform_settlements` · `settlement_ledger` · `my_partner_balance()` | What each stall and rider earned, and whether it is unpaid, held, under review, ready or settled. |
 | `request_partner_payout()` | Payout requests, limited to released money. |
 | `confirm_order_received()` | The customer's "Got it, all good". |
@@ -285,7 +298,7 @@ leaves Supabase.
 - Customer order tracking through each fulfilment stage
 
 **Next**
-- Map-based location and road-aware delivery fees
+- Road-network distances (today: straight line × 1.3)
 - Partner performance dashboards (response time, complaints, sold-out accuracy)
 - Repeat-purchase recommendations
 

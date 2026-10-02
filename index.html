@@ -415,7 +415,7 @@
       <option value="Kisugu"><option value="Kansanga"><option value="Ggaba">
       <option value="Namwongo"><option value="Entebbe"><option value="Kasangati"><option value="Jinja">
     </datalist>
-    <button id="gpsBtn" onclick="captureCustomerLocation()" style="background:var(--card2); border:1px solid rgba(243,232,216,0.15); color:var(--gold); border-radius:8px; padding:6px 10px; font-size:0.72rem; font-weight:800; white-space:nowrap; cursor:pointer;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span id="gpsBtnLabel">Use My Location</span></button>
+    <button id="gpsBtn" onclick="tnOpenDeliveryPin()" style="background:var(--card2); border:1px solid rgba(243,232,216,0.15); color:var(--gold); border-radius:8px; padding:6px 10px; font-size:0.72rem; font-weight:800; white-space:nowrap; cursor:pointer;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span id="gpsBtnLabel">Use My Location</span></button>
   </div>
 
   <div class="search-row">
@@ -1330,22 +1330,13 @@ else tnLocalizeChrome();
 
 const SAMPLE_RIDERS = [];
 
-/* Delivery fee is set by Tonninyira and scales with real distance, not a
-   single flat number. Uses the customer's GPS position and each vendor's
-   own registered coordinates (captured at their sign-up) via the
-   Haversine formula -- straight-line distance, no paid routing API
-   needed. Edit DELIVERY_TIERS directly to change the breakpoints or
-   amounts. Falls back to DEFAULT_DELIVERY_FEE whenever GPS or a vendor's
-   coordinates aren't available, so checkout never breaks over missing
-   location data -- it just can't be distance-aware for that order. */
-const DELIVERY_TIERS = [
-  {upToKm: 2,  fee: 1500},
-  {upToKm: 4,  fee: 2500},
-  {upToKm: 7,  fee: 4000},
-  {upToKm: 12, fee: 6000},
-  {upToKm: Infinity, fee: 8000},
-];
-const DEFAULT_DELIVERY_FEE = 3000;
+/* Delivery fee: UGX 1,000 per km by road (straight line x 1.3), minimum
+   UGX 1,000, rounded up per 100 m. The database works it out
+   (quote_delivery for the preview, tn_price_order_delivery when the order is
+   saved), so the phone only shows it. Both ends need a pin: the stall sets its
+   location in My stall, the customer drops a pin at checkout. */
+const DELIVERY_PER_KM = 1000, DELIVERY_MIN = 1000;
+const PIN_KEY = 'tn_delivery_pin';
 /* Loyalty redemption, phase 1: points -> free delivery only. The exact cost
    is still Tom's call to make with his partners -- this constant and the
    matching `cost` in the DB's redeem_free_delivery_points() trigger (the
@@ -1359,10 +1350,6 @@ function haversineKm(lat1, lon1, lat2, lon2){
   const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
-function feeForDistance(km){
-  const tier = DELIVERY_TIERS.find(t => km <= t.upToKm);
-  return tier ? tier.fee : DELIVERY_TIERS[DELIVERY_TIERS.length-1].fee;
-}
 function findVendorById(id){
   for(const cat of Object.values(CATALOG)) for(const sub of Object.values(cat.subs)){
     const v = sub.vendors.find(v=>v.id===id);
@@ -1370,16 +1357,49 @@ function findVendorById(id){
   }
   return null;
 }
+/* The server's quote for the current basket and pin, or null while there is
+   none (no pin yet, still loading, or a stall without a location). */
 function computeDeliveryFee(){
-  if(!AppState.customerLocation || !AppState.cart.length) return DEFAULT_DELIVERY_FEE;
-  const vendorIds = [...new Set(AppState.cart.map(c=>c.vendorId))];
-  const dists = vendorIds.map(vid=>{
-    const v = findVendorById(vid);
-    if(!v || v.latitude==null || v.longitude==null) return null;
-    return haversineKm(AppState.customerLocation.lat, AppState.customerLocation.lng, v.latitude, v.longitude);
-  });
-  if(dists.some(d=>d===null)) return DEFAULT_DELIVERY_FEE;
-  return feeForDistance(Math.max(...dists));
+  const q = AppState.deliveryQuote;
+  return q && q.ok && q.key === tnQuoteKey() ? Number(q.fee) : null;
+}
+function tnQuoteKey(){
+  const loc = AppState.customerLocation;
+  const ids = [...new Set(AppState.cart.map(c=>c.vendorId))].sort().join(',');
+  return loc ? ids + '@' + loc.lat.toFixed(6) + ',' + loc.lng.toFixed(6) : '';
+}
+let tnQuoteTimer = null, tnQuoteBusy = '';
+function tnRefreshQuote(){
+  const key = tnQuoteKey();
+  if(!key || !AppState.cart.length){ AppState.deliveryQuote = null; return; }
+  if((AppState.deliveryQuote && AppState.deliveryQuote.key === key) || tnQuoteBusy === key) return;
+  clearTimeout(tnQuoteTimer);
+  tnQuoteTimer = setTimeout(async ()=>{
+    tnQuoteBusy = key;
+    const loc = AppState.customerLocation, ids = [...new Set(AppState.cart.map(c=>c.vendorId))];
+    let q;
+    try{
+      const { data, error } = await supabaseClient.rpc('quote_delivery', { p_vendor_ids: ids, p_lat: loc.lat, p_lng: loc.lng });
+      q = error ? { ok:false, reason:'error' } : (data || { ok:false, reason:'error' });
+    }catch(_){ q = { ok:false, reason:'error' }; }
+    tnQuoteBusy = '';
+    if(key !== tnQuoteKey()) return tnRefreshQuote();
+    AppState.deliveryQuote = { ...q, key };
+    updateCartUI();
+  }, 250);
+}
+function tnSetCustomerPin(p){
+  AppState.customerLocation = { lat: Number(p.lat), lng: Number(p.lng) };
+  try{ localStorage.setItem(PIN_KEY, JSON.stringify(AppState.customerLocation)); }catch(_){}
+  const btn = document.getElementById('gpsBtn');
+  if(btn){ btn.innerHTML = TN_PIN + 'Delivery pin set ✓'; btn.style.color = 'var(--green)'; }
+  AppState.deliveryQuote = null; tnRefreshQuote(); updateCartUI();
+}
+function tnOpenDeliveryPin(){
+  if(typeof tnPinSheet !== 'function') return captureCustomerLocation();
+  tnPinSheet({ eyebrow:'Delivery pin', title:'Where should the rider bring it?',
+    note:'Drop the pin on your gate or building. Delivery costs UGX 1,000 per km from the stall (minimum UGX 1,000).',
+    start: AppState.customerLocation, saveLabel:'Deliver here', onSave: tnSetCustomerPin });
 }
 /* A hand-drawn line pin, not the platform's 📍 emoji glyph -- that glyph
    renders differently per device and, paired with "Use My Location," is
@@ -1393,12 +1413,7 @@ function captureCustomerLocation(){
   if(!navigator.geolocation){ btn.innerHTML = TN_PIN + 'Not supported on this device'; return; }
   btn.innerHTML = TN_PIN + 'Locating…';
   navigator.geolocation.getCurrentPosition(
-    pos=>{
-      AppState.customerLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      btn.innerHTML = TN_PIN + 'Location captured ✓';
-      btn.style.color = 'var(--green)';
-      if(document.getElementById('cartSheet') && !document.getElementById('cartSheet').classList.contains('hidden')) updateCartUI();
-    },
+    pos=>{ tnSetCustomerPin({ lat: pos.coords.latitude, lng: pos.coords.longitude }); },
     err=>{
       btn.innerHTML = TN_PIN + 'Use My Location';
       alert("Couldn't get your location — check your phone's location permission for this site and try again. You can still order using your typed area.");
@@ -1408,7 +1423,8 @@ function captureCustomerLocation(){
   );
 }
 
-const AppState = { category:"eats", subcategory:"breakfast", view:"shop", searchTerm:"", cart:[], customerLocation:null, loyaltyPoints:null, redeemDelivery:false };
+const AppState = { category:"eats", subcategory:"breakfast", view:"shop", searchTerm:"", cart:[], customerLocation:(()=>{ try{ const p = JSON.parse(localStorage.getItem('tn_delivery_pin')||'null'); return p && isFinite(p.lat) && isFinite(p.lng) ? {lat:+p.lat, lng:+p.lng} : null; }catch(_){ return null; } })(), deliveryQuote:null, loyaltyPoints:null, redeemDelivery:false };
+if(AppState.customerLocation){ const b = document.getElementById('gpsBtn'); if(b){ b.innerHTML = TN_PIN + 'Delivery pin set ✓'; b.style.color = 'var(--green)'; } }
 
 /* Fetched fresh each time the cart opens rather than cached indefinitely --
    a balance shown stale (e.g. after a previous order already spent it)
@@ -1786,6 +1802,9 @@ function vendorCardHTML(v){
   const coverHTML = cover
     ? `<button type="button" class="stall-cover" onclick="tnOpenViewer('${safeId(v.id)}','g',${coverIdx})" aria-label="View photos of ${esc(v.name)}"><img src="${safeUrl(cover)}" alt="" loading="lazy"></button>`
     : '';
+  /* Delivery is priced from the stall's pin, so a stall without one cannot
+     take orders yet (the database refuses them too). */
+  const noPin = v.latitude==null || v.longitude==null;
   const productHTML = v.items.map(item=>{
     const ph = item.photos || [];
     const img = ph.length
@@ -1799,6 +1818,9 @@ function vendorCardHTML(v){
     const opts = tnItemOptions(item);
     const range = tnItemPriceRange(item);
     const sold = !!item.sold_out || (opts.length && opts.length === ph.length && opts.every(o=>o.sold_out));
+    if(noPin) return `<div class="prod-card">${img}
+      <div class="prod-body"><div class="prod-name">${esc(item.name)}</div>${item.desc?`<div class="prod-desc">${esc(item.desc)}</div>`:''}<div class="prod-price">${range.lo===range.hi?'':'From '}UGX ${fmt(range.lo)}</div></div>
+      <button type="button" class="prod-add" disabled>Opening soon</button></div>`;
     return `<div class="prod-card${sold?' is-sold':''}">${img}
       <div class="prod-body"><div class="prod-name">${esc(item.name)}</div>${item.desc?`<div class="prod-desc">${esc(item.desc)}</div>`:''}<div class="prod-price">${range.lo===range.hi?'':'From '}UGX ${fmt(range.lo)}</div>${opts.length?`<div class="prod-desc" style="-webkit-line-clamp:1">${opts.length} option${opts.length===1?'':'s'} · swipe to choose</div>`:''}</div>
       ${sold
@@ -1831,6 +1853,7 @@ function vendorCardHTML(v){
       </div>
       ${galleryHTML ? `<div class="stall-sec"><span>See the stall</span><small>Tap to view full screen</small></div>${galleryHTML}` : ''}
       <div class="stall-sec"><span>Products</span><small>${v.items.length} item${v.items.length===1?'':'s'}</small></div>
+      ${noPin ? `<p style="margin:0 12px 10px;padding:10px 12px;border-radius:12px;background:rgba(245,180,0,.09);border:1px solid rgba(245,180,0,.3);font-size:.78rem;color:var(--sand);line-height:1.45">This stall is setting its location for delivery. Ordering opens as soon as it is done.</p>` : ''}
       <div class="prod-grid">${productHTML}</div>
     </div>`;
 }
@@ -1859,7 +1882,7 @@ function tnItemPriceRange(item){
 function addToCart(vendorId, itemId, optionId){
   const vendor = findVendor(vendorId);
   const item = vendor && vendor.items.find(i=>i.id===itemId);
-  if(!item || item.sold_out) return false;
+  if(!item || item.sold_out || vendor.latitude==null || vendor.longitude==null) return false;
   const opt = optionId ? tnItemOptions(item).find(o=>o.id===optionId) : null;
   if(optionId && (!opt || opt.sold_out)) return false;
   const oid = opt ? opt.id : '';
@@ -1894,16 +1917,41 @@ function updateCartUI(){
     body.innerHTML = `<div class="empty-state">${ICONS.emptyCart}<p style="font-weight:700; color:var(--sand);">Your basket is empty</p><p>Add something tasty or useful.</p></div>`;
     return;
   }
+  tnRefreshQuote();
   const realFee = computeDeliveryFee();
+  const q = AppState.deliveryQuote && AppState.deliveryQuote.key === tnQuoteKey() ? AppState.deliveryQuote : null;
   const canRedeem = AppState.loyaltyPoints !== null && AppState.loyaltyPoints >= FREE_DELIVERY_POINTS_COST;
   const redeeming = canRedeem && AppState.redeemDelivery;
-  const deliveryFee = redeeming ? 0 : realFee;
+  const deliveryFee = realFee == null ? null : (redeeming ? 0 : realFee);
+  const canPay = realFee != null;
+  /* Delivery block: no pin yet / working it out / a problem / the fee with
+     the route (pickups in order, then the customer). */
+  const pinBtn = label => `<button type="button" class="dn-pin" onclick="tnOpenDeliveryPin()" style="display:block;margin-top:8px;min-height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--gold);background:transparent;color:var(--gold);font:inherit;font-weight:800;font-size:.8rem;cursor:pointer">${label}</button>`;
+  let dnTitle, dnBody;
+  if(!AppState.customerLocation){
+    dnTitle = 'Set your delivery pin';
+    dnBody = `Delivery costs UGX ${fmt(DELIVERY_PER_KM)} per km from the stall (minimum UGX ${fmt(DELIVERY_MIN)}). Drop a pin to see your exact fee.${pinBtn('Set delivery pin')}`;
+  }else if(!q){
+    dnTitle = 'Working out your delivery fee…';
+    dnBody = `UGX ${fmt(DELIVERY_PER_KM)} per km by road, minimum UGX ${fmt(DELIVERY_MIN)}.`;
+  }else if(!q.ok){
+    const why = { stall_pin: `${esc((q.stalls||[]).join(', '))} ${(q.stalls||[]).length===1?'has':'have'} not set ${(q.stalls||[]).length===1?'its':'their'} stall location yet, so ${(q.stalls||[]).length===1?'it':'they'} can't take orders right now. Remove ${(q.stalls||[]).length===1?'it':'them'} from your basket to continue.`,
+      too_far: `Your pin is ${esc(q.km)} km by road from the stall. Tonninyira delivers up to 60 km.`,
+      outside: 'Your pin is outside Uganda.', pin: 'Set your delivery pin.' }[q.reason] || "We couldn't work out the delivery fee. Check your connection and try again.";
+    dnTitle = 'Delivery not available yet';
+    dnBody = why + (q.reason === 'stall_pin' ? '' : pinBtn(q.reason === 'error' ? 'Try again' : 'Move my pin'));
+  }else{
+    const names = q.names || {};
+    const route = (q.stops||[]).map(id => esc(names[id] || 'Stall')).concat('you').join(' → ');
+    dnTitle = `Delivery: UGX ${fmt(deliveryFee)} · ${Number(q.km).toFixed(1)} km`;
+    dnBody = `${(q.stops||[]).length > 1 ? 'One rider collects from ' : 'Rider route: '}${route}. UGX ${fmt(DELIVERY_PER_KM)} per km by road, minimum UGX ${fmt(DELIVERY_MIN)}.${redeeming ? ' Paid with your points.' : ''}${pinBtn('Change pin')}`;
+  }
   body.innerHTML = `
     <div class="delivery-note">
       ${ICONS.moto}
       <div>
-        <p class="dn-title">Delivery fee: UGX ${fmt(deliveryFee)}${AppState.customerLocation?'':' (estimate)'}</p>
-        <p class="dn-body">Set by Tonninyira based on distance, included in what you pay now.${AppState.customerLocation?'':' Tap "Use My Location" above for an exact fee.'} Our riders are ID-verified and carry a Tonninyira Rider ID.</p>
+        <p class="dn-title">${dnTitle}</p>
+        <p class="dn-body">${dnBody}</p>
       </div>
     </div>
     ${canRedeem ? `
@@ -1928,15 +1976,16 @@ function updateCartUI(){
       </div>`).join('')}
     <div class="summary-box">
       <div class="summary-row"><span>Subtotal (to vendors)</span><span>UGX ${fmt(cartSubtotal())}</span></div>
-      <div class="summary-row"><span>Delivery</span><span>UGX ${fmt(deliveryFee)}</span></div>
-      <div class="summary-row total"><span>Total</span><span>UGX ${fmt(cartSubtotal()+deliveryFee)}</span></div>
+      <div class="summary-row"><span>Delivery</span><span>${deliveryFee==null ? '—' : 'UGX '+fmt(deliveryFee)}</span></div>
+      <div class="summary-row total"><span>Total</span><span>${deliveryFee==null ? '—' : 'UGX '+fmt(cartSubtotal()+deliveryFee)}</span></div>
     </div>
     <div style="font-size:.72rem;font-weight:800;letter-spacing:1.5px;color:var(--gold);margin:4px 0 8px">PAY NOW TO PLACE YOUR ORDER</div>
-    <button class="pay-option" onclick="completeOrder('MTN MoMo')">
+    ${canPay ? '' : `<p style="font-size:.78rem;color:#FFB0A5;margin:0 0 8px">${AppState.customerLocation ? 'Payment opens once the delivery fee is ready.' : 'Set your delivery pin to pay.'}</p>`}
+    <button class="pay-option" onclick="completeOrder('MTN MoMo')" ${canPay?'':'disabled style="opacity:.45;pointer-events:none"'}>
       <img class="pay-icon pay-logo" src="assets/payments/mtn.png" alt="MTN" width="48" height="48">
       <div><div class="pay-name">MTN MoMo</div><div class="pay-sub">Pay from your MTN mobile money</div></div>
     </button>
-    <button class="pay-option" onclick="completeOrder('Airtel Money')">
+    <button class="pay-option" onclick="completeOrder('Airtel Money')" ${canPay?'':'disabled style="opacity:.45;pointer-events:none"'}>
       <img class="pay-icon pay-logo" src="assets/payments/airtel.png" alt="Airtel" width="48" height="48">
       <div><div class="pay-name">Airtel Money</div><div class="pay-sub">Pay from your Airtel mobile money</div></div>
     </button>
@@ -2604,6 +2653,7 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>{
 </script>
 <script src="rider-inbox.js"></script>
 <script src="stall-viewer.js"></script>
+<script src="delivery-pin.js"></script>
 <script src="media-uploader.js"></script>
 <script src="case-thread.js"></script>
 <script src="order-help.js"></script>
