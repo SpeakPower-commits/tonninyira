@@ -186,6 +186,13 @@
     editing = null;
     if(await save({ items: saved }, 'Product saved.') && before?.photos) before.photos.filter(u => !clean.photos || !clean.photos.includes(u)).forEach(u => TNMedia.remove(u));
   }
+  /* Sold out hides the Add to basket button on the storefront and the
+     database refuses new orders for it until it is back in stock. */
+  async function toggleSoldOut(i){
+    const it = items()[i]; if(!it) return;
+    const next = items().map((x, j) => { if(j !== i) return x; const y = { ...x }; if(y.sold_out) delete y.sold_out; else y.sold_out = true; return y; });
+    await save({ items: next }, it.sold_out ? `${it.name} is back in stock.` : `${it.name} is marked sold out.`);
+  }
   async function deleteProduct(){
     const it = items()[editing.index]; if(!it || !confirm(`Delete “${it.name}” from your stall?`)) return;
     const idx = editing.index; editing = null;
@@ -253,8 +260,9 @@
         ${it.map((x, i) => editing && editing.index === i ? editorHTML() : `<div class="tns-row">
           <div class="tns-thumb" style="${(x.photos || [])[0] ? `background-image:url('${esc(x.photos[0])}')` : ''}"></div>
           <div style="flex:1;min-width:0"><div style="font-weight:800;overflow-wrap:break-word">${esc(x.name)}</div>
-          <div class="tns-note">${ugx(x.price)} · ${(x.photos || []).length ? (x.photos.length + (x.photos.length === 1 ? ' photo' : ' photos')) : '<span class="tns-todo">no photo yet</span>'}</div></div>
-          <button type="button" class="tns-link" data-edit="${i}">${(x.photos || []).length ? 'Edit' : 'Add photo'}</button></div>`).join('')}
+          <div class="tns-note">${ugx(x.price)} · ${(x.photos || []).length ? (x.photos.length + (x.photos.length === 1 ? ' photo' : ' photos')) : '<span class="tns-todo">no photo yet</span>'}${x.sold_out ? ' · <b style="color:#FFB0A5">SOLD OUT</b>' : ''}</div></div>
+          <div style="display:grid;gap:4px;justify-items:end"><button type="button" class="tns-link" data-edit="${i}">${(x.photos || []).length ? 'Edit' : 'Add photo'}</button>
+          <button type="button" class="tns-link" data-soldout="${i}" aria-pressed="${!!x.sold_out}">${x.sold_out ? 'Back in stock' : 'Mark sold out'}</button></div></div>`).join('')}
         ${editing && editing.index == null ? editorHTML() : `<button type="button" class="tns-add" data-act="new-product" style="width:100%;min-height:52px;margin-top:10px">＋ Add a product</button>`}
       </div>
       <p class="tns-note" style="text-align:center">Photos are resized on your phone to save your data.</p>`;
@@ -283,6 +291,7 @@
     else if(b.dataset.remove) removeMedia(b.dataset.remove);
     else if(b.dataset.cover) makeCover(b.dataset.cover);
     else if(b.dataset.edit != null) openEditor(Number(b.dataset.edit));
+    else if(b.dataset.soldout != null) toggleSoldOut(Number(b.dataset.soldout));
   }
 
   function setTab(stall){

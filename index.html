@@ -218,6 +218,9 @@
   .prod-add{min-height:44px; margin:0 8px 8px; border:0; border-radius:12px; background:var(--gold); color:var(--ink); font:inherit; font-weight:800; font-size:0.82rem; cursor:pointer;}
   .prod-add:active{background:var(--gold-dark);}
   .prod-add.is-added{background:var(--green); color:var(--sand);}
+  .prod-add:disabled{background:var(--card); color:var(--muted); cursor:not-allowed;}
+  .prod-card.is-sold .prod-img{opacity:.55;}
+  .prod-ask{min-height:36px; margin:-2px 8px 8px; border:0; border-radius:10px; background:transparent; color:var(--gold); font:inherit; font-weight:700; font-size:0.74rem; cursor:pointer; text-decoration:underline; text-underline-offset:3px;}
   .item-row{
     display:flex; justify-content:space-between; align-items:center; gap:10px;
     padding:12px 16px; border-top:1px solid rgba(243,232,216,0.06);
@@ -1654,7 +1657,7 @@ function renderOrderGroups(rows, myReviews, custId){
                    : `<button class="rate-btn" onclick="openRatingForm('vendor','${safeId(g.vendor_id)}','${safeId(orderId)}',${esc(JSON.stringify(String(g.vendor_name||'the stall')))})">Rate ${esc(g.vendor_name)}</button>`)
         : '';
       return `<div class="order-vendor-line">
-          <div><strong>${esc(g.vendor_name)}</strong><div style="font-size:0.76rem; color:var(--muted);">${(g.items||[]).map(i=>esc(i.name)+' ×'+Number(i.qty||1)).join(', ')}</div></div>
+          <div><strong>${esc(g.vendor_name)}</strong><div style="font-size:0.76rem; color:var(--muted);">${(g.items||[]).map(i=>esc(i.name)+' ×'+Number(i.qty||1)).join(', ')}</div>${Array.isArray(g.unavailable_items)&&g.unavailable_items.length?`<div style="font-size:0.74rem; color:#FFB0A5; margin-top:2px;">Not available: ${g.unavailable_items.map(i=>esc(i.name)+' ×'+Number(i.qty||1)).join(', ')} · UGX ${fmt(g.unavailable_items.reduce((s,i)=>s+Number(i.refund||0),0))} refunded</div>`:''}${['declined','cancelled'].includes(g.status)&&g.payment_status==='paid'?`<div style="font-size:0.74rem; color:#FFB0A5; margin-top:2px;">Cancelled · full refund to your Mobile Money</div>`:''}</div>
           <span class="status-pill status-${safeId(g.status)}">${esc(g.status)}</span>
         </div>${rateBtn ? `<div>${rateBtn}</div>` : ''}`;
     }).join('');
@@ -1788,9 +1791,16 @@ function vendorCardHTML(v){
     const img = ph.length
       ? `<button type="button" class="prod-img" onclick="tnOpenViewer('${safeId(v.id)}','i','${safeId(item.id)}')" aria-label="See photos of ${esc(item.name)}"><img src="${safeUrl(ph[0])}" alt="" loading="lazy">${ph.length>1?`<span class="prod-count">${ph.length} photos</span>`:''}</button>`
       : `<div class="prod-img prod-ph" style="color:${avatarColor(item.name)}" aria-hidden="true"><b>${esc(String(item.name||'?').trim().charAt(0).toUpperCase())}</b><small>Photo coming soon</small></div>`;
-    return `<div class="prod-card">${img}
+    /* Sold out (set by the stall in My stall) blocks the basket; otherwise the
+       customer can ask the stall whether it is still in stock before buying
+       (product-questions.js). */
+    const sold = !!item.sold_out;
+    return `<div class="prod-card${sold?' is-sold':''}">${img}
       <div class="prod-body"><div class="prod-name">${esc(item.name)}</div>${item.desc?`<div class="prod-desc">${esc(item.desc)}</div>`:''}<div class="prod-price">UGX ${fmt(item.price)}</div></div>
-      <button type="button" class="prod-add" onclick="tnAddFromCard(this,'${safeId(v.id)}','${safeId(item.id)}')">Add to basket</button></div>`;
+      ${sold
+        ? `<button type="button" class="prod-add" disabled>Sold out</button>`
+        : `<button type="button" class="prod-add" onclick="tnAddFromCard(this,'${safeId(v.id)}','${safeId(item.id)}')">Add to basket</button>
+      <button type="button" class="prod-ask" data-ask-vendor="${safeId(v.id)}" data-ask-item="${esc(item.name)}">Ask if it's available</button>`}</div>`;
   }).join('');
 
   return `
@@ -1828,6 +1838,7 @@ function tnAddFromCard(btn, vendorId, itemId){
 function addToCart(vendorId, itemId){
   const vendor = findVendor(vendorId);
   const item = vendor.items.find(i=>i.id===itemId);
+  if(!item || item.sold_out) return;
   const existing = AppState.cart.find(c=>c.vendorId===vendorId && c.itemId===itemId);
   if(existing) existing.qty++;
   else AppState.cart.push({vendorId, itemId, qty:1, name:item.name, price:item.price, vendorName:vendor.name});
@@ -2570,6 +2581,7 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>{
 <script src="media-uploader.js"></script>
 <script src="case-thread.js"></script>
 <script src="order-help.js"></script>
+<script src="product-questions.js"></script>
 <script src="enhancements.js"></script>
 <script src="enhancements-fix.js"></script>
 <script src="profile-copy-enhancements.js"></script>
