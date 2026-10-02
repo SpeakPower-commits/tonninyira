@@ -173,7 +173,27 @@
       +'<div class="panel" style="margin-top:10px"><h3>Riders</h3>'+table(r,[{label:'Name',render:x=>esc(x.full_name)+dupBadge(dupR(x)),csv:x=>x.full_name},{label:'TID',key:'tonninyira_id'},{label:'Phone',key:'phone'},{label:'Vehicle',key:'vehicle_type'},{label:'Plate',key:'plate_number'},{label:'Login',render:x=>x.auth_user_id?'Linked':'<span class="muted">None</span>',csv:x=>x.auth_user_id?'linked':'none'},{label:'Standing',render:x=>pill(x.approval_status),csv:x=>x.approval_status},{label:'Actions',noCsv:true,noSearch:true,render:x=>partnerActions('rider',x)}],{name:'riders',status:x=>x.approval_status})+'</div>'
       +'<div class="panel" style="margin-top:10px"><h3>Payout queue</h3>'+table(p.slice().sort((a,b)=>String(b.requested_at).localeCompare(String(a.requested_at))),[{label:'Type',key:'partner_type'},{label:'Amount',render:x=>money(x.amount),csv:x=>x.amount},{label:'Method',key:'method'},{label:'To',render:x=>esc([x.account_name,x.account_number,x.bank_name].filter(Boolean).join(' · ')),csv:x=>[x.account_name,x.account_number,x.bank_name].filter(Boolean).join(' ')},{label:'Status',render:x=>pill(x.status),csv:x=>x.status},{label:'Reference',key:'reference'},{label:'Requested',render:x=>esc(when(x.requested_at)),csv:x=>x.requested_at},{label:'Actions',noCsv:true,noSearch:true,render:x=>['requested','approved','processing','failed'].includes(x.status)?'<div class="acts">'+btn('po-paid','Mark paid',{id:x.id},'go')+(x.status!=='failed'?btn('po-failed','Mark failed',{id:x.id},'stop'):'')+'</div>':'<span class="muted">—</span>'}],{name:'payouts',status:x=>x.status})+'</div>'}
 
-  async function finance(){setHead('Payments & payouts','Payment reconciliation, settlement and partner cash-out.');const [p,s]=await Promise.all([rows('payment_transactions'),rows('platform_settlements')]);app.innerHTML='<div class="panel"><h3>Payment transactions</h3>'+table(p,[{label:'Order',render:x=>esc(x.metadata?.order_group_id||x.order_id),csv:x=>x.metadata?.order_group_id||x.order_id},{label:'Provider',key:'provider'},{label:'Network',key:'network'},{label:'Amount',render:x=>money(x.amount),csv:x=>x.amount},{label:'Status',render:x=>pill(x.status),csv:x=>x.status},{label:'Reference',key:'provider_reference'},{label:'Verified',render:x=>esc(when(x.verified_at)),csv:x=>x.verified_at}],{name:'payments',status:x=>x.status})+'</div><div class="panel" style="margin-top:10px"><h3>Platform settlements</h3>'+table(s,[{label:'Vendor',key:'vendor_id'},{label:'Rider',key:'rider_tid'},{label:'Gross',render:x=>money(x.gross_amount),csv:x=>x.gross_amount},{label:'Platform fee',render:x=>money(x.platform_fee),csv:x=>x.platform_fee},{label:'Vendor net',render:x=>money(x.vendor_amount),csv:x=>x.vendor_amount},{label:'Rider net',render:x=>money(x.rider_amount),csv:x=>x.rider_amount},{label:'Status',render:x=>pill(x.status),csv:x=>x.status}],{name:'settlements',status:x=>x.status})+'</div>'}
+  /* Refunds are sent to the customer's Mobile Money automatically by the
+     process-refunds worker (every 2 minutes). Support only steps in when one
+     fails (Retry) or there is no Flutterwave charge to refund (pay by hand,
+     then Mark paid). Settlements come from settlement_ledger, which shows
+     whether each stall's / rider's money is held, released or under review. */
+  async function finance(){setHead('Payments & payouts','Payments, refunds, settlement and partner cash-out.');
+    const [p,s,rf]=await Promise.all([rows('payment_transactions'),rows('settlement_ledger'),client().from('order_refunds').select('*').order('created_at',{ascending:false}).limit(500).then(r=>{if(r.error)throw r.error;return r.data||[]})]);
+    const attention=rf.filter(r=>['failed','manual'].includes(r.status));
+    const src={case:'Complaint decision',vendor_declined:'Stall declined',vendor_no_response:'Stall did not confirm',item_unavailable:'Item not available',admin:'Admin'};
+    app.innerHTML='<div class="panel"><h3>Refunds'+(attention.length?' <span class="pill bad">'+attention.length+' need attention</span>':'')+'</h3><p class="muted" style="margin:0 0 8px;font-size:12px">Sent automatically to the customer\'s Mobile Money. Act only on failed or manual ones.</p>'
+      +table(rf,[{label:'Order',key:'order_id'},{label:'Amount',render:x=>money(x.amount),csv:x=>x.amount},{label:'Why',render:x=>esc(src[x.source]||x.source)+'<br><span class="muted" style="font-size:11px">'+esc(x.reason)+'</span>',csv:x=>x.reason},{label:'Status',render:x=>pill(x.status)+(x.failed_reason?'<br><span class="muted" style="font-size:11px">'+esc(x.failed_reason)+'</span>':''),csv:x=>x.status},{label:'Reference',key:'provider_reference'},{label:'Created',render:x=>esc(when(x.created_at)),csv:x=>x.created_at},
+        {label:'',render:x=>['failed','manual'].includes(x.status)?'<div class="acts"><button type="button" class="act warn" data-refund-retry="'+esc(x.id)+'">Retry</button><button type="button" class="act go" data-refund-paid="'+esc(x.id)+'">Mark paid</button></div>':'',csv:()=>''}],{name:'refunds',status:x=>x.status})
+      +'</div><div class="panel" style="margin-top:10px"><h3>Payment transactions</h3>'+table(p,[{label:'Order',render:x=>esc(x.metadata?.order_group_id||x.order_id),csv:x=>x.metadata?.order_group_id||x.order_id},{label:'Provider',key:'provider'},{label:'Network',key:'network'},{label:'Amount',render:x=>money(x.amount),csv:x=>x.amount},{label:'Status',render:x=>pill(x.status),csv:x=>x.status},{label:'Reference',key:'provider_reference'},{label:'Verified',render:x=>esc(when(x.verified_at)),csv:x=>x.verified_at}],{name:'payments',status:x=>x.status})
+      +'</div><div class="panel" style="margin-top:10px"><h3>Settlements</h3><p class="muted" style="margin:0 0 8px;font-size:12px">A stall\'s money is held until delivery, then released 12 hours later (or when the customer confirms). A rider\'s money is released on delivery. An open complaint puts it under review.</p>'+table(s,[{label:'Order',key:'order_id'},{label:'Vendor',key:'vendor_id'},{label:'Vendor net',render:x=>money(x.vendor_net),csv:x=>x.vendor_net},{label:'Vendor money',render:x=>pill(x.vendor_state),csv:x=>x.vendor_state},{label:'Rider',key:'rider_tid'},{label:'Rider net',render:x=>money(x.rider_net),csv:x=>x.rider_net},{label:'Rider money',render:x=>pill(x.rider_state),csv:x=>x.rider_state},{label:'Refunded',render:x=>Number(x.customer_refund)>0?money(x.customer_refund):'—',csv:x=>x.customer_refund},{label:'Platform fee',render:x=>money(x.platform_fee),csv:x=>x.platform_fee}],{name:'settlements',status:x=>x.vendor_state})+'</div>'}
+  app.addEventListener('click',async e=>{
+    const rt=e.target.closest('[data-refund-retry]'),mp=e.target.closest('[data-refund-paid]');if(!rt&&!mp)return;
+    if(rt){const v=await ask({title:'Retry this refund',message:'It will be sent to Flutterwave again within 2 minutes.',fields:[reasonField],confirm:'Retry'});if(!v)return;
+      try{await rpc('admin_retry_refund',{p_id:Number(rt.dataset.refundRetry),p_reason:v.reason});note('Refund queued again.');load('finance')}catch(err){note('Could not retry: '+String(err?.message||err),true)}return}
+    const v=await ask({title:'Mark refund as paid by hand',message:'Only after you have sent the money to the customer yourself.',fields:[{name:'reference',label:'Mobile Money / bank reference',required:true},reasonField],confirm:'Mark paid'});if(!v)return;
+    try{await rpc('admin_mark_refund_paid',{p_id:Number(mp.dataset.refundPaid),p_reference:v.reference,p_reason:v.reason});note('Refund marked as paid.');load('finance')}catch(err){note('Could not update: '+String(err?.message||err),true)}
+  });
 
   /* Reading messages is not support. Without a way to answer, every customer who
      writes in is met with silence -- so each conversation carries a reply box.
@@ -183,7 +203,7 @@
      move a case through open -> investigating -> waiting for customer ->
      resolved -> closed via admin_set_case_status (audited). The conversation
      UI and private evidence photos come from case-thread.js / media-uploader.js. */
-  let caseOpen=null, caseFilter='active';
+  let caseOpen=null, caseFilter='active', caseCtx=null;
   const CASE_ACTIVE=['open','investigating','awaiting_customer'];
   const hoursSince=v=>v?Math.floor((Date.now()-new Date(v).getTime())/3600000):0;
   async function support(){
@@ -213,8 +233,10 @@
     const [prof,orders]=await Promise.all([
       client().from('profiles').select('display_name,phone').eq('id',cs.customer_id).maybeSingle().then(r=>r.data),
       cs.order_id?client().from('orders').select('*').eq('order_id',cs.order_id).then(r=>r.data||[]):[]]);
+    const refunds=cs.order_id?await client().from('order_refunds').select('amount,status,vendor_id,source,created_at').eq('order_id',cs.order_id).then(r=>r.data||[]):[];
+    caseCtx={cs,orders};
     const ev=orders.length?await client().from('order_events').select('event_type,created_at,order_id').in('order_id',orders.map(o=>String(o.id))).order('created_at').then(r=>r.data||[]):[];
-    const total=orders.reduce((s,o)=>s+Number(o.item_subtotal||0),0)+Math.max(0,...orders.map(o=>Number(o.delivery_fee||0)));
+    const total=orders.reduce((s,o)=>s+Number(o.item_subtotal||0)+Number(o.delivery_fee||0),0);
     const tried={yes:'Yes, they already talked to the rider/stall',no:'No, they came straight to support',unreachable:'They could not reach the rider/stall'}[cs.tried_contact]||'—';
     app.innerHTML='<div class="acts" style="margin-bottom:10px"><button type="button" class="act" data-case-back>← All cases</button></div>'
       +'<div class="grid"><div class="panel"><h3>Case</h3>'
@@ -229,8 +251,9 @@
           +(cs.status!=='closed'?'<button type="button" class="act stop" data-case-status="closed">Close</button>':'<button type="button" class="act" data-case-status="open">Reopen</button>')
         +'</div></div>'
       +(cs.order_id?'<div class="panel"><h3>Order '+esc(cs.order_id)+'</h3>'
-        +orders.map(o=>'<p style="margin:4px 0"><b>'+esc(o.vendor_name)+'</b> · '+esc((o.items||[]).map(i=>i.name+' ×'+i.qty).join(', '))+' '+pill(o.status)+'</p>').join('')
+        +orders.map(o=>'<p style="margin:4px 0"><b>'+esc(o.vendor_name)+'</b> · '+esc((o.items||[]).map(i=>i.name+(i.option_label?' ('+i.option_label+')':'')+' ×'+i.qty).join(', '))+' '+pill(o.status)+'</p>').join('')
         +'<p style="margin:4px 0"><b>Paid:</b> '+money(total)+' · '+pill(orders[0]?.payment_status||'—')+'</p>'
+        +(refunds.length?'<p style="margin:4px 0"><b>Refunds:</b> '+refunds.map(r=>money(r.amount)+' '+pill(r.status)).join(' · ')+'</p>':'')
         +'<p style="margin:4px 0"><b>Rider:</b> '+esc(orders[0]?.rider_tid||'none')+' · <b>Area:</b> '+esc(orders[0]?.customer_area||'—')+'</p>'
         +'<p class="muted" style="margin:8px 0 0;font-size:11px">'+(ev.length?ev.map(e=>esc(when(e.created_at))+' '+esc(String(e.event_type).replace(/_/g,' '))).join('<br>'):'No order events recorded.')+'</p></div>':'')
       +'</div><div class="panel" style="margin-top:10px"><h3>Conversation</h3><div id="caseThread" style="max-height:55vh;overflow:auto"></div><div id="caseComp"></div></div>';
@@ -244,6 +267,7 @@
     if(e.target.closest('[data-case-back]')){caseOpen=null;return load('support')}
     const s=e.target.closest('[data-case-status]');if(!s||!caseOpen)return;
     const st=s.dataset.caseStatus,final=['resolved','closed'].includes(st);
+    if(st==='resolved'&&caseCtx?.cs?.order_id) return resolveWithMoney();
     const v=await ask({title:{investigating:'Mark as investigating',awaiting_customer:'Ask the customer for more information',resolved:'Resolve this case',closed:'Close this case',open:'Reopen this case'}[st],
       message:final?'The customer, stall and rider will see your decision. Mark a refund as due if the customer should get money back.':'The customer is notified of the change.',
       fields:(final?[{name:'resolution',label:'Decision (shown to the customer)',type:'textarea',required:true},{name:'refund',label:'Refund due?',type:'select',options:[{value:'no',label:'No refund'},{value:'yes',label:'Yes — refund the customer'}]}]:
@@ -253,6 +277,35 @@
     try{await rpc('admin_set_case_status',{p_conversation:caseOpen,p_status:st,p_resolution:v.resolution||null,p_refund_due:final?v.refund==='yes':null,p_reason:v.reason});note('Case updated.');load('support')}
     catch(err){note('Could not update the case: '+String(err?.message||err),true)}
   });
+
+  /* Resolving an order complaint decides the money, through the audited
+     admin_resolve_case_money(): release the held payment to the stall, refund
+     part of it (taken from the stall's share), refund everything because the
+     stall was at fault (the stall also covers the delivery fee so the rider is
+     still paid), or refund everything as Tonninyira goodwill (stall and rider
+     keep their pay). Refunds are queued in order_refunds. */
+  async function resolveWithMoney(){
+    const {cs,orders}=caseCtx;
+    const stalls=[...new Map(orders.map(o=>[o.vendor_id,o])).values()];
+    const fields=[{name:'outcome',label:'Outcome',type:'select',options:[
+        {value:'release',label:'No refund — release the payment to the stall'},
+        {value:'partial_refund',label:'Partial refund — taken from the stall\'s share'},
+        {value:'full_refund_stall',label:'Full refund — stall\'s fault (stall also covers delivery)'},
+        {value:'full_refund_platform',label:'Full refund — Tonninyira covers it (goodwill)'}]}];
+    if(stalls.length>1) fields.push({name:'vendor',label:'Which stall?',type:'select',options:[{value:'',label:cs.vendor_id?'The stall named in the complaint':'Choose a stall…'}].concat(stalls.map(o=>({value:o.vendor_id,label:o.vendor_name||o.vendor_id})))});
+    fields.push({name:'amount',label:'Refund amount in UGX (partial refunds only)'},
+      {name:'resolution',label:'Decision (shown to the customer)',type:'textarea',required:true},
+      {name:'reason',label:'Internal reason (audit log)',type:'textarea',required:true});
+    const v=await ask({title:'Resolve this case',message:'Decide what happens to the money. The customer, stall and rider will see your decision.',fields,confirm:'Resolve'});
+    if(!v)return;
+    const amount=Number(String(v.amount||'').replace(/[^\d.]/g,''));
+    if(v.outcome==='partial_refund'&&!(amount>0))return note('Enter the refund amount for a partial refund.',true);
+    try{
+      const r=await rpc('admin_resolve_case_money',{p_conversation:cs.id,p_outcome:v.outcome,p_vendor_id:v.vendor||null,p_amount:v.outcome==='partial_refund'?amount:null,p_resolution:v.resolution,p_reason:v.reason});
+      note(r&&r.refund>0?'Case resolved. Refund of '+money(r.refund)+' queued.':'Case resolved. The stall\'s payment is released.');
+      load('support');
+    }catch(err){note('Could not resolve the case: '+String(err?.message||err),true)}
+  }
 
   /* Approval is the control that publishes a partner: vendors_public and
      riders_public both serve approval_status='approved' only, so nothing

@@ -15,39 +15,40 @@
     return { user, profile, role };
   }
 
+  /* Balances come from the database (my_partner_balance), never from adding
+     up rows in the browser. Only money that is paid, delivered and released
+     counts as available: a stall's share waits 12 hours after delivery (or
+     until the customer taps "Got it, all good") and stays frozen while a
+     complaint is open; a rider's share is released on delivery. */
   async function getBalance(partner){
-    let gross = 0;
+    let partnerName = partner.profile.display_name || (partner.role === 'vendor' ? 'Vendor' : 'Rider');
     if (partner.role === 'vendor') {
-      const { data: vendor } = await client.from('vendors').select('tonninyira_id,business_name,phone,approval_status').eq('auth_user_id', partner.user.id).maybeSingle();
-      if (!vendor || vendor.approval_status !== 'approved') return { gross: 0, committed: 0, available: 0, partnerName: vendor?.business_name || partner.profile.display_name || 'Vendor' };
-      const { data: settlements } = await client.from('platform_settlements').select('vendor_amount').eq('vendor_id', vendor.tonninyira_id);
-      gross = (settlements || []).reduce((s,r)=>s + Number(r.vendor_amount || 0), 0);
-      return await withPayouts(gross, vendor.business_name || partner.profile.display_name || 'Vendor', partner);
+      const { data: vendor } = await client.from('vendors').select('business_name').eq('auth_user_id', partner.user.id).maybeSingle();
+      partnerName = vendor?.business_name || partnerName;
+    } else {
+      const { data: rider } = await client.from('riders').select('full_name').eq('auth_user_id', partner.user.id).maybeSingle();
+      partnerName = rider?.full_name || partnerName;
     }
-    const { data: rider } = await client.from('riders').select('tonninyira_id,full_name,phone,approval_status').eq('auth_user_id', partner.user.id).maybeSingle();
-    if (!rider || rider.approval_status !== 'approved') return { gross: 0, committed: 0, available: 0, partnerName: rider?.full_name || partner.profile.display_name || 'Rider' };
-    const { data: settlements } = await client.from('platform_settlements').select('rider_amount').eq('rider_tid', rider.tonninyira_id);
-    gross = (settlements || []).reduce((s,r)=>s + Number(r.rider_amount || 0), 0);
-    return await withPayouts(gross, rider.full_name || partner.profile.display_name || 'Rider', partner);
-  }
-
-  /* Mobile Money payouts disburse the instant they're requested, with no
-     admin in the loop -- see request_partner_payout() in the database. That
-     only stays safe because the destination is locked to a phone already
-     proven to belong to this account (profiles.phone_verified, set only by
-     verify-phone-otp), never to whatever a form field says. Bank payouts have
-     no equivalent verified-on-file concept yet, so they stay request-only. */
-  async function withPayouts(gross, partnerName, partner){
-    const { data: payouts } = await client.from('partner_payouts').select('amount,status,method,requested_at,reference,failed_reason').in('status',['requested','approved','processing','paid']).order('requested_at',{ascending:false});
-    const committed = (payouts || []).reduce((s,r)=>s + Number(r.amount || 0), 0);
-    return { gross, committed, available: Math.max(gross - committed, 0), partnerName, phone: partner.profile.phone, phoneVerified: !!partner.profile.phone_verified, payouts: payouts || [] };
+    const { data: bal, error } = await client.rpc('my_partner_balance', { p_partner_type: partner.role });
+    const ok = !error && bal && bal.ok;
+    const { data: payouts } = await client.from('partner_payouts').select('amount,status,method,requested_at,reference,failed_reason').order('requested_at',{ascending:false}).limit(5);
+    return {
+      ok, partnerName,
+      available: ok ? Number(bal.available || 0) : 0,
+      held: ok ? Number(bal.held || 0) : 0,
+      frozen: ok ? Number(bal.frozen || 0) : 0,
+      committed: ok ? Number(bal.committed || 0) : 0,
+      nextReleaseAt: ok ? bal.next_release_at : null,
+      phone: partner.profile.phone, phoneVerified: !!partner.profile.phone_verified,
+      payouts: payouts || []
+    };
   }
 
   function style(){
     if(document.getElementById('tn-wallet-style')) return;
     const st=document.createElement('style'); st.id='tn-wallet-style'; st.textContent=`
       .tn-wallet-card{background:var(--card,#2a1f19);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:18px;margin:18px 0;color:var(--sand,#f3e8d8);box-shadow:0 10px 30px rgba(0,0,0,.12)}
-      .tn-wallet-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}.tn-wallet-metric{background:rgba(255,255,255,.05);padding:12px;border-radius:12px}.tn-wallet-metric small{display:block;opacity:.7;margin-bottom:4px}.tn-wallet-metric strong{font-size:1.08rem}
+      .tn-wallet-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}.tn-wallet-metric{background:rgba(255,255,255,.05);padding:12px;border-radius:12px}.tn-wallet-metric small{display:block;opacity:.7;margin-bottom:4px}.tn-wallet-metric strong{font-size:1.08rem}.tn-wallet-main{background:rgba(245,180,0,.14);border:1px solid rgba(245,180,0,.4)}.tn-wallet-frozen{background:rgba(226,63,37,.12);border:1px solid rgba(226,63,37,.4)}
       .tn-wallet-actions{display:flex;gap:10px;flex-wrap:wrap}.tn-wallet-btn{border:0;border-radius:12px;padding:11px 14px;font-weight:800;cursor:pointer;background:var(--gold,#f5b400);color:#1c1410}.tn-wallet-btn.secondary{background:transparent;color:inherit;border:1px solid currentColor}
       .tn-wallet-form{display:grid;gap:10px;margin-top:12px}.tn-wallet-form input,.tn-wallet-form select{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.12);color:inherit}.tn-wallet-note{font-size:.84rem;opacity:.72;line-height:1.45}.tn-wallet-history{margin-top:14px}.tn-wallet-row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid rgba(255,255,255,.08);font-size:.9rem}
       .tn-signout{display:block;width:100%;margin-top:12px;border:1px solid rgba(255,255,255,.16);background:transparent;color:inherit;border-radius:12px;padding:12px;font-weight:800;cursor:pointer}
@@ -118,8 +119,12 @@
     const history=(data.payouts||[]).slice(0,5).map(p=>`<div class="tn-wallet-row"><span>${esc(p.method==='mobile_money'?'Mobile Money':'Bank')} · ${esc(statusLabel(p.status))}${p.status==='failed'&&p.failed_reason?' — '+esc(p.failed_reason):''}</span><strong>${money(p.amount)}</strong></div>`).join('') || '<div class="tn-wallet-note">No payout requests yet.</div>';
     const phoneRow = data.phoneVerified
       ? `<input id="tn-payout-number" value="${esc(data.phone)}" readonly>`
-      : `<div class="tn-wallet-note">Verify your phone number to enable instant Mobile Money payouts.</div><button type="button" class="tn-wallet-btn secondary" id="tn-verify-phone-btn" style="width:100%">Verify my phone</button>`;
-    box.innerHTML=`<h2 style="margin:0 0 6px">Wallet & payouts</h2><div class="tn-wallet-note">${esc(data.partnerName)} · Mobile Money payouts send automatically to your verified phone. Bank payouts are still processed manually.</div><div class="tn-wallet-grid"><div class="tn-wallet-metric"><small>Total earned</small><strong>${money(data.gross)}</strong></div><div class="tn-wallet-metric"><small>Already requested/paid</small><strong>${money(data.committed)}</strong></div><div class="tn-wallet-metric"><small>Available</small><strong>${money(data.available)}</strong></div></div><div class="tn-wallet-actions"><button class="tn-wallet-btn" id="tn-withdraw-open">Withdraw money</button><button class="tn-wallet-btn secondary" id="tn-wallet-refresh">Refresh</button></div><div id="tn-withdraw-panel" hidden><form class="tn-wallet-form" id="tn-withdraw-form"><select id="tn-payout-method"><option value="mobile_money">Mobile Money (instant)</option><option value="bank">Bank account (manual)</option></select><input id="tn-payout-amount" type="number" min="1000" step="100" max="${Math.floor(data.available)}" placeholder="Amount in UGX" required><input id="tn-payout-provider" placeholder="Network: MTN or Airtel"><input id="tn-payout-name" placeholder="Account name" value="${esc(data.partnerName)}"><div id="tn-payout-mm-slot">${phoneRow}</div><input id="tn-bank-name" placeholder="Bank name" hidden><input id="tn-payout-bank-number" placeholder="Bank account number" hidden><button class="tn-wallet-btn" type="submit">Request payout</button><div class="tn-wallet-note">Bank payouts are recorded securely and paid out manually.</div></form></div><div class="tn-wallet-history"><strong>Recent payouts</strong>${history}</div>`;
+      : `<div class="tn-wallet-note">Verify your phone number to receive Mobile Money payouts.</div><button type="button" class="tn-wallet-btn secondary" id="tn-verify-phone-btn" style="width:100%">Verify my phone</button>`;
+    const when=iso=>{ try{ return new Date(iso).toLocaleString([], {weekday:'short', hour:'numeric', minute:'2-digit'}); }catch(_){ return ''; } };
+    const holdNote = partner.role==='vendor'
+      ? `Money from an order is held until it is delivered, then released 12 hours later, or straight away when the customer taps <b>Got it, all good</b>.${data.nextReleaseAt?` Next release: <b>${esc(when(data.nextReleaseAt))}</b>.`:''}`
+      : 'Delivery money is held until you mark the order delivered, then it is yours to withdraw.';
+    box.innerHTML=`<h2 style="margin:0 0 6px">Wallet & payouts</h2><div class="tn-wallet-note">${esc(data.partnerName)} · ${holdNote}</div><div class="tn-wallet-grid"><div class="tn-wallet-metric tn-wallet-main"><small>Available to withdraw</small><strong>${money(data.available)}</strong></div><div class="tn-wallet-metric"><small>On hold</small><strong>${money(data.held)}</strong></div>${data.frozen>0?`<div class="tn-wallet-metric tn-wallet-frozen"><small>Under review (customer complaint)</small><strong>${money(data.frozen)}</strong></div>`:''}<div class="tn-wallet-metric"><small>Already requested / paid</small><strong>${money(data.committed)}</strong></div></div><div class="tn-wallet-actions"><button class="tn-wallet-btn" id="tn-withdraw-open" ${data.available<1000?'disabled style="opacity:.5;cursor:not-allowed" title="Nothing released to withdraw yet"':''}>Withdraw money</button><button class="tn-wallet-btn secondary" id="tn-wallet-refresh">Refresh</button></div><div id="tn-withdraw-panel" hidden><form class="tn-wallet-form" id="tn-withdraw-form"><select id="tn-payout-method"><option value="mobile_money">Mobile Money</option><option value="bank">Bank account (manual)</option></select><input id="tn-payout-amount" type="number" min="1000" step="100" max="${Math.floor(data.available)}" placeholder="Amount in UGX" required><input id="tn-payout-provider" placeholder="Network: MTN or Airtel"><input id="tn-payout-name" placeholder="Account name" value="${esc(data.partnerName)}"><div id="tn-payout-mm-slot">${phoneRow}</div><input id="tn-bank-name" placeholder="Bank name" hidden><input id="tn-payout-bank-number" placeholder="Bank account number" hidden><button class="tn-wallet-btn" type="submit">Request payout</button><div class="tn-wallet-note">Bank payouts are recorded securely and paid out manually.</div></form></div><div class="tn-wallet-history"><strong>Recent payouts</strong>${history}</div>`;
     const panel=box.querySelector('#tn-withdraw-panel');
     box.querySelector('#tn-withdraw-open').onclick=()=>panel.hidden=!panel.hidden;
     box.querySelector('#tn-wallet-refresh').onclick=()=>mountWallet();

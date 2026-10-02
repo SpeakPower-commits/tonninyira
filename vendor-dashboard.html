@@ -73,6 +73,14 @@
   .action-ready{background:var(--green); color:var(--sand);}
   .action-done{background:var(--card); color:var(--sand); border:1px solid rgba(243,232,216,0.15);}
   .action-decline{background:none; color:var(--red); border:1px solid var(--red);}
+  .order-card.status-cancelled{opacity:0.55;}
+  .status-pill.status-cancelled{background:var(--card); color:var(--muted);}
+  .order-confirm{margin-top:8px; padding:8px 10px; border-radius:10px; background:rgba(226,63,37,.14); border:1px solid rgba(226,63,37,.45); font-size:0.78rem;}
+  .accept-back{position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,.72); display:grid; place-items:end center;}
+  .accept-sheet{width:min(520px,100%); background:var(--ink); color:var(--sand); border-radius:20px 20px 0 0; padding:18px 16px calc(20px + env(safe-area-inset-bottom)); box-sizing:border-box;}
+  .accept-item{display:grid; grid-template-columns:auto 1fr auto; gap:10px; align-items:center; padding:12px 0; border-bottom:1px dashed rgba(243,232,216,0.12); font-size:0.88rem; cursor:pointer;}
+  .accept-item input{width:20px; height:20px;}
+  .accept-err{color:#FFB0A5; font-size:0.8rem; min-height:1.1em; margin-top:8px;}
 
   .placeholder{text-align:center; padding:50px 20px; color:var(--muted);}
   .placeholder h3{color:var(--sand); text-transform:none; letter-spacing:0; margin-bottom:6px;}
@@ -256,7 +264,8 @@ function logOut(){
   document.getElementById('loginPin').value = '';
 }
 
-const STATUS_LABEL = { new:'New', accepted:'Accepted', preparing:'Preparing', ready:'Ready for Pickup', out_for_delivery:'Out for Delivery', completed:'Completed', declined:'Declined' };
+const STATUS_LABEL = { new:'New', pending:'New', accepted:'Accepted', preparing:'Preparing', ready:'Ready for Pickup', out_for_delivery:'Out for Delivery', completed:'Completed', declined:'Declined', cancelled:'Cancelled' };
+const escH = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function timeAgo(iso){
   const mins = Math.round((Date.now() - new Date(iso).getTime())/60000);
   if(mins < 1) return 'just now';
@@ -266,6 +275,7 @@ function timeAgo(iso){
   return new Date(iso).toLocaleDateString();
 }
 
+let ordersById = {};
 async function loadOrders(){
   if(!currentVendor) return;
   const forVendor = currentVendor.tonninyira_id;
@@ -276,50 +286,97 @@ async function loadOrders(){
     if(!currentVendor || currentVendor.tonninyira_id !== forVendor) return;
     renderOrders(data||[]);
   }catch(e){
-    document.getElementById('ordersList').innerHTML = `<div class="placeholder"><p>Couldn't load orders (${e.message||e}).</p></div>`;
+    document.getElementById('ordersList').innerHTML = `<div class="placeholder"><p>Couldn't load orders (${escH(e.message||e)}).</p></div>`;
   }
+}
+
+/* A paid order must be confirmed within 15 minutes (orders.confirm_by), or it
+   is cancelled and the customer refunded automatically. */
+function confirmLeft(o){
+  if(!o.confirm_by) return '';
+  const m = Math.ceil((new Date(o.confirm_by).getTime() - Date.now()) / 60000);
+  return m > 0 ? `<div class="order-confirm">Confirm within <b>${m} min</b> or the order is cancelled and the customer refunded.</div>`
+               : `<div class="order-confirm">Time is up. This order is being cancelled.</div>`;
 }
 
 function renderOrders(orders){
   const el = document.getElementById('ordersList');
+  ordersById = Object.fromEntries(orders.map(o => [o.id, o]));
   if(!orders.length){
-    el.innerHTML = `<div class="placeholder">${''}<h3>No orders yet</h3><p>New orders from customers will show up here automatically.</p></div>`;
+    el.innerHTML = `<div class="placeholder"><h3>No orders yet</h3><p>New orders from customers will show up here automatically.</p></div>`;
     return;
   }
   el.innerHTML = orders.map(o=>{
     const items = o.items||[];
+    const st = o.status === 'pending' ? 'new' : o.status;
+    const missing = Array.isArray(o.unavailable_items) ? o.unavailable_items : [];
     return `
-    <div class="order-card status-${o.status}">
+    <div class="order-card status-${escH(st)}">
       <div class="order-top">
         <div>
-          <div class="order-id">${o.order_id}</div>
-          <div class="order-time">${timeAgo(o.created_at)} · ${o.customer_area||'area not given'}</div>
+          <div class="order-id">${escH(o.order_id)}</div>
+          <div class="order-time">${timeAgo(o.created_at)} · ${escH(o.customer_area||'area not given')}</div>
         </div>
-        <span class="status-pill status-${o.status}">${STATUS_LABEL[o.status]||o.status}</span>
+        <span class="status-pill status-${escH(st)}">${escH(STATUS_LABEL[o.status]||o.status)}</span>
       </div>
-      ${items.map(it=>`<div class="order-item-line"><span>${it.name} ×${it.qty}</span><span>UGX ${Number(it.price*it.qty).toLocaleString()}</span></div>`).join('')}
-      <div class="order-meta">Payment: ${o.payment_method} · Rider: ${o.rider_tid||'—'}</div>
+      ${items.map(it=>`<div class="order-item-line"><span style="display:flex;gap:8px;align-items:center;min-width:0">${it.photo&&/^https:\/\//.test(it.photo)?`<img src="${escH(it.photo)}" alt="" width="36" height="36" style="width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0">`:''}<span>${escH(it.name)}${it.option_label?` <b style="color:var(--gold)">(${escH(it.option_label)})</b>`:''} ×${Number(it.qty||1)}</span></span><span>UGX ${Number((it.price||0)*(it.qty||1)).toLocaleString()}</span></div>`).join('')}
+      ${missing.length ? `<div class="order-meta" style="color:#FFB0A5">Not available: ${missing.map(m=>escH(m.name)+' ×'+Number(m.qty||1)).join(', ')} · customer refunded UGX ${Number(missing.reduce((s,m)=>s+Number(m.refund||0),0)).toLocaleString()}</div>` : ''}
+      ${['new','pending'].includes(o.status) ? confirmLeft(o) : ''}
+      <div class="order-meta">Payment: ${escH(o.payment_method)} · Rider: ${escH(o.rider_tid||'—')}</div>
       <div class="order-actions">${actionsFor(o.status, o.id)}</div>
     </div>`;
   }).join('');
 }
 
 function actionsFor(status, id){
-  if(status==='new') return `
-    <button class="action-btn action-accept" onclick="updateStatus(${id},'accepted')">Accept</button>
-    <button class="action-btn action-decline" onclick="updateStatus(${id},'declined')">Decline</button>`;
-  if(status==='accepted') return `<button class="action-btn action-accept" onclick="updateStatus(${id},'preparing')">Start Preparing</button>`;
-  if(status==='preparing') return `<button class="action-btn action-ready" onclick="updateStatus(${id},'ready')">Mark Ready for Pickup</button>`;
+  if(status==='new' || status==='pending') return `
+    <button class="action-btn action-accept" onclick="openAccept(${Number(id)})">Accept</button>
+    <button class="action-btn action-decline" onclick="declineOrder(${Number(id)})">Decline</button>`;
+  if(status==='accepted' || status==='preparing') return `<button class="action-btn action-ready" onclick="updateStatus(${Number(id)},'ready')">Mark Ready for Pickup</button>`;
   if(status==='ready') return `<span class="helper" style="font-style:italic;">Waiting for your rider to pick this up</span>`;
   if(status==='out_for_delivery') return `<span class="helper" style="font-style:italic;">Out for delivery</span>`;
+  if(status==='declined' || status==='cancelled') return `<span class="helper" style="font-style:italic;">The customer was refunded in full.</span>`;
   return '';
 }
 
-async function updateStatus(id, status){
-  try{
-    await supabaseClient.from('orders').update({status, updated_at:new Date().toISOString()}).eq('id', id);
+/* Accept, optionally ticking items the stall does not have: those are
+   refunded to the customer automatically (vendor_accept_order). */
+function openAccept(id){
+  const o = ordersById[id]; if(!o) return;
+  document.getElementById('acceptSheet')?.remove();
+  const items = o.items || [];
+  const m = document.createElement('div'); m.id = 'acceptSheet'; m.className = 'accept-back';
+  m.innerHTML = `<div class="accept-sheet" role="dialog" aria-modal="true" aria-label="Accept order">
+    <h3 style="margin:0 0 4px">Accept order ${escH(o.order_id)}</h3>
+    <p class="helper" style="margin:0 0 10px">Tick anything you <b>don't</b> have. The customer is refunded for it automatically and gets the rest.</p>
+    ${items.map((it,i)=>`<label class="accept-item"><input type="checkbox" value="${i}"><span>${escH(it.name)}${it.option_label?` (${escH(it.option_label)})`:''} ×${Number(it.qty||1)}</span><span>UGX ${Number((it.price||0)*(it.qty||1)).toLocaleString()}</span></label>`).join('')}
+    <div class="accept-err" id="acceptErr"></div>
+    <div class="order-actions" style="margin-top:12px"><button class="action-btn action-accept" id="acceptGo">Accept order</button><button class="action-btn action-decline" id="acceptNo">Cancel</button></div></div>`;
+  document.body.appendChild(m);
+  const go = m.querySelector('#acceptGo');
+  const sync = () => { const n = m.querySelectorAll('input:checked').length; go.textContent = n === 0 ? 'Accept order' : n >= items.length ? 'Decline — I have none of it' : `Accept without ${n} item${n>1?'s':''}`; };
+  m.addEventListener('change', sync);
+  m.addEventListener('click', e => { if(e.target === m || e.target.id === 'acceptNo') m.remove(); });
+  go.onclick = async () => {
+    const missing = [...m.querySelectorAll('input:checked')].map(x => Number(x.value));
+    go.disabled = true; go.textContent = 'Sending…';
+    const { data, error } = await supabaseClient.rpc('vendor_accept_order', { p_row_id: id, p_unavailable: missing });
+    if(error){ go.disabled = false; sync(); m.querySelector('#acceptErr').textContent = error.message; return; }
+    m.remove();
+    if(data && data.refund > 0) alert(data.status === 'declined' ? 'Order declined. The customer is being refunded in full.' : `Order accepted. The customer is being refunded UGX ${Number(data.refund).toLocaleString()} for the missing items.`);
     loadOrders();
-  }catch(e){ console.log('Status update failed:', e.message||e); }
+  };
+}
+
+async function declineOrder(id){
+  if(!confirm('Decline this order? The customer will be refunded in full.')) return;
+  await updateStatus(id, 'declined');
+}
+
+async function updateStatus(id, status){
+  const { error } = await supabaseClient.from('orders').update({status, updated_at:new Date().toISOString()}).eq('id', id);
+  if(error){ alert('Could not update the order: ' + (error.message || error)); }
+  loadOrders();
 }
 
 (function restoreSession(){
@@ -333,6 +390,7 @@ async function updateStatus(id, status){
 <script src="vendor-stall-media.js"></script>
 <script src="case-thread.js"></script>
 <script src="partner-cases.js"></script>
+<script src="product-questions.js"></script>
 <script src="partner-dashboard-auth-earnings.js"></script>
 <script src="partner-wallet-payouts.js"></script>
 <script src="signout-visible.js"></script>

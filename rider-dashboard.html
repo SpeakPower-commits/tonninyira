@@ -278,7 +278,7 @@ const STAGE_LABEL = { preparing:'Stalls Still Preparing', ready:'Ready for Picku
 function escHtml(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function itemsLine(items){
   if(!Array.isArray(items) || !items.length) return '';
-  return items.map(i=>`${Number(i.qty||1)}× ${escHtml(i.name||'item')}`).join(', ');
+  return items.map(i=>`${Number(i.qty||1)}× ${escHtml(i.name||'item')}${i.option_label?` (${escHtml(i.option_label)})`:''}`).join(', ');
 }
 function paymentLine(group){
   const first = group[0];
@@ -287,6 +287,9 @@ function paymentLine(group){
 
 function renderDeliveries(rows){
   const el = document.getElementById('deliveriesList');
+  /* A stall that declined, or did not confirm in time, is cancelled and its
+     customer refunded: nothing to pick up there. */
+  rows = rows.filter(r=>!['cancelled','declined'].includes(r.status));
   if(!rows.length){
     el.innerHTML = `<div class="placeholder"><h3>No deliveries yet</h3><p>When a customer near you pays for an order, a delivery offer pops up here. After you accept it, the delivery card appears with the customer, location and items.</p>
       <button class="btn-secondary" type="button" onclick="showExampleDelivery()">Show an example delivery</button></div>`;
