@@ -21,7 +21,7 @@
     s.textContent = `
       .tna-said{margin:-4px 8px 8px;font-size:.72rem;font-weight:700;line-height:1.35}
       .tna-said.yes{color:#9FE0B0}.tna-said.no{color:#FFB0A5}.tna-said.wait{color:var(--muted,#B7A493)}
-      .tna-back{position:fixed;inset:0;z-index:10030;background:rgba(0,0,0,.72);display:grid;place-items:end center}
+      .tna-back{position:fixed;inset:0;z-index:10050;background:rgba(0,0,0,.72);display:grid;place-items:end center}
       .tna-sheet{width:min(520px,100%);background:var(--ink,#1C1410);color:var(--sand,#F3E8D8);border-radius:22px 22px 0 0;padding:18px 16px calc(22px + env(safe-area-inset-bottom));font-family:'Work Sans',sans-serif}
       .tna-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
       .tna-eye{font-size:.66rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--gold,#F5B400)}
@@ -50,22 +50,23 @@
 
   /* ---------------- customer side ---------------- */
   let mine = [], lastLoad = 0, poll = null;
-  const key = (v, n) => v + '|' + String(n).toLowerCase();
+  /* A question can be about one option (one photo/version) of a product. */
+  const key = (v, n, o) => v + '|' + String(n).toLowerCase() + '|' + (o || '');
 
   async function loadMine(force){
     if(!force && Date.now() - lastLoad < 25000) return;
     lastLoad = Date.now();
     const me = await uid(); if(!me){ mine = []; return; }
     const since = new Date(Date.now() - 24 * 3600e3).toISOString();
-    const { data } = await c().from('product_questions').select('id,vendor_id,item_name,answer,answer_note,created_at,answered_at').gte('created_at', since).order('created_at', { ascending: false }).limit(100);
+    const { data } = await c().from('product_questions').select('id,vendor_id,item_name,option_id,answer,answer_note,created_at,answered_at').gte('created_at', since).order('created_at', { ascending: false }).limit(100);
     mine = data || [];
   }
 
   function annotate(){
     const latest = {};
-    mine.forEach(q => { const k = key(q.vendor_id, q.item_name); if(!latest[k]) latest[k] = q; });
+    mine.forEach(q => { const k = key(q.vendor_id, q.item_name, q.option_id); if(!latest[k]) latest[k] = q; });
     document.querySelectorAll('[data-ask-vendor]').forEach(btn => {
-      const q = latest[key(btn.dataset.askVendor, btn.dataset.askItem)];
+      const q = latest[key(btn.dataset.askVendor, btn.dataset.askItem, btn.dataset.askOption)];
       let line = btn.nextElementSibling?.classList.contains('tna-said') ? btn.nextElementSibling : null;
       if(!q){ line?.remove(); return; }
       if(!line){ line = document.createElement('div'); btn.after(line); }
@@ -87,18 +88,19 @@
   function closeSheet(){ clearInterval(poll); poll = null; document.getElementById('tnAsk')?.remove(); }
 
   async function ask(btn){
-    const vendorId = btn.dataset.askVendor, item = btn.dataset.askItem;
+    const vendorId = btn.dataset.askVendor, item = btn.dataset.askItem, optionId = btn.dataset.askOption || null;
+    const title = item + (btn.dataset.askLabel ? ` (${btn.dataset.askLabel})` : '');
     const me = await uid();
     if(!me){ if(typeof window.tnAuthEntry === 'function') window.tnAuthEntry(); return; }
-    const stall = btn.closest('.stall-card')?.querySelector('.stall-name')?.textContent?.trim() || 'the stall';
+    const stall = btn.dataset.askStall || btn.closest('.stall-card')?.querySelector('.stall-name')?.textContent?.trim() || 'the stall';
     btn.disabled = true;
-    const { data, error } = await c().from('product_questions').insert({ vendor_id: vendorId, customer_id: me, item_name: item }).select('id').single();
+    const { data, error } = await c().from('product_questions').insert({ vendor_id: vendorId, customer_id: me, item_name: item, ...(optionId ? { option_id: optionId } : {}) }).select('id').single();
     btn.disabled = false;
     if(error){ alert(error.message); return; }
-    const back = sheet(`<div class="tna-top"><div><div class="tna-eye">Ask the stall</div><div class="tna-h">${esc(item)}</div></div><button type="button" class="tna-x" data-x aria-label="Close">✕</button></div>
+    const back = sheet(`<div class="tna-top"><div><div class="tna-eye">Ask the stall</div><div class="tna-h">${esc(title)}</div></div><button type="button" class="tna-x" data-x aria-label="Close">✕</button></div>
       <div class="tna-box" id="tnaBox">We asked <b>${esc(stall)}</b> if it is still available<span class="tna-dots"></span></div>
       <div class="tna-sub">You can close this. The answer will also show on the product.</div>`);
-    const addBtn = btn.parentElement?.querySelector('.prod-add');
+    const addBtn = btn.parentElement?.querySelector('.prod-add, .tv-add');
     const check = async () => {
       const { data: q } = await c().from('product_questions').select('answer,answer_note,answered_at').eq('id', data.id).maybeSingle();
       if(!q?.answer) return;
@@ -132,18 +134,18 @@
   async function loadVendor(){
     const el = host(); if(!el) return;
     const since = new Date(Date.now() - 24 * 3600e3).toISOString();
-    const { data, error } = await c().from('product_questions').select('id,item_name,answer,answer_note,created_at,answered_at').gte('created_at', since).order('created_at', { ascending: false }).limit(30);
+    const { data, error } = await c().from('product_questions').select('id,item_name,option_label,answer,answer_note,created_at,answered_at').gte('created_at', since).order('created_at', { ascending: false }).limit(30);
     if(error){ el.hidden = true; return; }
     const rows = data || [];
     if(!rows.length){ el.hidden = true; el.innerHTML = ''; return; }
     const open = rows.filter(q => !q.answer);
     el.hidden = false;
     el.innerHTML = `<div class="tna-ph">Customers asking ${open.length ? `<span class="tna-badge">${open.length}</span>` : ''}</div>`
-      + rows.map(q => q.answer
+      + rows.map(q => ({ ...q, item_name: q.item_name + (q.option_label ? ` (${q.option_label})` : '') })).map(q => q.answer
         ? `<div class="tna-q done"><b>${esc(q.item_name)}</b><small>You answered ${q.answer === 'yes' ? 'Yes' : 'No'} · ${esc(ago(q.answered_at))}</small></div>`
         : `<div class="tna-q" data-q="${q.id}"><b>Is “${esc(q.item_name)}” still available?</b><small>Asked ${esc(ago(q.created_at))}. Customers buy faster when you answer quickly.</small>
             <input type="text" maxlength="140" placeholder="Optional note, e.g. new stock on Friday" data-note>
-            <label><input type="checkbox" data-soldout> If No, also mark it sold out</label>
+            <label><input type="checkbox" data-soldout> If No, also mark ${q.option_label ? 'this one' : 'it'} sold out</label>
             <div class="tna-row"><button type="button" class="tna-yes" data-answer="yes">Yes, I have it</button><button type="button" class="tna-no" data-answer="no">No</button></div></div>`).join('');
   }
   async function answer(btn){

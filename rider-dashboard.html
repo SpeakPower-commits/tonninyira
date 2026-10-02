@@ -278,7 +278,7 @@ const STAGE_LABEL = { preparing:'Stalls Still Preparing', ready:'Ready for Picku
 function escHtml(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function itemsLine(items){
   if(!Array.isArray(items) || !items.length) return '';
-  return items.map(i=>`${Number(i.qty||1)}× ${escHtml(i.name||'item')}`).join(', ');
+  return items.map(i=>`${Number(i.qty||1)}× ${escHtml(i.name||'item')}${i.option_label?` (${escHtml(i.option_label)})`:''}`).join(', ');
 }
 function paymentLine(group){
   const first = group[0];

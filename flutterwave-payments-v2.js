@@ -33,7 +33,7 @@
         s.cart.forEach(i=>(vendors[i.vendorId]??={vendorName:i.vendorName,items:[]}).items.push(i));
         const rows=Object.entries(vendors).map(([vendorId,g])=>({
           order_id:newGroup,vendor_id:vendorId,vendor_name:g.vendorName,
-          items:g.items.map(i=>({id:i.itemId,name:i.name,price:Number(i.price),qty:Number(i.qty)})),
+          items:g.items.map(i=>({id:i.itemId,name:i.name,price:Number(i.price),qty:Number(i.qty),...(i.optionId?{option_id:i.optionId,option_label:i.optionLabel||null}:{})})),
           item_subtotal:g.items.reduce((x,i)=>x+Number(i.price||0)*Number(i.qty||0),0),
           subtotal:g.items.reduce((x,i)=>x+Number(i.price||0)*Number(i.qty||0),0),
           total:g.items.reduce((x,i)=>x+Number(i.price||0)*Number(i.qty||0),0),

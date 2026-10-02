@@ -52,7 +52,7 @@ English, Luganda, Kiswahili, Acholi, Lumasaba and Runyankole.
 
 | Customer | Stall (vendor) | Rider | Support (Command Center) |
 | --- | --- | --- | --- |
-| Browse stalls with real photos (up to 8 per product) and short videos | Manage logo, stall photos, 5-minute videos and products in **My stall** | See nearby paid deliveries and accept in one tap | Approve, suspend or remove partners (audited) |
+| Browse stalls with real photos (up to 8 per product) and short videos; swipe a product's photos and **Add this one** when each photo is a different version with its own price | Manage logo, stall photos, 5-minute videos and products in **My stall**; give each product photo its own name, price and Sold out switch | See nearby paid deliveries and accept in one tap | Approve, suspend or remove partners (audited) |
 | **Ask if it's available** before buying | Answer **Customers asking** with Yes / No, optionally marking it sold out | Home with earnings goal, best hours and busy areas (Tonninyira Assist) | **Cases**: complaints with photos, support-only notes, decisions |
 | Pay with MTN or Airtel Mobile Money | Accept a paid order within **15 minutes**, ticking anything it doesn't have | Step-by-step active delivery with maps, call and WhatsApp | Decide the money on a complaint: release, partial or full refund |
 | **Got it, all good** or **Report a problem** with photos | **Mark sold out / Back in stock** per product | **Issues** on deliveries, with replies and photos | **Refunds** panel: retry failed ones, mark manual ones paid |
@@ -262,6 +262,7 @@ leaves Supabase.
 | Storefront, accounts (email/password, Google), six languages, installable app | ✅ Live |
 | Vendor / rider applications, approval and Command Center | ✅ Live |
 | Photos and 5-minute videos ("buy what you see") | ✅ Live |
+| A price per photo (product options), charged by the database | ✅ Live |
 | Pay-first Mobile Money checkout | ✅ Live in the Flutterwave **sandbox** |
 | Nearby rider dispatch | ✅ Live |
 | Hold-until-happy wallet, 15-minute stall confirmation, sold out, Ask the stall | ✅ Live |

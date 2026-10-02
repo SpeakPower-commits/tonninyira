@@ -251,7 +251,7 @@
           +(cs.status!=='closed'?'<button type="button" class="act stop" data-case-status="closed">Close</button>':'<button type="button" class="act" data-case-status="open">Reopen</button>')
         +'</div></div>'
       +(cs.order_id?'<div class="panel"><h3>Order '+esc(cs.order_id)+'</h3>'
-        +orders.map(o=>'<p style="margin:4px 0"><b>'+esc(o.vendor_name)+'</b> · '+esc((o.items||[]).map(i=>i.name+' ×'+i.qty).join(', '))+' '+pill(o.status)+'</p>').join('')
+        +orders.map(o=>'<p style="margin:4px 0"><b>'+esc(o.vendor_name)+'</b> · '+esc((o.items||[]).map(i=>i.name+(i.option_label?' ('+i.option_label+')':'')+' ×'+i.qty).join(', '))+' '+pill(o.status)+'</p>').join('')
         +'<p style="margin:4px 0"><b>Paid:</b> '+money(total)+' · '+pill(orders[0]?.payment_status||'—')+'</p>'
         +(refunds.length?'<p style="margin:4px 0"><b>Refunds:</b> '+refunds.map(r=>money(r.amount)+' '+pill(r.status)).join(' · ')+'</p>':'')
         +'<p style="margin:4px 0"><b>Rider:</b> '+esc(orders[0]?.rider_tid||'none')+' · <b>Area:</b> '+esc(orders[0]?.customer_area||'—')+'</p>'

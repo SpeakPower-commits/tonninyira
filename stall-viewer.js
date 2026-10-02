@@ -1,10 +1,12 @@
 /* Tonninyira full-screen stall viewer: "buy what you see".
  * tnOpenViewer(vendorId, 'g', index)  -> the stall's photos and videos
- * tnOpenViewer(vendorId, 'i', itemId) -> one product's photos, with price and Add to basket
+ * tnOpenViewer(vendorId, 'i', itemId) -> one product's photos, with price and Add to basket.
+ *   When the stall made photos into options (own name, price, Sold out), each
+ *   slide shows that option and "Add this one" adds exactly that version.
  * Swipe (scroll-snap), arrow buttons, keyboard, and the phone's Back button all
  * work. A video is only fetched when the customer taps play, so browsing a
  * stall costs almost no data and does not eat the free plan's viewing allowance.
- * Uses index.html globals: findVendor, addToCart, esc, safeUrl, fmt.
+ * Uses index.html globals: findVendor, addToCart, tnItemOptions, tnOptionPrice, esc, safeUrl, fmt.
  */
 (function(){
   'use strict';
@@ -39,6 +41,11 @@
       #tnViewer .tv-sub{font-size:.78rem;color:var(--muted);margin-top:2px;overflow-wrap:break-word}
       #tnViewer .tv-price{font-family:'Alfa Slab One',serif;font-weight:400;font-synthesis:none;color:var(--gold);font-size:1.3rem;white-space:nowrap}
       #tnViewer .tv-add{min-height:54px;border:0;border-radius:16px;background:var(--gold);color:var(--ink);font:inherit;font-weight:800;font-size:1rem;cursor:pointer}
+      #tnViewer .tv-add:disabled{background:#2A1F19;color:var(--muted);cursor:not-allowed}
+      #tnViewer .tv-opt{color:var(--gold);font-weight:800;font-size:.86rem;margin-top:3px;overflow-wrap:break-word}
+      #tnViewer .tv-ask{min-height:36px;border:0;background:transparent;color:var(--gold);font:inherit;font-weight:700;font-size:.8rem;text-decoration:underline;text-underline-offset:3px;cursor:pointer;margin-top:-4px}
+      #tnViewer .tv-thumb{position:relative}
+      #tnViewer .tv-thumb.sold::after{content:'';position:absolute;inset:0;border-radius:8px;background:rgba(14,10,8,.6)}
     `;
     document.head.appendChild(s);
   }
@@ -83,7 +90,8 @@
     let slides = [], start = 0, item = null;
     if(mode === 'i'){
       item = (v.items || []).find(x => String(x.id) === String(key)); if(!item || !(item.photos || []).length) return;
-      slides = item.photos.map(url => ({ url, type: 'image' }));
+      const opts = typeof tnItemOptions === 'function' ? tnItemOptions(item) : [];
+      slides = item.photos.map(url => ({ url, type: 'image', opt: opts.find(o => o.photo === url) || null, caption: (opts.find(o => o.photo === url) || {}).label }));
     }else{
       slides = (v.gallery || []).filter(g => g && g.url); start = Math.max(0, Math.min(slides.length - 1, Number(key) || 0));
       if(!slides.length) return;
@@ -101,13 +109,17 @@
         <div class="tv-track" style="flex:1">${slides.map(slide).join('')}</div>
         ${multi ? `<button type="button" class="tv-btn tv-nav tv-prev" aria-label="Previous">${ICON.prev}</button><button type="button" class="tv-btn tv-nav tv-next" aria-label="Next">${ICON.next}</button>` : ''}
       </div>
-      ${multi ? `<div class="tv-thumbs">${slides.map((s, i) => `<button type="button" class="tv-thumb" data-go="${i}" aria-label="Show ${i + 1}" style="background-image:url('${U(s.type === 'video' ? (s.poster || '') : s.url)}')"></button>`).join('')}</div>` : ''}
+      ${multi ? `<div class="tv-thumbs">${slides.map((s, i) => `<button type="button" class="tv-thumb${s.opt && s.opt.sold_out ? ' sold' : ''}" data-go="${i}" aria-label="Show ${i + 1}${s.opt && s.opt.label ? ': ' + E(s.opt.label) : ''}" style="background-image:url('${U(s.type === 'video' ? (s.poster || '') : s.url)}')"></button>`).join('')}</div>` : ''}
       <div class="tv-foot"></div>`;
     document.body.appendChild(el); document.documentElement.style.overflow = 'hidden';
 
+    const hasOpts = item && slides.some(s => s.opt);
+    const priceOf = opt => typeof tnOptionPrice === 'function' ? tnOptionPrice(item, opt) : Number(item.price);
     const footFor = item
-      ? () => `<div class="tv-row"><div style="min-width:0"><div class="tv-name">${E(item.name)}</div><div class="tv-sub">${E(v.name)}${item.desc ? ' · ' + E(item.desc) : ''}</div></div><div class="tv-price">${money(item.price)}</div></div>
-               <button type="button" class="tv-add">Add to basket</button>`
+      ? i => { const o = slides[i].opt, sold = !!item.sold_out || !!(o && o.sold_out);
+          return `<div class="tv-row"><div style="min-width:0"><div class="tv-name">${E(item.name)}</div>${o && o.label ? `<div class="tv-opt">${E(o.label)}</div>` : ''}<div class="tv-sub">${E(v.name)}${item.desc ? ' · ' + E(item.desc) : ''}</div></div><div class="tv-price">${money(priceOf(o))}</div></div>
+               <button type="button" class="tv-add" data-opt="${o ? E(o.id) : ''}" ${sold ? 'disabled' : ''}>${sold ? (o ? 'This one is sold out' : 'Sold out') : hasOpts ? (o ? 'Add this one' : 'Add to basket') : 'Add to basket'}</button>
+               ${!sold && hasOpts && o ? `<button type="button" class="tv-ask" data-ask-vendor="${E(vendorId)}" data-ask-item="${E(item.name)}" data-ask-option="${E(o.id)}" data-ask-label="${E(o.label || '')}" data-ask-stall="${E(v.name)}">Ask if this one is available</button>` : ''}`; }
       : i => `<div><div class="tv-name">${E(slides[i].caption || v.name)}</div><div class="tv-sub">${E(v.name)}${slides[i].type === 'video' ? ' · video' : ''}</div></div>`;
 
     el.addEventListener('click', e => {
@@ -120,15 +132,18 @@
         const s = slides[Number(b.dataset.play)], box = b.parentElement;
         box.innerHTML = `<video src="${U(s.url)}" ${s.poster ? `poster="${U(s.poster)}"` : ''} controls autoplay playsinline preload="auto"></video>`;
       }else if(b.classList.contains('tv-add') && item){
-        try{ addToCart(vendorId, item.id); }catch(_){}
+        let ok = true; try{ ok = addToCart(vendorId, item.id, b.dataset.opt || undefined) !== false; }catch(_){}
+        if(!ok){ b.textContent = 'Not available'; b.disabled = true; return; }
         b.textContent = 'Added to basket ✓'; setTimeout(() => { if(b.isConnected) b.textContent = 'Add another'; }, 1400);
       }
     });
     const track = el.querySelector('.tv-track');
-    let t; track.addEventListener('scroll', () => { clearTimeout(t); t = setTimeout(() => el && sync(slides, item ? null : footFor), 60); }, { passive: true });
+    /* Re-render the footer only when the slide changes, so "Added ✓" stays put. */
+    let t, shown = -1;
+    const syncFoot = () => { if(!el) return; const i = current(); if(i === shown && item) { sync(slides, null); return; } shown = i; sync(slides, footFor); };
+    track.addEventListener('scroll', () => { clearTimeout(t); t = setTimeout(syncFoot, 60); }, { passive: true });
     document.addEventListener('keydown', onKey);
-    if(item) el.querySelector('.tv-foot').innerHTML = footFor();
-    requestAnimationFrame(() => { go(0, start); sync(slides, item ? null : footFor); el.querySelector('.tv-close').focus(); });
+    requestAnimationFrame(() => { go(0, start); syncFoot(); el.querySelector('.tv-close').focus(); });
     try{ history.pushState({ tnViewer: 1 }, ''); pushed = true; }catch(_){}
   }
   window.addEventListener('popstate', () => { if(el) close(true); });

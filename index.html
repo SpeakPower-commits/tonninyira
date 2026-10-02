@@ -1657,7 +1657,7 @@ function renderOrderGroups(rows, myReviews, custId){
                    : `<button class="rate-btn" onclick="openRatingForm('vendor','${safeId(g.vendor_id)}','${safeId(orderId)}',${esc(JSON.stringify(String(g.vendor_name||'the stall')))})">Rate ${esc(g.vendor_name)}</button>`)
         : '';
       return `<div class="order-vendor-line">
-          <div><strong>${esc(g.vendor_name)}</strong><div style="font-size:0.76rem; color:var(--muted);">${(g.items||[]).map(i=>esc(i.name)+' ×'+Number(i.qty||1)).join(', ')}</div>${Array.isArray(g.unavailable_items)&&g.unavailable_items.length?`<div style="font-size:0.74rem; color:#FFB0A5; margin-top:2px;">Not available: ${g.unavailable_items.map(i=>esc(i.name)+' ×'+Number(i.qty||1)).join(', ')} · UGX ${fmt(g.unavailable_items.reduce((s,i)=>s+Number(i.refund||0),0))} refunded</div>`:''}${['declined','cancelled'].includes(g.status)&&g.payment_status==='paid'?`<div style="font-size:0.74rem; color:#FFB0A5; margin-top:2px;">Cancelled · full refund to your Mobile Money</div>`:''}</div>
+          <div><strong>${esc(g.vendor_name)}</strong><div style="font-size:0.76rem; color:var(--muted);">${(g.items||[]).map(i=>esc(i.name)+(i.option_label?' ('+esc(i.option_label)+')':'')+' ×'+Number(i.qty||1)).join(', ')}</div>${Array.isArray(g.unavailable_items)&&g.unavailable_items.length?`<div style="font-size:0.74rem; color:#FFB0A5; margin-top:2px;">Not available: ${g.unavailable_items.map(i=>esc(i.name)+' ×'+Number(i.qty||1)).join(', ')} · UGX ${fmt(g.unavailable_items.reduce((s,i)=>s+Number(i.refund||0),0))} refunded</div>`:''}${['declined','cancelled'].includes(g.status)&&g.payment_status==='paid'?`<div style="font-size:0.74rem; color:#FFB0A5; margin-top:2px;">Cancelled · full refund to your Mobile Money</div>`:''}</div>
           <span class="status-pill status-${safeId(g.status)}">${esc(g.status)}</span>
         </div>${rateBtn ? `<div>${rateBtn}</div>` : ''}`;
     }).join('');
@@ -1794,11 +1794,18 @@ function vendorCardHTML(v){
     /* Sold out (set by the stall in My stall) blocks the basket; otherwise the
        customer can ask the stall whether it is still in stock before buying
        (product-questions.js). */
-    const sold = !!item.sold_out;
+    /* A product whose photos are different versions (options, each with its
+       own price) is chosen in the photo viewer: "Choose & add". */
+    const opts = tnItemOptions(item);
+    const range = tnItemPriceRange(item);
+    const sold = !!item.sold_out || (opts.length && opts.length === ph.length && opts.every(o=>o.sold_out));
     return `<div class="prod-card${sold?' is-sold':''}">${img}
-      <div class="prod-body"><div class="prod-name">${esc(item.name)}</div>${item.desc?`<div class="prod-desc">${esc(item.desc)}</div>`:''}<div class="prod-price">UGX ${fmt(item.price)}</div></div>
+      <div class="prod-body"><div class="prod-name">${esc(item.name)}</div>${item.desc?`<div class="prod-desc">${esc(item.desc)}</div>`:''}<div class="prod-price">${range.lo===range.hi?'':'From '}UGX ${fmt(range.lo)}</div>${opts.length?`<div class="prod-desc" style="-webkit-line-clamp:1">${opts.length} option${opts.length===1?'':'s'} · swipe to choose</div>`:''}</div>
       ${sold
         ? `<button type="button" class="prod-add" disabled>Sold out</button>`
+        : opts.length
+        ? `<button type="button" class="prod-add" onclick="tnOpenViewer('${safeId(v.id)}','i','${safeId(item.id)}')">Choose &amp; add</button>
+      <button type="button" class="prod-ask" data-ask-vendor="${safeId(v.id)}" data-ask-item="${esc(item.name)}">Ask if it's available</button>`
         : `<button type="button" class="prod-add" onclick="tnAddFromCard(this,'${safeId(v.id)}','${safeId(item.id)}')">Add to basket</button>
       <button type="button" class="prod-ask" data-ask-vendor="${safeId(v.id)}" data-ask-item="${esc(item.name)}">Ask if it's available</button>`}</div>`;
   }).join('');
@@ -1835,20 +1842,41 @@ function tnAddFromCard(btn, vendorId, itemId){
   clearTimeout(btn._t); btn._t = setTimeout(()=>{ btn.textContent = 'Add to basket'; btn.classList.remove('is-added'); }, 1400);
 }
 
-function addToCart(vendorId, itemId){
-  const vendor = findVendor(vendorId);
-  const item = vendor.items.find(i=>i.id===itemId);
-  if(!item || item.sold_out) return;
-  const existing = AppState.cart.find(c=>c.vendorId===vendorId && c.itemId===itemId);
-  if(existing) existing.qty++;
-  else AppState.cart.push({vendorId, itemId, qty:1, name:item.name, price:item.price, vendorName:vendor.name});
-  updateCartUI();
+/* Product options: photos the stall named or priced as their own version.
+   An option without a price costs the product's price. The database
+   (normalize_new_order) charges the same prices whatever the phone sends. */
+function tnItemOptions(item){
+  const ph = item.photos || [];
+  return (Array.isArray(item.options) ? item.options : []).filter(o=>o && o.id && ph.includes(o.photo));
 }
-function updateQty(vendorId, itemId, delta){
-  const line = AppState.cart.find(c=>c.vendorId===vendorId && c.itemId===itemId);
+function tnOptionPrice(item, opt){ return Number(opt && Number(opt.price) > 0 ? opt.price : item.price) || 0; }
+function tnItemPriceRange(item){
+  const all = tnItemOptions(item), plain = (item.photos||[]).length > all.length || !all.length;
+  const open = all.filter(o=>!o.sold_out), opts = open.length || plain ? open : all;
+  const ps = [...(plain ? [Number(item.price)||0] : []), ...opts.map(o=>tnOptionPrice(item,o))];
+  return {lo: Math.min(...ps), hi: Math.max(...ps)};
+}
+function addToCart(vendorId, itemId, optionId){
+  const vendor = findVendor(vendorId);
+  const item = vendor && vendor.items.find(i=>i.id===itemId);
+  if(!item || item.sold_out) return false;
+  const opt = optionId ? tnItemOptions(item).find(o=>o.id===optionId) : null;
+  if(optionId && (!opt || opt.sold_out)) return false;
+  const oid = opt ? opt.id : '';
+  const existing = AppState.cart.find(c=>c.vendorId===vendorId && c.itemId===itemId && (c.optionId||'')===oid);
+  if(existing) existing.qty++;
+  else AppState.cart.push({vendorId, itemId, qty:1, name:item.name, price:tnOptionPrice(item,opt), vendorName:vendor.name,
+    ...(opt ? {optionId:opt.id, optionLabel:opt.label||'', photo:opt.photo} : {})});
+  updateCartUI();
+  return true;
+}
+function updateQty(vendorId, itemId, delta, optionId){
+  const oid = optionId || '';
+  const same = c => c.vendorId===vendorId && c.itemId===itemId && (c.optionId||'')===oid;
+  const line = AppState.cart.find(same);
   if(!line) return;
   line.qty += delta;
-  if(line.qty<=0) AppState.cart = AppState.cart.filter(c=>!(c.vendorId===vendorId && c.itemId===itemId));
+  if(line.qty<=0) AppState.cart = AppState.cart.filter(c=>!same(c));
   updateCartUI();
 }
 function cartSubtotal(){ return AppState.cart.reduce((s,c)=>s+c.price*c.qty,0); }
@@ -1886,15 +1914,15 @@ function updateCartUI(){
     ${AppState.cart.map(c=>`
       <div class="cart-line-card">
         <div class="cart-line-top">
-          <div><div style="font-weight:700;">${esc(c.name)}</div><div class="cart-line-vendor">From ${esc(c.vendorName)}</div></div>
+          <div style="display:flex;gap:10px;align-items:center;min-width:0">${c.photo?`<img src="${safeUrl(c.photo)}" alt="" width="44" height="44" style="width:44px;height:44px;border-radius:10px;object-fit:cover;flex-shrink:0">`:''}<div style="min-width:0"><div style="font-weight:700;overflow-wrap:break-word">${esc(c.name)}</div>${c.optionId?`<div style="font-size:.78rem;color:var(--gold);font-weight:700;overflow-wrap:break-word">${esc(c.optionLabel||'Chosen photo')}</div>`:''}<div class="cart-line-vendor">From ${esc(c.vendorName)}</div></div></div>
           <div class="price-tag">${fmt(c.price)}</div>
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
           <span style="font-size:0.82rem; color:var(--muted);">Qty</span>
           <div style="display:flex; gap:10px; align-items:center;">
-            <button class="qty-btn" onclick="updateQty('${safeId(c.vendorId)}','${safeId(c.itemId)}',-1)">−</button>
+            <button class="qty-btn" onclick="updateQty('${safeId(c.vendorId)}','${safeId(c.itemId)}',-1,'${safeId(c.optionId)}')">−</button>
             <span style="font-weight:800; min-width:18px; text-align:center;">${c.qty}</span>
-            <button class="qty-btn" onclick="updateQty('${safeId(c.vendorId)}','${safeId(c.itemId)}',1)">+</button>
+            <button class="qty-btn" onclick="updateQty('${safeId(c.vendorId)}','${safeId(c.itemId)}',1,'${safeId(c.optionId)}')">+</button>
           </div>
         </div>
       </div>`).join('')}

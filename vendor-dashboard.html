@@ -319,7 +319,7 @@ function renderOrders(orders){
         </div>
         <span class="status-pill status-${escH(st)}">${escH(STATUS_LABEL[o.status]||o.status)}</span>
       </div>
-      ${items.map(it=>`<div class="order-item-line"><span>${escH(it.name)} ×${Number(it.qty||1)}</span><span>UGX ${Number((it.price||0)*(it.qty||1)).toLocaleString()}</span></div>`).join('')}
+      ${items.map(it=>`<div class="order-item-line"><span style="display:flex;gap:8px;align-items:center;min-width:0">${it.photo&&/^https:\/\//.test(it.photo)?`<img src="${escH(it.photo)}" alt="" width="36" height="36" style="width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0">`:''}<span>${escH(it.name)}${it.option_label?` <b style="color:var(--gold)">(${escH(it.option_label)})</b>`:''} ×${Number(it.qty||1)}</span></span><span>UGX ${Number((it.price||0)*(it.qty||1)).toLocaleString()}</span></div>`).join('')}
       ${missing.length ? `<div class="order-meta" style="color:#FFB0A5">Not available: ${missing.map(m=>escH(m.name)+' ×'+Number(m.qty||1)).join(', ')} · customer refunded UGX ${Number(missing.reduce((s,m)=>s+Number(m.refund||0),0)).toLocaleString()}</div>` : ''}
       ${['new','pending'].includes(o.status) ? confirmLeft(o) : ''}
       <div class="order-meta">Payment: ${escH(o.payment_method)} · Rider: ${escH(o.rider_tid||'—')}</div>
@@ -349,7 +349,7 @@ function openAccept(id){
   m.innerHTML = `<div class="accept-sheet" role="dialog" aria-modal="true" aria-label="Accept order">
     <h3 style="margin:0 0 4px">Accept order ${escH(o.order_id)}</h3>
     <p class="helper" style="margin:0 0 10px">Tick anything you <b>don't</b> have. The customer is refunded for it automatically and gets the rest.</p>
-    ${items.map((it,i)=>`<label class="accept-item"><input type="checkbox" value="${i}"><span>${escH(it.name)} ×${Number(it.qty||1)}</span><span>UGX ${Number((it.price||0)*(it.qty||1)).toLocaleString()}</span></label>`).join('')}
+    ${items.map((it,i)=>`<label class="accept-item"><input type="checkbox" value="${i}"><span>${escH(it.name)}${it.option_label?` (${escH(it.option_label)})`:''} ×${Number(it.qty||1)}</span><span>UGX ${Number((it.price||0)*(it.qty||1)).toLocaleString()}</span></label>`).join('')}
     <div class="accept-err" id="acceptErr"></div>
     <div class="order-actions" style="margin-top:12px"><button class="action-btn action-accept" id="acceptGo">Accept order</button><button class="action-btn action-decline" id="acceptNo">Cancel</button></div></div>`;
   document.body.appendChild(m);

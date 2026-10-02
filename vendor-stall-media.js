@@ -1,7 +1,9 @@
 /* Tonninyira vendor "My stall": the vendor manages what customers see.
  * Adds an Orders | My stall switch to vendor-dashboard.html. My stall lets the
  * vendor change the logo, add up to 2 videos (max 5 min each) and 12 stall
- * photos, and add, edit or remove products with up to 8 photos each. Every
+ * photos, and add, edit or remove products with up to 8 photos each. Each
+ * product photo can be its own version of the product (an "option") with a
+ * name, its own price and its own Sold out switch. Every
  * change saves straight to the vendor's own row (vendors_self_update); the
  * guard_vendor_media trigger enforces the same limits server-side.
  * Media goes through window.TNMedia (media-uploader.js).
@@ -51,7 +53,14 @@
       .tns-edit{padding:14px;border-radius:16px;background:var(--card2);margin:8px 0;display:grid;gap:8px}
       .tns-edit label{font-size:.72rem;color:var(--muted);font-weight:700}
       .tns-edit input,.tns-edit textarea{width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid #4A3B30;background:var(--ink);color:var(--sand);font:inherit;font-size:.9rem}
-      .tns-pphotos{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+      .tns-pphotos{display:grid;gap:8px}
+      .tns-opt{display:grid;grid-template-columns:64px minmax(0,1fr) 44px;gap:8px;align-items:start;padding:8px;border-radius:14px;background:var(--ink)}
+      .tns-opt .tns-tile{width:64px;height:64px;aspect-ratio:auto}
+      .tns-opt .f{display:grid;gap:6px;min-width:0}
+      .tns-edit .tns-opt input{padding:9px 10px;font-size:.84rem}
+      .tns-opt .sold{display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--muted);font-weight:700;min-height:32px}
+      .tns-opt .sold input{width:18px;height:18px;padding:0;accent-color:var(--gold)}
+      .tns-opt .tns-x{position:static;width:44px;height:44px}
       .tns-btns{display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-top:4px}
       .tns-primary{min-height:48px;border:0;border-radius:14px;background:var(--gold);color:var(--ink);font:inherit;font-weight:800;cursor:pointer}
       .tns-ghost{min-height:48px;border:1px solid #4A3B30;border-radius:14px;background:transparent;color:var(--muted);font:inherit;font-weight:700;cursor:pointer}
@@ -160,7 +169,31 @@
   }
 
   /* ---- products ---- */
-  function openEditor(index){ editing = { index, draft: index == null ? { name: '', desc: '', price: '', photos: [] } : { ...items()[index], photos: [...(items()[index].photos || [])] } }; render(); document.getElementById('tnsEditor')?.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+  /* Options are kept in the draft by photo URL, so removing a photo also drops
+     its option and reordering never mixes names and prices up. */
+  const newOptId = () => 'o' + Math.random().toString(36).slice(2, 9);
+  function openEditor(index){
+    const src = index == null ? null : items()[index];
+    const opts = {};
+    (src?.options || []).forEach(o => { if(o && o.photo) opts[o.photo] = { id: o.id, label: o.label || '', price: o.price ? String(o.price) : '', sold_out: !!o.sold_out }; });
+    editing = { index, draft: src ? { ...src, photos: [...(src.photos || [])], opts } : { name: '', desc: '', price: '', photos: [], opts } };
+    render(); document.getElementById('tnsEditor')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+  function readOpts(){
+    if(!editing) return;
+    document.querySelectorAll('#tnsPPhotos .tns-opt').forEach(row => {
+      const u = row.dataset.url, o = editing.draft.opts[u] || (editing.draft.opts[u] = { label: '', price: '', sold_out: false });
+      o.label = row.querySelector('[data-opt=label]').value.trim().slice(0, 60);
+      o.price = row.querySelector('[data-opt=price]').value.replace(/[^\d]/g, '');
+      o.sold_out = row.querySelector('[data-opt=sold]').checked;
+    });
+  }
+  /* A photo becomes an option once the vendor names it, prices it or marks it
+     sold out; untouched photos stay plain pictures of the product. */
+  function optionsFor(d){
+    return d.photos.map(u => ({ u, o: d.opts[u] })).filter(({ o }) => o && (o.label || Number(o.price) > 0 || o.sold_out))
+      .map(({ u, o }) => { o.id = o.id || newOptId(); const x = { id: o.id, photo: u }; if(o.label) x.label = o.label; if(Number(o.price) > 0) x.price = Number(o.price); if(o.sold_out) x.sold_out = true; return x; });
+  }
   async function addProductPhoto(){
     if(editing.draft.photos.length >= MAX.productPhotos) return say(`Up to ${MAX.productPhotos} photos per product.`, true);
     const files = (await pick('image/*', true)).slice(0, MAX.productPhotos - editing.draft.photos.length);
@@ -174,15 +207,17 @@
     editing.draft.name = f.querySelector('[name=name]').value.trim();
     editing.draft.desc = f.querySelector('[name=desc]').value.trim();
     editing.draft.price = f.querySelector('[name=price]').value.replace(/[^\d]/g, '');
+    readOpts();
   }
   async function saveProduct(){
     readDraft(); const d = editing.draft;
     if(!d.name) return say('Give the product a name.', true);
     if(!(Number(d.price) > 0)) return say('Enter the price in UGX.', true);
-    const next = [...items()]; const clean = { name: d.name, desc: d.desc, price: Number(d.price), ...(d.photos.length ? { photos: d.photos } : {}) };
+    const opts = optionsFor(d);
+    const next = [...items()]; const clean = { name: d.name, desc: d.desc, price: Number(d.price), ...(d.photos.length ? { photos: d.photos } : {}), ...(opts.length ? { options: opts } : {}) };
     const before = editing.index == null ? null : next[editing.index];
-    if(editing.index == null){ if(next.length >= MAX.products) return say(`Up to ${MAX.products} products.`, true); next.push(clean); } else next[editing.index] = { ...next[editing.index], ...clean, ...(d.photos.length ? {} : { photos: undefined }) };
-    const saved = next.map(x => { const y = { ...x }; if(!y.photos || !y.photos.length) delete y.photos; return y; });
+    if(editing.index == null){ if(next.length >= MAX.products) return say(`Up to ${MAX.products} products.`, true); next.push(clean); } else next[editing.index] = { ...next[editing.index], ...clean, ...(d.photos.length ? {} : { photos: undefined }), ...(opts.length ? {} : { options: undefined }) };
+    const saved = next.map(x => { const y = { ...x }; if(!y.photos || !y.photos.length) delete y.photos; if(!y.options || !y.options.length) delete y.options; return y; });
     editing = null;
     if(await save({ items: saved }, 'Product saved.') && before?.photos) before.photos.filter(u => !clean.photos || !clean.photos.includes(u)).forEach(u => TNMedia.remove(u));
   }
@@ -200,9 +235,15 @@
   }
   function renderEditorPhotos(){
     const box = document.getElementById('tnsPPhotos'); if(!box || !editing) return;
-    const ph = editing.draft.photos;
-    box.innerHTML = ph.map((u, i) => `<div class="tns-tile"><img src="${esc(u)}" alt="Product photo ${i + 1}" loading="lazy"><button type="button" class="tns-x" data-pp-remove="${i}" aria-label="Remove photo ${i + 1}">✕</button></div>`).join('')
-      + (ph.length < MAX.productPhotos ? `<button type="button" class="tns-add" data-act="pp-add" style="aspect-ratio:1">＋<span>Photo</span></button>` : '');
+    readOpts();
+    const ph = editing.draft.photos, opts = editing.draft.opts;
+    box.innerHTML = ph.map((u, i) => { const o = opts[u] || {}; return `<div class="tns-opt" data-url="${esc(u)}">
+        <div class="tns-tile"><img src="${esc(u)}" alt="Product photo ${i + 1}" loading="lazy"></div>
+        <div class="f"><input data-opt="label" maxlength="60" placeholder="Name, e.g. Brown, large" aria-label="Name for photo ${i + 1}" value="${esc(o.label || '')}" autocomplete="off">
+          <input data-opt="price" inputmode="numeric" placeholder="Own price (optional)" aria-label="Price for photo ${i + 1} in UGX" value="${esc(o.price || '')}" autocomplete="off">
+          <label class="sold"><input type="checkbox" data-opt="sold" ${o.sold_out ? 'checked' : ''}> This one is sold out</label></div>
+        <button type="button" class="tns-x" data-pp-remove="${i}" aria-label="Remove photo ${i + 1}">✕</button></div>`; }).join('')
+      + (ph.length < MAX.productPhotos ? `<button type="button" class="tns-add" data-act="pp-add" style="min-height:52px">＋ Add photo</button>` : '');
   }
 
   /* ---- render ---- */
@@ -260,7 +301,7 @@
         ${it.map((x, i) => editing && editing.index === i ? editorHTML() : `<div class="tns-row">
           <div class="tns-thumb" style="${(x.photos || [])[0] ? `background-image:url('${esc(x.photos[0])}')` : ''}"></div>
           <div style="flex:1;min-width:0"><div style="font-weight:800;overflow-wrap:break-word">${esc(x.name)}</div>
-          <div class="tns-note">${ugx(x.price)} · ${(x.photos || []).length ? (x.photos.length + (x.photos.length === 1 ? ' photo' : ' photos')) : '<span class="tns-todo">no photo yet</span>'}${x.sold_out ? ' · <b style="color:#FFB0A5">SOLD OUT</b>' : ''}</div></div>
+          <div class="tns-note">${priceText(x)} · ${(x.options || []).length ? x.options.length + (x.options.length === 1 ? ' option · ' : ' options · ') : ''}${(x.photos || []).length ? (x.photos.length + (x.photos.length === 1 ? ' photo' : ' photos')) : '<span class="tns-todo">no photo yet</span>'}${x.sold_out ? ' · <b style="color:#FFB0A5">SOLD OUT</b>' : ''}</div></div>
           <div style="display:grid;gap:4px;justify-items:end"><button type="button" class="tns-link" data-edit="${i}">${(x.photos || []).length ? 'Edit' : 'Add photo'}</button>
           <button type="button" class="tns-link" data-soldout="${i}" aria-pressed="${!!x.sold_out}">${x.sold_out ? 'Back in stock' : 'Mark sold out'}</button></div></div>`).join('')}
         ${editing && editing.index == null ? editorHTML() : `<button type="button" class="tns-add" data-act="new-product" style="width:100%;min-height:52px;margin-top:10px">＋ Add a product</button>`}
@@ -269,12 +310,19 @@
     renderJobs(); renderEditorPhotos();
     if(editing){ const f = document.getElementById('tnsEditor'); f.querySelector('[name=name]').value = editing.draft.name || ''; f.querySelector('[name=desc]').value = editing.draft.desc || ''; f.querySelector('[name=price]').value = editing.draft.price || ''; }
   }
+  function priceText(x){
+    const ps = [Number(x.price), ...(x.options || []).map(o => Number(o.price) || Number(x.price))].filter(n => n > 0);
+    const lo = Math.min(...ps), hi = Math.max(...ps);
+    return lo === hi ? ugx(lo) : `${ugx(lo)} – ${ugx(hi)}`;
+  }
   function editorHTML(){
     return `<div class="tns-edit" id="tnsEditor">
       <label for="tnsPName">Product name</label><input id="tnsPName" name="name" maxlength="60" autocomplete="off">
       <label for="tnsPDesc">Short description</label><input id="tnsPDesc" name="desc" maxlength="120" autocomplete="off">
       <label for="tnsPPrice">Price (UGX)</label><input id="tnsPPrice" name="price" inputmode="numeric" autocomplete="off">
-      <label>Photos (up to ${MAX.productPhotos})</label><div class="tns-pphotos" id="tnsPPhotos"></div>
+      <label>Photos (up to ${MAX.productPhotos})</label>
+      <div class="tns-note">Is each photo a different version (colour, size, design)? Give it a name and, if it costs more or less, its own price (blank = the product price). Leave both blank for plain photos of the same product.</div>
+      <div class="tns-pphotos" id="tnsPPhotos"></div>
       <div class="tns-btns"><button type="button" class="tns-primary" data-act="save-product">Save product</button><button type="button" class="tns-ghost" data-act="cancel-product">Cancel</button></div>
       ${editing.index != null ? '<button type="button" class="tns-danger" data-act="delete-product">Delete this product</button>' : ''}
     </div>`;
