@@ -7,6 +7,10 @@
  * customer's own paid order and only until 48 h after delivery.
  * A report becomes a case (support_conversations with order_id + case_ref);
  * its conversation is shared with support and the stall/rider on that order.
+ * Once an order is delivered the card also asks "Did everything arrive well?":
+ * "Got it, all good" (confirm_order_received) releases the stall's money at
+ * once; otherwise it is released 12 hours after delivery unless the customer
+ * reports a problem, which holds that stall's payment until support decides.
  */
 (function(){
   'use strict';
@@ -53,6 +57,13 @@
       .tnh-err{font-size:.78rem;color:#FFB0A5;min-height:1.2em;margin-top:8px}
       .tnh-res{padding:12px;border-radius:14px;background:#20301F;border:1px solid #3D6B45;font-size:.84rem;margin:10px 0}
       .tnh-thread{max-height:46vh;overflow:auto;margin-top:10px}
+      .tnh-confirm{padding:12px;border-radius:14px;background:#1E2A1F;border:1px solid #3D6B45}
+      .tnh-confirm>b{display:block;font-size:.9rem}
+      .tnh-confirm .tnh-sub{margin-top:4px}
+      .tnh-confirm-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+      .tnh-ok{min-height:46px;border-radius:12px;border:0;background:#6BD08A;color:#10261A;font:inherit;font-weight:800;font-size:.86rem;cursor:pointer}
+      .tnh-bad{min-height:46px;border-radius:12px;border:1px solid #6B4A40;background:transparent;color:#FFB0A5;font:inherit;font-weight:800;font-size:.86rem;cursor:pointer}
+      .tnh-done{font-size:.78rem;color:#9FE0B0;font-weight:700}
     `;
     document.head.appendChild(s);
   }
@@ -103,9 +114,17 @@
     }catch(e){ box.innerHTML = `<div class="tnh-err">Could not load contacts: ${esc(e.message || e)}</div>`; }
   }
 
+  function stallsOf(orderId){
+    const slot = document.querySelector(`.tn-help-slot[data-order="${CSS.escape(orderId)}"]`);
+    try{ const list = JSON.parse(slot?.dataset.stalls || '[]'); return list.filter((x, i, a) => x.id && a.findIndex(y => y.id === x.id) === i); }catch(_){ return []; }
+  }
+
   function openReport(orderId){
-    let cat = null, tried = null, files = [];
+    let cat = null, tried = null, files = [], stall = '';
+    const stalls = stallsOf(orderId);
     const back = sheet(`${head('Report a problem', 'Order ' + orderId)}
+      ${stalls.length > 1 ? `<span class="tnh-label">Which stall is it about?</span>
+      <div class="tnh-chips" id="tnhStall">${stalls.map(x => `<button type="button" data-stall="${esc(x.id)}" aria-pressed="false">${esc(x.name)}</button>`).join('')}<button type="button" data-stall="" aria-pressed="true">Whole order / not sure</button></div>` : ''}
       <span class="tnh-label">What went wrong?</span>
       <div class="tnh-chips" id="tnhCat">${Object.entries(TNCase.CATEGORY).map(([k, v]) => `<button type="button" data-cat="${k}" aria-pressed="false">${esc(v)}</button>`).join('')}</div>
       <span class="tnh-label">Did you already talk to the rider or the stall?</span>
@@ -120,6 +139,7 @@
     const paint = () => { back.querySelector('#tnhPrev').innerHTML = files.map((f, i) => `<span style="background-image:url('${f.preview}')"><button type="button" data-rm="${i}" aria-label="Remove photo">✕</button></span>`).join(''); back.querySelector('#tnhAdd').disabled = files.length >= 4; };
     back.addEventListener('click', e => {
       const b = e.target.closest('button'); if(!b) return;
+      if(b.dataset.stall != null){ stall = b.dataset.stall; back.querySelectorAll('[data-stall]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); }
       if(b.dataset.cat){ cat = b.dataset.cat; back.querySelectorAll('[data-cat]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); }
       if(b.dataset.tried){ tried = b.dataset.tried; back.querySelectorAll('[data-tried]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); }
       if(b.dataset.rm != null){ URL.revokeObjectURL(files[+b.dataset.rm].preview); files.splice(+b.dataset.rm, 1); paint(); }
@@ -137,7 +157,7 @@
       btn.disabled = true; btn.textContent = 'Opening your case…'; err.textContent = '';
       const client = c(); const me = (await client.auth.getSession())?.data?.session?.user?.id;
       const { data: cs, error } = await client.from('support_conversations')
-        .insert({ customer_id: me, order_id: orderId, category: cat, tried_contact: tried }).select('id,case_ref,status').single();
+        .insert({ customer_id: me, order_id: orderId, category: cat, tried_contact: tried, vendor_id: stall || null }).select('id,case_ref,status').single();
       if(error){ btn.disabled = false; btn.textContent = 'Send to Tonninyira'; err.textContent = 'Could not open the case: ' + error.message; return; }
       const attachments = [], failed = [];
       for(const [n, f] of files.entries()){
@@ -187,12 +207,39 @@
       const id = s.dataset.order, cs = cases[id];
       if(!s.dataset.paid && !cs){ s.innerHTML = ''; return; }
       s.innerHTML = (cs ? `<button type="button" class="tnh-case" data-case="${esc(cs.id)}"><span style="flex:1;min-width:0"><b>Case ${esc(cs.case_ref || '')}</b><small>${esc(TNCase.STATUS[cs.status] || cs.status)} · tap to view</small></span><span class="tnc-pill ${esc(cs.status)}">${esc(TNCase.STATUS[cs.status] || cs.status)}</span></button>` : '')
+        + confirmBlock(s, cs)
         + (s.dataset.paid && !s.dataset.cancelled ? `<button type="button" class="tnh-open" data-help="${esc(id)}">Get help with this order</button>` : '');
     });
+  }
+
+  const ACTIVE = ['open', 'investigating', 'awaiting_customer'];
+  /* "Did everything arrive well?" on delivered orders. */
+  function confirmBlock(s, cs){
+    if(!s.dataset.paid || s.dataset.cancelled || !s.dataset.delivered) return '';
+    if(s.dataset.confirmed) return '<div class="tnh-done">✓ You confirmed this order arrived well.</div>';
+    if(cs && ACTIVE.includes(cs.status)) return '';
+    const due = new Date(new Date(s.dataset.delivered).getTime() + 12 * 3600e3);
+    const late = isNaN(due) || due < new Date();
+    const when = isNaN(due) ? '' : due.toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+    return `<div class="tnh-confirm"><b>Did everything arrive well?</b>
+      <div class="tnh-sub">${late ? 'Tap below to confirm, or report a problem if something is wrong.' : `Tonninyira holds the stall's payment until <b>${esc(when)}</b>. If something is wrong, report it before then.`}</div>
+      <div class="tnh-confirm-row"><button type="button" class="tnh-ok" data-confirm="${esc(s.dataset.order)}">Got it, all good</button><button type="button" class="tnh-bad" data-report="${esc(s.dataset.order)}">Report a problem</button></div></div>`;
+  }
+
+  async function confirmOrder(btn){
+    const id = btn.dataset.confirm, slot = btn.closest('.tn-help-slot');
+    btn.disabled = true; btn.textContent = 'Confirming…';
+    const { data, error } = await c().rpc('confirm_order_received', { p_order_id: id });
+    if(error){ btn.disabled = false; btn.textContent = 'Got it, all good'; alert('Could not confirm: ' + error.message); return; }
+    if(slot){ slot.dataset.confirmed = data && data.confirmed > 0 ? '1' : slot.dataset.confirmed; }
+    if(window.showToast) try{ showToast('Thanks! The stall has been paid for this order.'); }catch(_){}
+    mount(true);
   }
   document.addEventListener('click', e => {
     const h = e.target.closest('.tn-help-slot [data-help]'); if(h) return openHelp(h.dataset.help);
     const k = e.target.closest('.tn-help-slot [data-case]'); if(k) return openCase(k.dataset.case);
+    const ok = e.target.closest('.tn-help-slot [data-confirm]'); if(ok) return confirmOrder(ok);
+    const bad = e.target.closest('.tn-help-slot [data-report]'); if(bad) return openReport(bad.dataset.report);
   });
   document.addEventListener('keydown', e => { if(e.key === 'Escape' && document.getElementById('tnHelp')) close(); });
   window.tnOrderHelp = { mount, openHelp, openCase };

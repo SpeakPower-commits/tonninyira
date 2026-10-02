@@ -1671,7 +1671,7 @@ function renderOrderGroups(rows, myReviews, custId){
         ${vendorLines}
         ${riderBtn ? `<div style="margin-top:8px; border-top:1px dashed rgba(243,232,216,0.08); padding-top:8px;">${riderBtn}</div>` : ''}
         <div id="reviewSlot-${orderId}"></div>
-        <div class="tn-help-slot" data-order="${safeId(orderId)}" data-paid="${group.every(g=>g.payment_status==='paid')?'1':''}" data-cancelled="${group.some(g=>g.status==='cancelled')?'1':''}"></div>
+        <div class="tn-help-slot" data-order="${safeId(orderId)}" data-paid="${group.every(g=>g.payment_status==='paid')?'1':''}" data-cancelled="${group.some(g=>g.status==='cancelled')?'1':''}" data-delivered="${group.some(g=>g.status==='completed')?esc(group.filter(g=>g.status==='completed').map(g=>g.delivered_at||g.updated_at).sort()[0]||''):''}" data-confirmed="${group.filter(g=>g.status==='completed').every(g=>g.customer_confirmed_at)?'1':''}" data-stalls="${esc(JSON.stringify(group.map(g=>({id:g.vendor_id,name:g.vendor_name||'Stall'}))))}"></div>
       </div>`;
   }).join('');
   window.tnOrderHelp?.mount();
