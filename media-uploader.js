@@ -143,15 +143,15 @@
   }
   const b64 = s => btoa(unescape(encodeURIComponent(s)));
 
-  async function simpleUpload(path, blob, token, onProgress){
-    const r = await xhr('POST', `${baseUrl()}/storage/v1/object/${BUCKET}/${path}`,
+  async function simpleUpload(path, blob, token, onProgress, bucket = BUCKET){
+    const r = await xhr('POST', `${baseUrl()}/storage/v1/object/${bucket}/${path}`,
       { authorization: `Bearer ${token}`, apikey: anonKey(), 'content-type': blob.type, 'x-upsert': 'false', 'cache-control': '31536000' },
       blob, n => onProgress?.(n / blob.size));
     if(r.status >= 300){ let m = ''; try{ m = JSON.parse(r.responseText).message }catch(_){} throw new MediaError(m || `Upload failed (${r.status}).`); }
   }
-  async function resumableUpload(path, blob, token, onProgress){
+  async function resumableUpload(path, blob, token, onProgress, bucket = BUCKET){
     const endpoint = `${baseUrl()}/storage/v1/upload/resumable`;
-    const meta = `bucketName ${b64(BUCKET)},objectName ${b64(path)},contentType ${b64(blob.type)},cacheControl ${b64('31536000')}`;
+    const meta = `bucketName ${b64(bucket)},objectName ${b64(path)},contentType ${b64(blob.type)},cacheControl ${b64('31536000')}`;
     const c = await xhr('POST', endpoint, { authorization: `Bearer ${token}`, apikey: anonKey(), 'tus-resumable': '1.0.0', 'upload-length': String(blob.size), 'upload-metadata': meta, 'x-upsert': 'false' }, null);
     if(c.status !== 201) throw new MediaError(`Upload could not start (${c.status}).`);
     let loc = c.getResponseHeader('location'); if(!loc) throw new MediaError('Upload could not start.');
@@ -184,6 +184,26 @@
     return publicUrl(path);
   }
 
+  /* Complaint evidence lives in the private 'support-evidence' bucket, under
+     <case id>/<user id>/, which only the people on that case (and support)
+     can open. Returns the storage path, not a URL: photos are shown through
+     short-lived signed links (evidenceUrls). */
+  const EVIDENCE = 'support-evidence';
+  async function uploadEvidence(file, caseId, onProgress){
+    const img = await prepareImage(file, 1600);
+    const s = await session();
+    const path = `${caseId}/${s.user.id}/photo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${img.ext}`;
+    await simpleUpload(path, img.blob, s.access_token, onProgress, EVIDENCE);
+    return { path, type: 'image' };
+  }
+  async function evidenceUrls(paths){
+    const list = [...new Set((paths || []).filter(Boolean))];
+    if(!list.length) return {};
+    const { data, error } = await client().storage.from(EVIDENCE).createSignedUrls(list, 3600);
+    if(error) return {};
+    const out = {}; (data || []).forEach(d => { if(d.signedUrl) out[d.path] = d.signedUrl; }); return out;
+  }
+
   /* Deletes a file this account uploaded (others are left alone). */
   async function remove(url){
     const prefix = `${baseUrl()}/storage/v1/object/public/${BUCKET}/`;
@@ -195,5 +215,5 @@
 
   function fmt(sec){ sec = Math.round(sec || 0); return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`; }
 
-  window.TNMedia = { prepareImage, prepareVideo, upload, remove, fmt, LIMITS, MediaError };
+  window.TNMedia = { prepareImage, prepareVideo, upload, remove, uploadEvidence, evidenceUrls, fmt, LIMITS, MediaError };
 })();

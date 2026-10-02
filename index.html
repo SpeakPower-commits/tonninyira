@@ -1650,12 +1650,12 @@ function renderOrderGroups(rows, myReviews, custId){
     const vendorLines = group.map(g=>{
       const already = reviewed.has(`vendor:${g.vendor_id}:${orderId}`);
       const rateBtn = g.status==='completed'
-        ? (already ? `<span class="reviewed-tag">✓ You rated ${g.vendor_name}</span>`
-                   : `<button class="rate-btn" onclick="openRatingForm('vendor','${g.vendor_id}','${orderId}',${JSON.stringify(g.vendor_name)})">Rate ${g.vendor_name}</button>`)
+        ? (already ? `<span class="reviewed-tag">✓ You rated ${esc(g.vendor_name)}</span>`
+                   : `<button class="rate-btn" onclick="openRatingForm('vendor','${safeId(g.vendor_id)}','${safeId(orderId)}',${esc(JSON.stringify(String(g.vendor_name||'the stall')))})">Rate ${esc(g.vendor_name)}</button>`)
         : '';
       return `<div class="order-vendor-line">
-          <div><strong>${g.vendor_name}</strong><div style="font-size:0.76rem; color:var(--muted);">${(g.items||[]).map(i=>i.name+' ×'+i.qty).join(', ')}</div></div>
-          <span class="status-pill status-${g.status}">${g.status}</span>
+          <div><strong>${esc(g.vendor_name)}</strong><div style="font-size:0.76rem; color:var(--muted);">${(g.items||[]).map(i=>esc(i.name)+' ×'+Number(i.qty||1)).join(', ')}</div></div>
+          <span class="status-pill status-${safeId(g.status)}">${esc(g.status)}</span>
         </div>${rateBtn ? `<div>${rateBtn}</div>` : ''}`;
     }).join('');
     const riderReviewed = reviewed.has(`rider:${first.rider_tid}:${orderId}`);
@@ -1663,16 +1663,18 @@ function renderOrderGroups(rows, myReviews, custId){
       ? (riderReviewed ? `<span class="reviewed-tag">✓ You rated your rider</span>`
                         : `<button class="rate-btn" onclick="openRatingForm('rider','${first.rider_tid}','${orderId}','your rider')">Rate Your Rider</button>`)
       : '';
-    return `<div class="order-group-card">
+    return `<div class="order-group-card" data-order="${safeId(orderId)}">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-          <strong class="display" style="color:var(--gold); font-size:0.95rem;">${orderId}</strong>
+          <strong class="display" style="color:var(--gold); font-size:0.95rem;">${esc(orderId)}</strong>
           <span style="font-size:0.72rem; color:var(--muted);">${new Date(first.created_at).toLocaleDateString()}</span>
         </div>
         ${vendorLines}
         ${riderBtn ? `<div style="margin-top:8px; border-top:1px dashed rgba(243,232,216,0.08); padding-top:8px;">${riderBtn}</div>` : ''}
         <div id="reviewSlot-${orderId}"></div>
+        <div class="tn-help-slot" data-order="${safeId(orderId)}" data-paid="${group.every(g=>g.payment_status==='paid')?'1':''}" data-cancelled="${group.some(g=>g.status==='cancelled')?'1':''}"></div>
       </div>`;
   }).join('');
+  window.tnOrderHelp?.mount();
 }
 
 let activeRatingStars = 0;
@@ -1681,7 +1683,7 @@ function openRatingForm(targetType, targetId, orderId, label){
   activeRatingStars = 0;
   slot.innerHTML = `
     <div class="review-form" style="margin-top:10px;">
-      <p style="font-weight:700; font-size:0.85rem; margin:0 0 4px;">Rate ${label}</p>
+      <p style="font-weight:700; font-size:0.85rem; margin:0 0 4px;">Rate ${esc(label)}</p>
       <div class="star-picker" id="starPicker-${orderId}">
         ${[1,2,3,4,5].map(n=>`<span onclick="setStars(${n},'${orderId}')" id="star-${orderId}-${n}">★</span>`).join('')}
       </div>
@@ -2565,6 +2567,9 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>{
 <script src="stall-viewer.js"></script>
 <script src="account-session-ui.js"></script>
 <script src="flutterwave-payments-v2.js"></script>
+<script src="media-uploader.js"></script>
+<script src="case-thread.js"></script>
+<script src="order-help.js"></script>
 <script src="enhancements.js"></script>
 <script src="enhancements-fix.js"></script>
 <script src="profile-copy-enhancements.js"></script>
