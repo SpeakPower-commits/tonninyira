@@ -1941,10 +1941,16 @@ function updateCartUI(){
     dnTitle = 'Delivery not available yet';
     dnBody = why + (q.reason === 'stall_pin' ? '' : pinBtn(q.reason === 'error' ? 'Try again' : 'Move my pin'));
   }else{
+    /* Stalls within about 2 km share one rider; a stall far from the rest
+       gets its own rider. One line per rider, one payment for all. */
     const names = q.names || {};
-    const route = (q.stops||[]).map(id => esc(names[id] || 'Stall')).concat('you').join(' → ');
-    dnTitle = `Delivery: UGX ${fmt(deliveryFee)} · ${Number(q.km).toFixed(1)} km`;
-    dnBody = `${(q.stops||[]).length > 1 ? 'One rider collects from ' : 'Rider route: '}${route}. UGX ${fmt(DELIVERY_PER_KM)} per km by road, minimum UGX ${fmt(DELIVERY_MIN)}.${redeeming ? ' Paid with your points.' : ''}${pinBtn('Change pin')}`;
+    const routes = Array.isArray(q.routes) && q.routes.length ? q.routes : [{ km:q.km, fee:q.fee, stops:q.stops||[] }];
+    const line = r => (r.stops||[]).map(id => esc(names[id] || 'Stall')).concat('you').join(' → ');
+    dnTitle = `Delivery: UGX ${fmt(deliveryFee)}${routes.length > 1 ? ` · ${routes.length} riders` : ` · ${Number(q.km).toFixed(1)} km`}`;
+    dnBody = (routes.length > 1
+      ? `Your stalls are far apart, so ${routes.length} riders deliver at the same time:` + routes.map((r,i)=>`<span style="display:block;margin-top:4px">Rider ${i+1}: ${line(r)} · ${Number(r.km).toFixed(1)} km · UGX ${fmt(redeeming ? 0 : r.fee)}</span>`).join('')
+      : `${(routes[0].stops||[]).length > 1 ? 'One rider collects from ' : 'Rider route: '}${line(routes[0])}.`)
+      + `<span style="display:block;margin-top:4px">UGX ${fmt(DELIVERY_PER_KM)} per km by road, minimum UGX ${fmt(DELIVERY_MIN)}.${redeeming ? ' Paid with your points.' : ''}</span>${pinBtn('Change pin')}`;
   }
   body.innerHTML = `
     <div class="delivery-note">
