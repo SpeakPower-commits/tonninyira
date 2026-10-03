@@ -6,7 +6,9 @@
  * name, its own price and its own Sold out switch. Every
  * change saves straight to the vendor's own row (vendors_self_update); the
  * guard_vendor_media trigger enforces the same limits server-side.
- * Media goes through window.TNMedia (media-uploader.js).
+ * Media goes through window.TNMedia (media-uploader.js). The stall's location
+ * pin (delivery-pin.js) prices delivery at UGX 1,000 per km; a stall without
+ * one cannot take orders, so the dashboard asks for it until it is set.
  */
 (function(){
   'use strict';
@@ -68,6 +70,10 @@
       #tnsMsg{position:fixed;left:12px;right:12px;bottom:16px;max-width:520px;margin:0 auto;padding:12px 14px;border-radius:14px;background:#2A1F19;border:1px solid #5A4838;font-size:.84rem;z-index:1000;display:none}
       #tnsMsg.show{display:block}#tnsMsg.err{border-color:#E23F25;color:#FFC2B8}
       .tns-logo{display:flex;align-items:center;gap:12px}
+      .tns-loc{border:1px solid #5A4838}.tns-loc.need{border-color:#E23F25;background:#2E1A15}
+      #tnsPinBanner{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:16px;background:#2E1A15;border:1px solid #E23F25;margin:0 0 12px;font-size:.84rem;line-height:1.4}
+      #tnsPinBanner button{min-height:44px;padding:0 14px;border:0;border-radius:12px;background:var(--gold);color:var(--ink);font:inherit;font-weight:800;cursor:pointer;flex-shrink:0}
+      #dashView.tn-stall-mode #tnsPinBanner{display:none}
       .tns-logo .lg{width:64px;height:64px;border-radius:16px;background:var(--red) center/cover;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.2rem;color:#fff;flex-shrink:0}
     `;
     document.head.appendChild(s);
@@ -87,15 +93,15 @@
 
   async function load(){
     const s = (await c().auth.getSession())?.data?.session; if(!s) return false;
-    const { data, error } = await c().from('vendors').select('tonninyira_id,business_name,owner_name,logo_url,gallery,items').eq('auth_user_id', s.user.id).maybeSingle();
+    const { data, error } = await c().from('vendors').select('tonninyira_id,business_name,owner_name,logo_url,gallery,items,latitude,longitude').eq('auth_user_id', s.user.id).maybeSingle();
     if(error || !data) return false;
     vendor = data; return true;
   }
 
   async function save(patch, okText){
-    const { data, error } = await c().from('vendors').update(patch).eq('tonninyira_id', vendor.tonninyira_id).select('tonninyira_id,business_name,owner_name,logo_url,gallery,items').maybeSingle();
+    const { data, error } = await c().from('vendors').update(patch).eq('tonninyira_id', vendor.tonninyira_id).select('tonninyira_id,business_name,owner_name,logo_url,gallery,items,latitude,longitude').maybeSingle();
     if(error || !data){ say('Not saved: ' + (error?.message || 'please try again.'), true); return false; }
-    vendor = data; render(); if(okText) say(okText); return true;
+    vendor = data; render(); banner(); if(okText) say(okText); return true;
   }
 
   function pick(accept, multiple){
@@ -166,6 +172,27 @@
   async function makeCover(url){
     const g = gallery(); const i = g.findIndex(x => x.url === url); if(i < 0) return;
     const [it] = g.splice(i, 1); await save({ gallery: [it, ...g] }, 'Cover photo set.');
+  }
+
+  /* ---- stall location ---- */
+  const hasPin = () => vendor && vendor.latitude != null && vendor.longitude != null;
+  function setPin(){
+    if(typeof tnPinSheet !== 'function') return say('The map could not load. Refresh and try again.', true);
+    tnPinSheet({ eyebrow: 'Stall location', title: vendor.business_name || 'Your stall',
+      note: 'Stand at your stall and tap "Use my location", or drag the pin onto your stall. Riders and delivery prices use this spot.',
+      start: hasPin() ? { lat: vendor.latitude, lng: vendor.longitude } : null, saveLabel: 'Save stall location',
+      onSave: async p => (await save({ latitude: p.lat, longitude: p.lng }, 'Stall location saved. Customers can order now.')) ? true : false });
+  }
+  function banner(){
+    const dash = document.getElementById('dashView'); if(!dash) return;
+    let b = document.getElementById('tnsPinBanner');
+    if(hasPin()){ b?.remove(); return; }
+    if(!b){
+      b = document.createElement('div'); b.id = 'tnsPinBanner'; b.setAttribute('role', 'alert');
+      b.innerHTML = '<span><b>Set your stall location.</b> Customers cannot order from you until you do.</span><button type="button">Set location</button>';
+      b.querySelector('button').onclick = () => { setTab(true); setTimeout(setPin, 50); };
+      document.getElementById('tnStallTabs')?.after(b);
+    }
   }
 
   /* ---- products ---- */
@@ -266,6 +293,14 @@
         </div>
       </div>
 
+      <div class="tns-card tns-loc${hasPin() ? '' : ' need'}">
+        <div class="tns-h"><span class="tns-eye">Stall location</span><span class="tns-note">for delivery prices</span></div>
+        <div class="tns-logo"><div style="flex:1;min-width:0">${hasPin()
+          ? `<div style="font-weight:800">✓ Location set</div><div class="tns-note">Delivery is UGX 1,000 per km from here to the customer.</div>`
+          : `<div style="font-weight:800;color:#FFB0A5">Not set: customers cannot order yet</div><div class="tns-note">Set it once, standing at your stall.</div>`}</div>
+        <button type="button" class="tns-link" data-act="pin">${hasPin() ? 'Change' : 'Set location'}</button></div>
+      </div>
+
       <div class="tns-card">
         <div class="tns-h"><span class="tns-eye">Logo</span></div>
         <div class="tns-logo"><div class="lg" style="${vendor.logo_url ? `background-image:url('${esc(vendor.logo_url)}')` : ''}">${vendor.logo_url ? '' : initials}</div>
@@ -331,7 +366,7 @@
   function onClick(e){
     const b = e.target.closest('button'); if(!b || !b.closest('#tnStallPane')) return;
     const a = b.dataset.act;
-    if(a === 'photos') addPhotos(); else if(a === 'video') addVideo(); else if(a === 'logo') changeLogo();
+    if(a === 'pin') setPin(); else if(a === 'photos') addPhotos(); else if(a === 'video') addVideo(); else if(a === 'logo') changeLogo();
     else if(a === 'new-product') openEditor(null); else if(a === 'save-product') saveProduct();
     else if(a === 'cancel-product'){ editing = null; render(); } else if(a === 'delete-product') deleteProduct();
     else if(a === 'pp-add'){ readDraft(); addProductPhoto(); }
@@ -361,6 +396,7 @@
     tabs.children[0].onclick = () => setTab(false); tabs.children[1].onclick = () => setTab(true);
     pane.addEventListener('click', onClick);
     setTab(location.hash === '#stall');
+    (vendor ? Promise.resolve(true) : load().then(ok => { if(ok) render(); return ok; })).then(ok => { if(ok) banner(); });
   }
   const iv = setInterval(() => { boot(); if(booted) clearInterval(iv); }, 500);
   window.tnStallMedia = { reload: () => load().then(render) };

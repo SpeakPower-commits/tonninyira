@@ -17,7 +17,12 @@
     const s=typeof AppState!=='undefined'?AppState:null;if(!s?.cart?.length)return;
     const phoneSaved=session.user.phone||(()=>{try{return JSON.parse(localStorage.getItem('tonninyira_customer')||'{}').phone||''}catch(_){return ''}})();
     const subtotal=typeof cartSubtotal==='function'?Number(cartSubtotal()):s.cart.reduce((x,i)=>x+Number(i.price||0)*Number(i.qty||0),0);
-    const delivery=typeof computeDeliveryFee==='function'?Number(computeDeliveryFee()):0;
+    /* The delivery fee comes from the server's quote for this basket and pin
+       (quote_delivery); the database prices the saved order the same way. */
+    if(!s.customerLocation){if(typeof tnOpenDeliveryPin==='function')tnOpenDeliveryPin();else alert('Set your delivery pin first.');return}
+    const quoted=typeof computeDeliveryFee==='function'?computeDeliveryFee():null;
+    if(quoted==null){if(typeof updateCartUI==='function')updateCartUI();alert('Your delivery fee is not ready yet. Check the basket and try again.');return}
+    const delivery=Number(quoted);
     const wantsRedeem=!!(s.redeemDelivery&&s.loyaltyPoints!==null&&typeof FREE_DELIVERY_POINTS_COST!=='undefined'&&s.loyaltyPoints>=FREE_DELIVERY_POINTS_COST);
     const total=subtotal+(wantsRedeem?0:delivery);const area=document.getElementById('areaSelect')?.value||'';
     const e=popup();

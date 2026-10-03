@@ -85,6 +85,24 @@ flowchart LR
 
 ---
 
+## Delivery fee
+
+**UGX 1,000 per km by road, minimum UGX 1,000**, rounded up per 100 m (300 m costs UGX 1,000; 2.35 km
+costs UGX 2,400). Road distance is estimated as the straight-line distance × 1.3.
+
+- Every stall sets its **location pin** in My stall. A stall without a pin cannot take orders.
+- The customer drops a **delivery pin** at checkout. The basket shows the fee and the rider's route
+  before payment.
+- The database prices it (`quote_delivery` for the preview, `tn_price_order_delivery` when the order is
+  saved). The phone's number is ignored, and the limit is 60 km.
+- **Smart riders:** stalls within about 2 km of each other share one rider, who collects them nearest
+  stall next and then the customer. A stall far from the rest gets its own rider. Each route is priced
+  with the same rule; the customer pays the sum in **one** Mobile Money payment, and the basket shows
+  every rider's route.
+- Each rider is offered, accepts and is paid (route fee − 5%) for their own route only, released when
+  that route is delivered. A route's fee is refunded only if every stall on it cancels.
+- The customer can call or WhatsApp each rider from **Get help**.
+
 ## How the money works
 
 One payment, many recipients. The customer pays once for the whole basket; Tonninyira holds the
@@ -92,10 +110,10 @@ money and keeps a separate ledger line for every stall and for the rider.
 
 ```mermaid
 flowchart TB
-  P["Customer pays once<br/>items + one delivery fee"] --> T["Held by Tonninyira"]
+  P["Customer pays once<br/>items + delivery per route"] --> T["Held by Tonninyira"]
   T --> S1["Stall A<br/>items − 5%"]
   T --> S2["Stall B<br/>items − 5%"]
-  T --> R["Rider<br/>delivery fee − 5%"]
+  T --> R["Each rider<br/>route fee − 5%"]
   T --> F["Tonninyira<br/>5% service fee"]
   style T fill:#F5B400,stroke:#1C1410,color:#1C1410
   style F fill:#E23F25,stroke:#1C1410,color:#ffffff
@@ -104,7 +122,7 @@ flowchart TB
 | Money | When it can be withdrawn |
 | --- | --- |
 | A stall's share | 12 hours after delivery, or straight away when the customer taps **Got it, all good**. Frozen while a complaint about that stall is open. |
-| The rider's share | As soon as the whole order is delivered (one rider, one delivery fee per order). Frozen only for complaints about the rider or a missing delivery. |
+| The rider's share | As soon as the rider's route is delivered (one fee per route; an order can have several riders). Frozen only for complaints about the rider or a missing delivery. |
 | Refunds | Sent automatically to the customer's Mobile Money. A stall at fault also covers the delivery fee, so the rider is still paid. |
 
 Partners see **Available to withdraw**, **On hold** and **Under review** separately, and can only
@@ -201,7 +219,7 @@ flowchart TB
 
 | Object | Purpose |
 | --- | --- |
-| `orders` | One row per stall per order; `order_id` groups a basket. The first stall's row carries the delivery fee. |
+| `orders` | One row per stall per order; `order_id` groups a basket. `route_no` / `pickup_seq` place each stall on a rider's route; the route's first pickup carries its delivery fee and `delivery_km`. |
 | `platform_settlements` · `settlement_ledger` · `my_partner_balance()` | What each stall and rider earned, and whether it is unpaid, held, under review, ready or settled. |
 | `request_partner_payout()` | Payout requests, limited to released money. |
 | `confirm_order_received()` | The customer's "Got it, all good". |
@@ -285,7 +303,7 @@ leaves Supabase.
 - Customer order tracking through each fulfilment stage
 
 **Next**
-- Map-based location and road-aware delivery fees
+- Road-network distances (today: straight line × 1.3)
 - Partner performance dashboards (response time, complaints, sold-out accuracy)
 - Repeat-purchase recommendations
 

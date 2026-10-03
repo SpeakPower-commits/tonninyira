@@ -261,6 +261,9 @@ async function loadDeliveries(){
       .eq('rider_tid', forRider).order('created_at', {ascending:false});
     if(error) throw error;
     if(!currentRider || currentRider.tonninyira_id !== forRider) return;
+    /* Stall pins, for a map link to each pickup on the route. */
+    const ids = [...new Set((data||[]).map(r=>r.vendor_id).filter(Boolean))];
+    if(ids.length){ try{ const v = await supabaseClient.from('vendors_public').select('tonninyira_id,business_name,latitude,longitude').in('tonninyira_id', ids); (v.data||[]).forEach(x=>{ stallPins[x.tonninyira_id] = x; }); }catch(_){} }
     renderDeliveries(data||[]);
   }catch(e){
     document.getElementById('deliveriesList').innerHTML = `<div class="placeholder"><p>Couldn't load deliveries (${e.message||e}).</p></div>`;
@@ -285,6 +288,7 @@ function paymentLine(group){
   return `<div class="order-meta" style="color:var(--green)">Paid by ${escHtml(first.payment_method||'Mobile Money')} · nothing to collect</div>`;
 }
 
+const stallPins = {};
 function renderDeliveries(rows){
   const el = document.getElementById('deliveriesList');
   /* A stall that declined, or did not confirm in time, is cancelled and its
@@ -298,16 +302,21 @@ function renderDeliveries(rows){
   const groups = {};
   rows.forEach(r=>{ (groups[r.order_id] = groups[r.order_id]||[]).push(r); });
 
+  /* One card per route the rider accepted: pickups in the order the system
+     planned (pickup_seq: nearest stall next), then the customer. */
   el.innerHTML = Object.entries(groups).map(([orderId, group])=>{
+    group.sort((a,b)=>(a.route_no||1)-(b.route_no||1) || (a.pickup_seq||1)-(b.pickup_seq||1) || a.id-b.id);
     const first = group[0];
     const stage = stageFor(group);
-    const pickups = group.map(g=>`
-      <div class="pickup-line"><span>${g.vendor_name}${itemsLine(g.items)?' · '+itemsLine(g.items):''}</span>
+    const pickups = group.map((g,i)=>{ const pin = stallPins[g.vendor_id]; return `
+      <div class="pickup-line"><span>${group.length>1?`<b style="color:var(--gold)">Pickup ${i+1} of ${group.length}</b> · `:''}${escHtml(g.vendor_name)}${itemsLine(g.items)?' · '+itemsLine(g.items):''}${pin&&pin.latitude!=null?` · <a href="https://www.google.com/maps/search/?api=1&query=${Number(pin.latitude)},${Number(pin.longitude)}" target="_blank" rel="noopener" style="color:var(--gold)">Map</a>`:''}</span>
         <span class="status-pill stage-${g.status==='ready'||g.status==='out_for_delivery'||g.status==='completed' ? 'ready':'preparing'}">${g.status==='ready'?'Ready':g.status==='out_for_delivery'?'Picked Up':g.status==='completed'?'Delivered':'Preparing'}</span>
-      </div>`).join('');
+      </div>`; }).join('');
+    const km = group.reduce((s,g)=>s+Number(g.delivery_km||0),0);
+    const earn = group.reduce((s,g)=>s+Number(g.rider_earnings||0),0);
     let action = '';
-    if(stage==='ready') action = `<button class="action-btn action-pickup" onclick="advanceGroup('${orderId}','out_for_delivery')">Mark Picked Up From All Stalls</button>`;
-    else if(stage==='out') action = `<button class="action-btn action-deliver" onclick="advanceGroup('${orderId}','completed')">Mark Delivered</button>`;
+    if(stage==='ready') action = `<button class="action-btn action-pickup" onclick="advanceGroup('${String(orderId).replace(/[^A-Za-z0-9_-]/g,'')}','out_for_delivery')">Mark Picked Up From All Stalls</button>`;
+    else if(stage==='out') action = `<button class="action-btn action-deliver" onclick="advanceGroup('${String(orderId).replace(/[^A-Za-z0-9_-]/g,'')}','completed')">Mark Delivered</button>`;
     else if(stage==='preparing') action = `<p class="helper">Waiting on stalls to finish preparing before pickup.</p>`;
     const mapsLink = (first.customer_lat!=null && first.customer_lng!=null)
       ? `<a href="https://www.google.com/maps/search/?api=1&query=${first.customer_lat},${first.customer_lng}" target="_blank" rel="noopener" class="action-btn" style="display:block; text-align:center; text-decoration:none; background:var(--card); color:var(--gold); border:1px solid var(--gold); margin-bottom:8px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Open Customer Location in Maps</a>`
@@ -316,13 +325,13 @@ function renderDeliveries(rows){
     <div class="order-card stage-${stage}">
       <div class="order-top">
         <div>
-          <div class="order-id">${orderId}</div>
-          <div class="order-time">${timeAgo(first.created_at)} · deliver to ${first.customer_area||'area not given'}</div>
+          <div class="order-id">${escHtml(orderId)}</div>
+          <div class="order-time">${timeAgo(first.created_at)} · deliver to ${escHtml(first.customer_area||'area not given')}${km?` · ${km.toFixed(1)} km`:''}${earn?` · you earn UGX ${Math.round(earn).toLocaleString('en-US')}`:''}</div>
         </div>
         <span class="status-pill stage-${stage}">${STAGE_LABEL[stage]}</span>
       </div>
       ${pickups}
-      <div class="order-meta">Customer: ${first.customer_name||'—'} · ${first.customer_phone||''}</div>
+      <div class="order-meta">Customer: ${escHtml(first.customer_name||'—')} · ${escHtml(first.customer_phone||'')}</div>
       ${paymentLine(group)}
       <div class="order-actions">${mapsLink}${action}</div>
     </div>`;
