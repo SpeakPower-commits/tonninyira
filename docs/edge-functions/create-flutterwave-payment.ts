@@ -5,7 +5,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const FLW_LIVE = Deno.env.get("FLW_ENV") === "live";
 const FLW_BASE = FLW_LIVE ? "https://f4bexperience.flutterwave.com" : "https://developersandbox-api.flutterwave.com";
 const FLW_IDP = "https://idp.flutterwave.com/realms/flutterwave/protocol/openid-connect/token";
-const APP_RETURN = Deno.env.get("APP_RETURN_URL") || "https://speakpower-commits.github.io/tonninyira/payment-return-fixed.html";
+const APP_RETURN = Deno.env.get("APP_RETURN_URL") || "https://tonninyira-enhancements.thomasotieno583.workers.dev/payment-return-fixed.html";
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type", "Access-Control-Allow-Methods": "POST, OPTIONS" };
 function json(data: unknown, status = 200) { return new Response(JSON.stringify(data), { status, headers: { ...CORS, "content-type": "application/json", "cache-control": "no-store" } }); }
 function serviceKey() { return Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_SECRET_KEY") || ""; }
