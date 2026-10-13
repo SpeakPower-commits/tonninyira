@@ -16,7 +16,7 @@ Your money waits with Tonninyira until you say the order is right.
   <img src="https://img.shields.io/badge/payments-sandbox-8a6100?style=for-the-badge" alt="Payments in sandbox">
 </p>
 
-<a href="https://speakpower-commits.github.io/tonninyira/index.html"><strong>Open the live marketplace →</strong></a>
+<a href="https://tonninyira-enhancements.thomasotieno583.workers.dev/"><strong>Open the live marketplace →</strong></a>
 
 </div>
 
@@ -318,7 +318,7 @@ leaves Supabase.
 - **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — data model, authentication and authorization,
   analytics event model, security notes, repository layout and local development.
 - **[docs/edge-functions/](docs/edge-functions)** — source of the refund worker and payment webhook.
-- **[Live site](https://speakpower-commits.github.io/tonninyira/index.html)** — the running marketplace.
+- **[Live site](https://tonninyira-enhancements.thomasotieno583.workers.dev/)** — the running marketplace.
 
 ---
 

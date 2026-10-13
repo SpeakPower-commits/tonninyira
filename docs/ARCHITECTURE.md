@@ -241,7 +241,7 @@ redirect allowlist.
 flowchart LR
   A["git push"] --> B["GitHub Actions<br/>enhancement layer normalisation"]
   B --> C["Cloudflare Workers Builds<br/>wrangler deploy"]
-  C --> D["Live site<br/>tonninyira-enhancements.*.workers.dev"]
+  C --> D["Live site<br/>tonninyira-enhancements.thomasotieno583.workers.dev"]
 ```
 
 The site is a static asset Worker on **Cloudflare** (`wrangler.jsonc`, no build step). Cloudflare
@@ -254,6 +254,10 @@ terms do not allow e-commerce sites.
 - `html_handling: "none"` keeps every page at its exact `.html` address, matching the Supabase
   redirect allowlist, the Flutterwave return URL and the service worker cache. `_redirects` maps
   `/` to `index.html`.
+
+Each HTML page starts with a short script that sends visitors on the old
+`speakpower-commits.github.io/tonninyira` address to the same page on Cloudflare. It does
+nothing on Cloudflare.
 
 GitHub Actions still normalises the enhancement loading layer on push; commits carrying
 `[skip enhancement injector]` bypass that step.

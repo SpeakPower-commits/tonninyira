@@ -9,3 +9,4 @@ env.example
 gitignore
 *.md
 *.yml
+.wrangler
