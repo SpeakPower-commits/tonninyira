@@ -241,7 +241,7 @@ redirect allowlist.
 flowchart LR
   A["git push"] --> B["GitHub Actions<br/>enhancement layer normalisation"]
   B --> C["Cloudflare Workers Builds<br/>wrangler deploy"]
-  C --> D["Live site<br/>tonninyira.*.workers.dev"]
+  C --> D["Live site<br/>tonninyira-enhancements.*.workers.dev"]
 ```
 
 The site is a static asset Worker on **Cloudflare** (`wrangler.jsonc`, no build step). Cloudflare
