@@ -1,0 +1,11 @@
+# Repository files that must never be served publicly.
+.git
+.github
+.assetsignore
+docs
+node_modules
+wrangler.jsonc
+env.example
+gitignore
+*.md
+*.yml

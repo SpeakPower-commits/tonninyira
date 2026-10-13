@@ -273,8 +273,12 @@
   const ago = iso => { const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000); return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' hr ago' : new Date(iso).toLocaleDateString(); };
   const intl = p => { const d = String(p || '').replace(/\D/g, ''); return d.startsWith('256') ? d : d.startsWith('0') ? '256' + d.slice(1) : d.length === 9 ? '256' + d : d; };
   function card(id, g, example){
+    /* Pickups in the order the system planned for this route (nearest stall
+       next), then the customer. */
+    g = [...g].sort((a, b) => (a.route_no || 1) - (b.route_no || 1) || (a.pickup_seq || 1) - (b.pickup_seq || 1) || a.id - b.id);
     const f = g[0], st = stage(g), first = String(f.customer_name || 'Customer').trim().split(/\s+/)[0];
-    const vendors = g.map(r => esc(r.vendor_name)).join(', ');
+    const vendors = g.map(r => esc(r.vendor_name)).join(' → ');
+    const km = g.reduce((s, r) => s + Number(r.delivery_km || 0), 0), earn = g.reduce((s, r) => s + Number(r.rider_earnings || 0), 0);
     const step = (cls, title, sub) => `<li class="${cls}"><i>${cls === 'ok' ? svg('check', 12, 4) : ''}</i><div><b>${title}</b>${sub ? `<small>${sub}</small>` : ''}</div></li>`;
     const picked = st === 'out' || st === 'done';
     const steps = step('ok', 'Accepted', 'Paid order, assigned to you')
@@ -289,7 +293,7 @@
       : st === 'preparing' ? '<div class="rh-wait">Wait for the stall to mark it ready before you collect it.</div>' : '';
     if(st === 'done') return `<article class="rh-deliv done"><div class="rh-dhead"><div><b>${esc(id)}</b><small>${esc(first)} · ${esc(f.customer_area || '')} · ${ago(f.updated_at || f.created_at)}</small></div><span class="rh-pill done">Delivered</span></div></article>`;
     return `<article class="rh-deliv">
-      <div class="rh-dhead"><div><div class="rh-eye">Your delivery</div><b>${esc(id)}</b><small>Paid ${ago(f.paid_at || f.created_at)}</small></div><span class="rh-pill ${st === 'ready' ? 'ready' : ''}">${esc(STAGE[st])}</span></div>
+      <div class="rh-dhead"><div><div class="rh-eye">Your delivery</div><b>${esc(id)}</b><small>Paid ${ago(f.paid_at || f.created_at)}${g.length > 1 ? ` · ${g.length} pickups` : ''}${km ? ` · ${km.toFixed(1)} km` : ''}${earn ? ` · you earn UGX ${Math.round(earn).toLocaleString('en-US')}` : ''}</small></div><span class="rh-pill ${st === 'ready' ? 'ready' : ''}">${esc(STAGE[st])}</span></div>
       <ol class="rh-steps">${steps}</ol>
       <div class="rh-sep"></div>
       <div class="rh-eye" style="color:#B7A493">Deliver to</div>

@@ -1,0 +1,4 @@
+# The bare address opens the store. Every other page keeps its exact .html
+# address (html_handling "none"), so sign-in, payment-return and offline
+# links stay unchanged from GitHub Pages.
+/  /index.html  200

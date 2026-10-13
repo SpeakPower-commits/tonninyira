@@ -240,13 +240,23 @@ redirect allowlist.
 ```mermaid
 flowchart LR
   A["git push"] --> B["GitHub Actions<br/>enhancement layer normalisation"]
-  B --> C["GitHub Pages"]
-  C --> D["Live site"]
+  B --> C["Cloudflare Workers Builds<br/>wrangler deploy"]
+  C --> D["Live site<br/>tonninyira-enhancements.*.workers.dev"]
 ```
 
-The site is served by **GitHub Pages** from the `tonninyira-enhancements` branch at
-`speakpower-commits.github.io/tonninyira`. GitHub Actions normalises the enhancement loading
-layer on push; commits carrying `[skip enhancement injector]` bypass that step.
+The site is a static asset Worker on **Cloudflare** (`wrangler.jsonc`, no build step). Cloudflare
+Workers Builds is connected to this repository and runs `wrangler deploy` on every push to the
+production branch. Other branches get preview URLs. GitHub Pages is no longer used, because its
+terms do not allow e-commerce sites.
+
+- `.assetsignore` keeps `.git`, `.github`, `docs`, Markdown and config files out of the public site.
+- `_headers` sets security headers on every page, and makes `sw.js` revalidate every time.
+- `html_handling: "none"` keeps every page at its exact `.html` address, matching the Supabase
+  redirect allowlist, the Flutterwave return URL and the service worker cache. `_redirects` maps
+  `/` to `index.html`.
+
+GitHub Actions still normalises the enhancement loading layer on push; commits carrying
+`[skip enhancement injector]` bypass that step.
 
 ---
 

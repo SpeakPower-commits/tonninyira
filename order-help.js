@@ -105,10 +105,18 @@
         box.innerHTML = `<div class="tnh-step"><span class="tnh-n">1</span><div><b>Rider and stall</b><div class="tnh-sub">${esc(why)}</div></div></div>`;
         return;
       }
-      const r = data.rider;
+      /* Stalls far apart are delivered by different riders: one per route,
+         each shown with the stalls they collect from. */
+      const riders = Array.isArray(data.riders) && data.riders.length ? data.riders : [data.rider ? { ...data.rider, stalls: [] } : {}];
+      const many = riders.length > 1;
+      const riderHTML = riders.map(r => {
+        const from = (r.stalls || []).length ? 'Brings ' + r.stalls.join(', ') : '';
+        if(!r.phone) return `<div class="tnh-sub">${many && from ? esc(from) + ': ' : ''}No rider has been assigned yet. You will be able to reach them here once one accepts.</div>`;
+        return person(r.name || 'Your rider', [many ? from : '', r.vehicle, r.plate].filter(Boolean).join(' · ') || 'Your rider', r.phone, orderId);
+      }).join('');
       box.innerHTML = `
-        <div class="tnh-step"><span class="tnh-n">1</span><div><b>Talk to your rider</b>
-          ${r ? person(r.name || 'Your rider', [r.vehicle, r.plate].filter(Boolean).join(' · ') || 'Your rider', r.phone, orderId) : '<div class="tnh-sub">No rider has been assigned yet. You will be able to reach them here once one accepts.</div>'}</div></div>
+        <div class="tnh-step"><span class="tnh-n">1</span><div><b>${many ? `Talk to your riders (${riders.length})` : 'Talk to your rider'}</b>
+          ${riderHTML}</div></div>
         <div class="tnh-step"><span class="tnh-n">2</span><div><b>Talk to the stall</b>
           ${(data.stalls || []).map(s => person(s.stall, s.owner ? 'Ask for ' + s.owner : 'Stall', s.phone, orderId, s.owner)).join('') || '<div class="tnh-sub">The stall has no phone number on file.</div>'}</div></div>`;
     }catch(e){ box.innerHTML = `<div class="tnh-err">Could not load contacts: ${esc(e.message || e)}</div>`; }

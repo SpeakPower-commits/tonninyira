@@ -1,0 +1,10 @@
+# Security headers for every page (Cloudflare Workers static assets).
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: geolocation=(self), camera=(self), microphone=(self), payment=()
+
+# The service worker must always be re-checked so app updates reach phones.
+/sw.js
+  Cache-Control: no-cache
