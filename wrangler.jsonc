@@ -1,0 +1,16 @@
+{
+  // Tonninyira is a static site (HTML/JS, Supabase in the browser), served by
+  // Cloudflare Workers static assets. GitHub Pages' terms do not allow online
+  // shops, so the store is hosted here. Cloudflare Workers Builds deploys this
+  // on every push to the connected branch; no build step is needed.
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  "name": "tonninyira",
+  "compatibility_date": "2026-10-13",
+  "assets": {
+    "directory": ".",
+    "html_handling": "none",
+    "not_found_handling": "none"
+  },
+  "workers_dev": true,
+  "preview_urls": true
+}

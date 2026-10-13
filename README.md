@@ -12,7 +12,7 @@ Your money waits with Tonninyira until you say the order is right.
   <a href="https://github.com/SpeakPower-commits/tonninyira/tree/tonninyira-enhancements"><img src="https://img.shields.io/badge/branch-tonninyira--enhancements-E23F25?style=for-the-badge&logo=git&logoColor=white" alt="Active branch"></a>
   <img src="https://img.shields.io/badge/frontend-HTML%20%2B%20vanilla%20JS-F5B400?style=for-the-badge&logo=javascript&logoColor=1C1410" alt="Frontend">
   <img src="https://img.shields.io/badge/backend-Supabase-4C9A5B?style=for-the-badge&logo=supabase&logoColor=white" alt="Backend">
-  <img src="https://img.shields.io/badge/hosting-GitHub%20Pages-24292f?style=for-the-badge&logo=github&logoColor=white" alt="Hosting">
+  <img src="https://img.shields.io/badge/hosting-Cloudflare%20Workers-F38020?style=for-the-badge&logo=cloudflare&logoColor=white" alt="Hosting">
   <img src="https://img.shields.io/badge/payments-sandbox-8a6100?style=for-the-badge" alt="Payments in sandbox">
 </p>
 
@@ -159,7 +159,7 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-  B["Browser<br/>HTML · CSS · vanilla JS"] --> P["GitHub Pages<br/>static delivery"]
+  B["Browser<br/>HTML · CSS · vanilla JS"] --> P["Cloudflare Workers<br/>static assets"]
   B --> S["Supabase"]
   S --> AU["Auth<br/>email/password · Google"]
   S --> DB[("PostgreSQL<br/>RLS · triggers · pg_cron")]
@@ -176,7 +176,7 @@ flowchart TB
 | --- | --- | --- |
 | Frontend | Vanilla JS, no build step | Fast on an ordinary Android phone and a thin connection. |
 | Backend | Supabase | Auth, PostgreSQL, row-level security, storage, cron and serverless functions in one place. |
-| Hosting | GitHub Pages | The live site deploys from the `tonninyira-enhancements` branch. |
+| Hosting | Cloudflare Workers (static assets) | `wrangler.jsonc`; Workers Builds deploys every push to the connected branch. GitHub Pages is not used: its terms do not allow online shops. |
 | Payments | Flutterwave v4 | MTN and Airtel Mobile Money, plus refunds back to the same wallet. |
 
 **Scheduled jobs (pg_cron)**
