@@ -260,6 +260,14 @@ Names only:
 The refund worker's own token is generated inside the database (`tn_internal_config`) and never
 leaves Supabase.
 
+**Google Analytics 4** (Measurement ID `G-6TZRHHMVDD`, public, not a secret) is on the customer
+pages only: the store, guide, terms, registration, sign-in return and payment return pages. The
+staff dashboards are left out. It only loads on the live address
+(`tonninyira-enhancements.thomasotieno583.workers.dev`), so test copies and the old GitHub
+address send nothing. If a custom domain is added, put it in the same hostname check in those
+pages. A confirmed payment sends GA4's `purchase` event (order number, amount, `UGX`) once per
+payment, so sales show up in GA's Monetization reports.
+
 ---
 
 ## Going live checklist
