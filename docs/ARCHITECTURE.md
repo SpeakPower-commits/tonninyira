@@ -204,8 +204,13 @@ tonninyira/
 ├── admin.html                       # Admin partner registration console
 ├── admin-control-tower.html         # Admin command centre + approval queue
 ├── admin-session-fix.js             # Admin session/authorization guard
+├── logo-source.webp                 # Master logo; every icon below is built from it
+├── logo.png · logo-icon.png         # Full logo · artwork-only mark (headers, admin)
+├── favicon.ico · favicon-*.png      # Browser-tab icons (16/32/48)
+├── icon-*.png · apple-touch-icon.png # Installed-app icons (manifest, iPhone)
+├── og-image.png                     # Link preview (WhatsApp, Facebook, Google)
+├── docs/brand/make_icons.py         # Rebuilds all of the above from logo-source.webp
 ├── assets/
-│   ├── tonninyira-mark.svg
 │   └── market/                      # Market photography + optimised WebP
 ├── docs/ARCHITECTURE.md             # This file
 └── README.md

@@ -7,13 +7,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Tonninyira — Local Vendors. Real Prices. Your Door.</title>
-<!-- These three pointed at assets/favicon-*.png and assets/apple-touch-icon.png,
-     none of which exist in this repo -- every visitor's browser tab and any
-     manually-added iOS home-screen icon has been silently falling back to a
-     generic default this whole time. Pointed at the real generated files. -->
-<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="./favicon-16.png">
-<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+<!-- Link previews (WhatsApp, Facebook, X, Google): the Tonninyira logo and a one-line description. -->
+<meta name="description" content="Shop Kampala's neighbourhood market stalls online. Pay with MTN or Airtel Mobile Money and the nearest rider brings it to your door.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Tonninyira">
+<meta property="og:title" content="Tonninyira — Make It Yours">
+<meta property="og:description" content="Shop Kampala's neighbourhood market stalls online. Pay with MTN or Airtel Mobile Money and the nearest rider brings it to your door.">
+<meta property="og:url" content="https://tonninyira-enhancements.thomasotieno583.workers.dev/">
+<meta property="og:image" content="https://tonninyira-enhancements.thomasotieno583.workers.dev/og-image.png?v=2">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Tonninyira logo: a market stall with three traders. Make It Yours.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://tonninyira-enhancements.thomasotieno583.workers.dev/og-image.png?v=2">
+<link rel="icon" href="./favicon.ico?v=2" sizes="48x48">
+<link rel="icon" type="image/png" sizes="48x48" href="./favicon-48.png?v=2">
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png?v=2">
+<link rel="icon" type="image/png" sizes="16x16" href="./favicon-16.png?v=2">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=2">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Work+Sans:wght@400;500;600;700;800&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
@@ -602,7 +613,7 @@ function tryLoadFavicon(paths, i){
   img.onerror = () => tryLoadFavicon(paths, i+1);
   img.src = paths[i];
 }
-tryLoadFavicon(['assets/favicon-32.png','favicon-32.png','Assets/favicon-32.png','images/favicon-32.png','assets/Favicon-32.png']);
+tryLoadFavicon(['./favicon-32.png?v=2']);
 
 function tryLoadLogo(paths, i){
   i = i || 0;
@@ -616,7 +627,7 @@ function tryLoadLogo(paths, i){
   img.onerror = () => tryLoadLogo(paths, i+1);
   img.src = paths[i];
 }
-tryLoadLogo(['assets/logo.png','logo.png','Assets/logo.png','images/logo.png','assets/Logo.png']);
+tryLoadLogo(['./logo-icon.png?v=2']);
 
 const CATALOG = {
   eats: { label:"Eats", subs: {
@@ -2667,17 +2678,17 @@ if('serviceWorker' in navigator) window.addEventListener('load',()=>{
 <script src="case-thread.js"></script>
 <script src="order-help.js"></script>
 <script src="product-questions.js"></script>
+<script src="account-session-ui.js"></script>
+<script src="flutterwave-payments-v2.js"></script>
 <script src="enhancements.js"></script>
 <script src="enhancements-fix.js"></script>
 <script src="profile-copy-enhancements.js"></script>
 <script src="guest-access-flow.js"></script>
 <script src="admin-entrypoint.js"></script>
+<script src="session-compat.js"></script>
+<script src="wishlist-account.js"></script>
 <script src="partner-wallet-payouts.js"></script>
 <script src="signout-visible.js"></script>
 <script src="performance-optimizations.js"></script>
-<script src="session-compat.js"></script>
-<script src="account-session-ui.js"></script>
-<script src="wishlist-account.js"></script>
-<script src="flutterwave-payments-v2.js"></script>
 </body>
 </html>

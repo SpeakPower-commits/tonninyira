@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="logo-full-transparent.png" alt="Tonninyira — a market stall with three traders" width="200">
+<img src="logo.png" alt="Tonninyira — Make It Yours: a market stall with three traders" width="220">
 
 ### Discover locally. Order simply. Pay safely.
 
