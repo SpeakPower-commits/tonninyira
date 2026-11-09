@@ -4,9 +4,9 @@
    -- a deploy could not reach it, and a hard refresh did not help, because a
    hard refresh bypasses the service worker for the page but not for the
    subresources it requests. */
-const SHELL_CACHE='tonninyira-shell-v3';
+const SHELL_CACHE='tonninyira-shell-v4';
 const IMAGE_CACHE='tonninyira-images-v1';
-const SHELL=['./','./index.html','./manifest.webmanifest','./apple-touch-icon.png','./favicon-16.png','./favicon-32.png','./icon-192.png','./icon-512.png','./icon-maskable-512.png','./payment-return.html','./payment-return-fixed.html','./guide.html','./terms.html','./assets/market/manifest.json'];
+const SHELL=['./','./index.html','./manifest.webmanifest','./favicon.ico?v=2','./apple-touch-icon.png?v=2','./favicon-16.png?v=2','./favicon-32.png?v=2','./favicon-48.png?v=2','./icon-192.png?v=2','./icon-512.png?v=2','./icon-maskable-512.png?v=2','./logo-icon.png?v=2','./payment-return.html','./payment-return-fixed.html','./guide.html','./terms.html','./assets/market/manifest.json'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(SHELL_CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()));
